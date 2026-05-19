@@ -3,7 +3,7 @@
 > Use Claude Code properly. Plan first, team review, every feature surfaced.
 
 **Domain:** [adeptly.dev](https://adeptly.dev) (to be registered)
-**Status:** v0.2 alpha — runs on localhost.
+**Status:** v0.3 alpha — runs on localhost.
 
 ## What this is
 
@@ -45,7 +45,7 @@ npm run dev
 
 A token with `repo` scope lets you fetch the full collaborator list (not just public contributors).
 
-## What's in v0.2
+## What's in v0.3
 
 | Feature | Status |
 |---|---|
@@ -58,17 +58,31 @@ A token with `repo` scope lets you fetch the full collaborator list (not just pu
 | Codebase change hint (detects "create X / modify Y / delete Z" lines) | ✓ |
 | "Copy as Claude Code prompt" button (enabled once plan is approved) | ✓ |
 | Catalogue of 30+ Claude Code features (categorised, filterable) | ✓ |
-| **Contextual feature suggestions** based on plan content (keyword rules) | ✓ |
-| Click a suggestion → jumps to and expands that feature in the sidebar | ✓ |
-| **GitHub remote detection + collaborators integration** | ✓ |
+| Keyword-based contextual feature suggestions | ✓ |
+| **✨ Plan-Recipe (v0.3)** — `claude --print` analyses the plan and returns a workflow recipe: which subagents to spawn, which skills to invoke, which hooks to set up, expected turns, cost estimate, step-by-step execution order | ✓ |
+| Plan-Recipe is cached, content-hashed, marked stale on plan change | ✓ |
+| "Copy plan + recipe as Claude Code prompt" — both in one paste | ✓ |
+| GitHub remote detection + collaborators integration | ✓ |
 | Add GitHub collaborator as plan reviewer in one click | ✓ |
-| **Collapsible left panel** (plans list) | ✓ |
-| **Collapsible right panel** (features / sessions) with side-mounted toggle | ✓ |
+| Collapsible left panel (plans list) | ✓ |
+| Collapsible right panel (features / sessions) with side-mounted toggle | ✓ |
 | Right panel tabs: Features / Sessions | ✓ |
 | Recent Claude Code sessions (reads `~/.claude/projects/<slug>/*.jsonl`) | ✓ |
 | Electron desktop wrapper | not yet (Next.js dev server is enough for v0) |
-| Inline comment threads on plans | not yet (v0.3) |
-| LLM-driven feature suggestions | not yet (v1 — current is keyword-based) |
+| Inline comment threads on plans | not yet (v0.4) |
+| Plain-English plan summary for non-technical reviewers | not yet (v0.5) |
+
+### How Plan-Recipe works
+
+When you click **✨ Claude recipe** → **Generate Claude Code recipe**:
+
+1. Adeptly assembles a structured prompt with your plan content + the 30-feature catalogue.
+2. Adeptly spawns `claude --print` as a subprocess with that prompt on stdin.
+3. The `claude` CLI runs using **your existing Claude Code authentication and subscription** — no separate API key, no billing setup, nothing to configure in Adeptly.
+4. Claude returns a structured JSON recipe; Adeptly validates and caches it.
+5. The UI renders the recipe as a scrollable card view with a "Copy plan + recipe" button that combines both into a single paste-ready Claude Code prompt.
+
+**Side-effect benefit:** because `claude --print` inherits the current working directory's codebase context, the recipe is grounded in your actual repository — not just the plan text. This is exactly the gap Anthropic's own AutoDream feature has (it doesn't read existing code; users complain about this on HN/blogs).
 
 ## Architecture
 
