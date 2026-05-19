@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { SuggestedFeatures } from "./SuggestedFeatures";
 import { GitHubReviewers } from "./GitHubReviewers";
+import { PlanRecipe } from "./PlanRecipe";
 import type { Approval, FeatureSuggestion, Plan, PlanStatus } from "@/lib/types";
 
 interface FileChange {
@@ -73,9 +74,9 @@ export function PlanEditor({
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [error, setError] = useState<string | null>(null);
-  const [bottomTab, setBottomTab] = useState<"changes" | "suggestions" | "approval" | "reviewers">(
-    "approval"
-  );
+  const [bottomTab, setBottomTab] = useState<
+    "changes" | "suggestions" | "approval" | "reviewers" | "recipe"
+  >("approval");
 
   useEffect(() => {
     if (!slug || !projectRoot) {
@@ -259,6 +260,7 @@ export function PlanEditor({
             [
               ["approval", "Approval"],
               ["reviewers", "GitHub reviewers"],
+              ["recipe", "✨ Claude recipe"],
               ["changes", `Changes${mismatchCount ? ` · ${mismatchCount} ⚠` : ""}`],
               ["suggestions", `Suggestions · ${suggestions.length}`],
             ] as const
@@ -276,7 +278,7 @@ export function PlanEditor({
             </button>
           ))}
         </div>
-        <div className="max-h-56 overflow-auto bg-white border-t border-gray-200 p-3">
+        <div className="max-h-96 overflow-auto bg-white border-t border-gray-200 p-3">
           {bottomTab === "approval" &&
             (!approval ? (
               <div className="text-xs text-gray-500 italic">
@@ -391,6 +393,15 @@ export function PlanEditor({
 
           {bottomTab === "suggestions" && (
             <SuggestedFeatures suggestions={suggestions} onJumpToFeature={onJumpToFeature} />
+          )}
+
+          {bottomTab === "recipe" && (
+            <PlanRecipe
+              projectRoot={projectRoot}
+              planSlug={slug}
+              planContent={editContent}
+              planTitle={plan?.title ?? slug ?? ""}
+            />
           )}
         </div>
       </div>
