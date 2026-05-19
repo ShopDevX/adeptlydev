@@ -113,11 +113,71 @@ No other product owns all three. Several own pieces. Nobody owns the combination
    - Closes the exact pain the author hit this week.
 
 **Deliberately not in v0:**
-- No own LLM integration. We *never* replace Claude Code. The user runs Claude Code; we organise the work around it.
+- ~~No own LLM integration.~~ *Updated 2026-05-19:* v0.3 will add the Plan-Recipe feature (see §4.5 below) — but it shells out to the user's `claude` CLI rather than using a separate API key. We still never replace Claude Code; we generate prompts for it.
 - No cloud sync. Plans live in git, approvals in git, comments in git. Zero infra cost.
 - No subscriptions or paid tier. Free OSS for v0.
 - No multi-tenancy. v0 is local-first.
 - No telemetry without explicit opt-in.
+
+### 4.5 Plan-Recipe (v0.3) — LLM-driven feature suggestions
+
+The current `lib/feature-suggestions.ts` uses a keyword regex engine. v0.3 upgrades to an LLM call:
+
+**Flow:**
+
+1. User clicks **"Generate Claude Code recipe"** on an open plan.
+2. Adeptly spawns `claude --print` with a structured prompt containing:
+   - The full plan markdown
+   - The 30-feature catalogue from `lib/features.ts`
+   - A system instruction: *"Return JSON: which subagents to spawn (type + count + purpose), which skills to invoke and when, which hooks to set up, expected turn count, estimated token cost, and a step-by-step execution order."*
+3. Claude returns structured JSON (we parse + validate against a Zod schema).
+4. UI renders the recipe as a scrollable panel — each feature gets a card with reasoning specific to *this plan*, and a **"Copy recipe + plan as Claude Code prompt"** button.
+
+**Authentication model — important:**
+
+Adeptly does NOT hold an Anthropic API key. It invokes the user's local `claude` CLI, which uses whatever auth/subscription the user has already configured for Claude Code. This means:
+- Zero billing setup for the user
+- Cost is whatever their existing Claude plan allows
+- Falls back to the keyword engine if `claude` CLI isn't on PATH
+
+**Why this beats competitors:**
+
+- **CloudCLI's TaskMaster AI** plans the *work* (PRD-style task list) but doesn't recommend Claude Code features per task.
+- **Ralph TUI's PRD generation** is similar — plans tasks, not tool usage.
+- **Anthropic's AutoDream** generates plans from natural language but doesn't read the codebase, doesn't model multi-agent setups, doesn't estimate cost.
+- **Adeptly's Plan-Recipe** is the only one that says *"for this plan, spawn 2 Explore agents and 1 Plan agent in parallel, run `/security-review` before merge, set up a PreToolUse hook to block edits to `.env`, expected ~12 turns at ~$0.42."*
+
+**Expected output schema (illustrative):**
+
+```json
+{
+  "recipe": {
+    "start_with_plan_mode": true,
+    "subagents": [
+      { "type": "Explore", "count": 2, "for": "Map existing auth code and existing test fixtures" },
+      { "type": "Plan", "count": 1, "for": "Design the new session middleware" },
+      { "type": "code-reviewer", "count": 1, "for": "Review changes before commit" }
+    ],
+    "skills": [
+      { "name": "/security-review", "when": "After implementation, before merge" }
+    ],
+    "hooks_to_consider": [
+      { "type": "PreToolUse", "for": "Block edits to .env" }
+    ],
+    "expected_turns": 12,
+    "estimated_cost_usd": 0.42,
+    "execution_order": [
+      "1. Plan Mode to confirm approach",
+      "2. Explore agents in parallel to map context",
+      "3. Plan agent to draft middleware design",
+      "4. Implementation in main session",
+      "5. /security-review",
+      "6. code-reviewer subagent",
+      "7. /review on PR"
+    ]
+  }
+}
+```
 
 ---
 
@@ -267,10 +327,12 @@ Every item ticked before v0 ships to anyone other than the author:
 
 1. **Name.** ~~"Helm" vs another?~~ **Decided: Adeptly.** Domain `adeptly.dev` confirmed available 2026-05-18. Register before week 1 starts.
 2. **Reviewers for this plan.** Confirm Ben, Matt, Alex, Vee, Magesh are the right list — or is this a Jai-Alex-only project for now?
-3. **Repo location.** GitHub under `Thoughtlume` org (same as Signalyn), or a new personal/organisation account? OSS implications.
+3. **Repo location.** ~~GitHub under `Thoughtlume` org or personal?~~ **Decided: `github.com/jai-thoughtlume/adeptly` (personal account, private).** First push landed 2026-05-19. Public re-org TBD after v0.3.
 4. **Licence.** MIT (most permissive, most adoption) vs Apache 2.0 (patent clauses, slightly more business-friendly).
 5. **First user.** Is this Jai using it on Signalyn from week 1? Yes/no.
 6. **Telemetry.** Anonymous usage stats opt-in from v0, or wait until v1?
+7. **LLM access for Plan-Recipe.** ~~Anthropic API key?~~ **Decided: shell out to user's installed `claude` CLI** (see ADR-007). No separate API key. Adeptly inherits the user's Claude Code subscription. Falls back to keyword engine if `claude` is not on PATH.
+8. **Competitive monitoring.** *Goal set 2026-05-19:* repeat the competitor + user-feedback research scan around the 19th of every month. Findings appended to [`docs/plans/research-log.md`](./research-log.md). Triggers a plan revision if any competitor ships something that invalidates Adeptly's positioning.
 
 ---
 
@@ -295,3 +357,5 @@ Every item ticked before v0 ships to anyone other than the author:
 - **ADR-004 (2026-05-18):** OSS from day one. *Reason:* portfolio + reputation play. Revenue (if any) comes later via paid team-sync cloud feature, not v0.
 - **ADR-005 (2026-05-18):** Name is **Adeptly**, domain `adeptly.dev`. *Reason:* single English word, no Claude-specific lock-in (so we can support other models later), no major brand collision (Adept AI is a distinct word and acquired/dormant), DNS-verified available. Tagline: *"Use Claude Code properly."*
 - **ADR-006 (2026-05-18):** v0 ships as a **Next.js dev-server local web app, not an Electron desktop app**. *Reason:* identical functionality for a single-user local audience; Electron adds packaging/signing complexity that isn't justified before user feedback exists. Electron wrapper to be revisited once v0 is being used by developers other than the author. The Next.js app reads/writes the same filesystem an Electron app would, so the migration is mechanical when it happens.
+- **ADR-007 (2026-05-19):** v0.3 adds **LLM-driven feature suggestions ("Plan-Recipe") by shelling out to the user's installed `claude` CLI**, NOT by holding an Anthropic API key. *Reason:* every Adeptly user, by definition, already has Claude Code installed and authenticated — that's the audience. Adeptly inherits whatever Claude subscription they pay for. No API key in Adeptly's env, no billing setup, no separate quota. Implementation: `child_process.spawn('claude', ['--print'])` with the plan + feature catalogue piped in. Falls back to the keyword engine if `claude` CLI isn't on PATH. This overrides earlier draft of ADR-007 which assumed `ANTHROPIC_API_KEY` — that approach was wrong.
+- **ADR-008 (2026-05-19):** Adeptly will NOT compete with CloudCLI on mobile/remote-access or Ralph TUI on autonomous loops. *Reason:* those spaces have funded incumbents with multi-agent support and AGPL licensing that's expensive to extract from. Adeptly stays narrow: **plan-first + multi-reviewer + Claude-Code-feature literacy**. Single-agent (Claude Code only), web-only, single-tenant local. The pitch is "team coordination for Claude Code shops," not "fancier Claude Code."
