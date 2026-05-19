@@ -5,6 +5,76 @@ Add a new dated section per research run. Newest entries at top.
 
 ---
 
+## 2026-05-19 (afternoon) — Adjacent market scan: "AI app builders for non-technical users"
+
+**Goal:** Assess whether Adeptly should pivot to serve non-technical users ("vibe coding" market) or stay in the developer-team lane. Pulled in by direct user question 2026-05-19.
+
+**Sources:**
+- [Technically: 2026 vibe coding tool comparison](https://technically.dev/posts/vibe-coding-tool-comparison)
+- [AI Coding Agents Benchmark 2026: Lovable vs Bolt vs Replit vs V0 vs Base44 vs Totalum](https://ai-agents-benchmark.com/)
+- [Anna Arteeva on Medium: Choosing your AI prototyping stack](https://annaarteeva.medium.com/choosing-your-ai-prototyping-stack-lovable-v0-bolt-replit-cursor-magic-patterns-compared-9a5194f163e9)
+- [Lovable's own Bolt/Replit/Lovable comparison](https://lovable.dev/guides/bolt-vs-replit-vs-lovable)
+- [EPAM Insights: Vibe coding tools — real-design comparison](https://www.epam.com/insights/ai/blogs/best-vibe-coding-tools-v0-lovable-bolt-replit-and-figma-make)
+- [Sketchflow: Best AI App Builders for Non-Technical Founders (zero-to-MVP in 2026)](https://www.sketchflow.ai/blog/product/best-ai-app-builders-non-technical-founders-zero-to-mvp-2026)
+- [Lovable.dev pricing](https://lovable.dev/pricing)
+- [Sacra: Lovable revenue, funding & growth rate](https://sacra.com/c/lovable/)
+- [shipper.now: 40+ Lovable Statistics 2026](https://shipper.now/lovable-stats/)
+- [Banani: I Tested Top AI App Builders of 2026](https://www.banani.co/blog/best-ai-app-builder)
+
+### Market scale (numbers that matter)
+
+- **Lovable**: 8M users, $200M ARR (Nov 2025), $6.6B valuation, $530M raised across 2025 (Series A $200M + Series B $330M). 100k new projects/day. 5M visits/day across Lovable-built apps. Scaled $1M → $100M ARR in 8 months — one of the fastest-growing software products on record.
+- **Lovable pricing**: $25/mo for 100 credits; $20 Starter / $50 Launch / $100 Scale / custom Enterprise. Free tier 5 daily credits.
+- **Bolt**: Lowest-barrier consumer adoption. Browser tab, type a prompt, see a result. No accounts.
+- **Replit Agent**: Most feature-rich and full-stack. Slower builds, overwhelming UI for true non-coders.
+- **Blink**: 500,000 apps built, 8-minute average idea-to-deployed time.
+- **Gartner**: Named AI-native development platforms a top strategic tech trend for 2026.
+- **89% of dev execs**: Building or planning citizen-developer strategy.
+- **67% of non-technical founders**: Shipped first app within 1 week of adopting an AI builder in 2026.
+
+### Pain points users actually report (with AI builders for non-tech users)
+
+1. **Complex business logic still needs developers.** AI excels at standard patterns, slows on unusual custom logic.
+2. **Code editor visibility scares non-tech users.** Bolt shows the code — powerful for devs, intimidating for non-coders.
+3. **Legacy / production integration is brittle.** AI-generated prototypes break against real systems with technical debt.
+4. **"Dory Problem"** — generative AI lacks persistent institutional understanding of the app's history and intent.
+5. **Slow build speeds + overwhelming interface** (Replit).
+6. **Once they have a real codebase, they can't participate in technical changes anymore.** They're locked out of their own product as soon as it grows past what the AI builder can do.
+
+### Strategic read for Adeptly
+
+**Direct competition with Lovable/Bolt/Replit is a non-starter.** Adeptly's architecture is fundamentally wrong for non-tech users — markdown plans, Mermaid diagrams, git, CLI integration, file paths, reviewer workflows. To compete head-on we'd be rebuilding from zero against an incumbent with 8M users and $6.6B valuation.
+
+**However, an adjacent expansion makes sense — eventually.** Lovable's millions of users will (over the next 2–3 years) outgrow their AI builders and hire developers. Those developers will use Claude Code (or Cursor, etc.). The non-technical founder will still want oversight. **That's Adeptly's natural growth audience: "non-coders who oversee coders."** Same product architecture, different positioning:
+
+> *"AI engineering oversight for product teams. Your developer codes with Claude. You approve the plan. Everyone stays informed without learning git."*
+
+This is a positioning shift, not a rebuild. Adeptly's plan-review workflow translates almost directly — the only changes are:
+- Tone of the docs / homepage (less Claude-Code-jargon, more "what's being built and is it on track")
+- Maybe an LLM translation layer that renders the plan in plain English for non-tech reviewers
+- A "tour mode" for first-time non-technical users explaining what a plan is
+
+### What we should NOT do as a result of this research
+
+- **Do not pivot to compete with Lovable/Bolt/Replit.** Different product, different distribution, different stack, much more crowded space.
+- **Do not chase this expansion before validating v0.x with the Claude Code power-user audience.** Same trap Signalyn fell into — pivoting before validating audience #1.
+- **Do not add no-code features (visual builder, app generation, hosted runtime) to Adeptly.** That dilutes the product and signals confused positioning.
+
+### Trigger condition for revisiting
+
+Re-open this question if **any** of these become true:
+1. Adeptly has 100+ active users from the Claude Code power-user audience → expansion is a natural growth move.
+2. Adeptly has <10 users 4 weeks after public launch → the original positioning is wrong, and "non-coder oversight" is the most promising pivot.
+3. Lovable or a competitor announces they're entering the "post-MVP team handoff / oversight" space → defensive expansion needed.
+
+### Action items added to backlog (not v0.3)
+
+- [ ] **Plain-English plan summary mode** — LLM-generated 3-sentence summary of any plan, for non-tech reviewers. Triggered by a `[for-pm]` tag in the plan front-matter. (Candidate for v0.5)
+- [ ] **"Approve without reading the code" UX** — when a non-tech reviewer approves a plan, they're approving the *outcome* described, not the *implementation*. Make this clear in the UI. (v0.5+)
+- [ ] **Sample plans repo for product-manager-style reviewers** — show what a plan looks like from a PM's perspective, with annotations. Onboarding material for the eventual expansion. (v1.0)
+
+---
+
 ## 2026-05-19 — Initial competitive scan + 2-month Claude Code feedback synthesis
 
 **Goal:** Identify (a) what competitors in the Claude Code companion / orchestration space ship, (b) what Claude Code users have complained about over the last 60 days, (c) what gaps remain that Adeptly can fill.
