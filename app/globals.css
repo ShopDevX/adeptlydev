@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: #f9fafb;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Markdown rendering */
+.prose-adept h1 { @apply text-2xl font-semibold mt-4 mb-2 tracking-tight; }
+.prose-adept h2 { @apply text-xl font-semibold mt-4 mb-2; }
+.prose-adept h3 { @apply text-lg font-semibold mt-3 mb-1; }
+.prose-adept p { @apply my-2 leading-relaxed; }
+.prose-adept ul { @apply list-disc pl-6 my-2; }
+.prose-adept ol { @apply list-decimal pl-6 my-2; }
+.prose-adept li { @apply my-1; }
+.prose-adept code { @apply font-mono text-sm bg-gray-100 px-1 py-0.5 rounded; }
+.prose-adept pre { @apply font-mono text-sm bg-gray-900 text-gray-100 p-3 rounded my-3 overflow-x-auto; }
+.prose-adept pre code { @apply bg-transparent text-inherit p-0; }
+.prose-adept blockquote { @apply border-l-4 border-gray-300 pl-3 italic my-3 text-gray-700; }
+.prose-adept table { @apply border-collapse my-3 text-sm; }
+.prose-adept th, .prose-adept td { @apply border border-gray-300 px-2 py-1; }
+.prose-adept th { @apply bg-gray-100 font-semibold; }
+.prose-adept a { @apply text-adept-600 underline; }
+.prose-adept hr { @apply border-gray-200 my-4; }
+
+/* Mermaid container */
+.mermaid-block {
+  @apply bg-white border border-gray-200 rounded p-3 my-3 overflow-x-auto;
+}

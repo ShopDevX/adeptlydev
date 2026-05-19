@@ -1,0 +1,14 @@
+{
+  "plan": "v0-product-plan.md",
+  "status": "draft",
+  "createdAt": "2026-05-18",
+  "updatedAt": "2026-05-18",
+  "author": "jai",
+  "reviewers": [
+    { "name": "ben", "status": "pending", "comments": [] },
+    { "name": "matt", "status": "pending", "comments": [] },
+    { "name": "alex", "status": "pending", "comments": [] },
+    { "name": "vee", "status": "pending", "comments": [] },
+    { "name": "magesh", "status": "pending", "comments": [] }
+  ]
+}
