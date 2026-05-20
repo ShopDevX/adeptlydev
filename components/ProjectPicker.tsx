@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Folder, FolderPlus, FolderOpen, Clock } from "lucide-react";
 import type { ProjectInfo } from "@/lib/types";
 
 interface RecentProject {
@@ -123,16 +124,16 @@ export function ProjectPicker({
     <div className="relative" ref={popRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded border border-border-strong bg-elevated hover:bg-base text-sm"
+        className="flex items-center gap-2 px-3 py-1.5 rounded border border-border-strong bg-elevated hover:bg-base text-sm transition-colors"
       >
-        <span className="text-fg-secondary text-xs">Project:</span>
-        <span className="font-medium truncate max-w-[260px]">
+        <Folder size={14} strokeWidth={1.5} className="text-fg-tertiary shrink-0" />
+        <span className="font-medium truncate max-w-[260px] text-fg">
           {current?.name || "no project selected"}
         </span>
         <span className="text-fg-tertiary text-xs font-mono truncate max-w-[300px] hidden md:inline">
           {current?.path}
         </span>
-        <span className="text-fg-tertiary">▾</span>
+        <ChevronDown size={14} strokeWidth={1.5} className="text-fg-tertiary shrink-0" />
       </button>
 
       {open && (
@@ -145,7 +146,8 @@ export function ProjectPicker({
 
           {recent.length > 0 && (
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-fg-secondary mb-1">
+              <div className="text-xs font-semibold uppercase tracking-wide text-fg-secondary mb-1 flex items-center gap-1.5">
+                <Clock size={12} strokeWidth={1.5} />
                 Recent
               </div>
               <ul className="border border-border-subtle rounded divide-y divide-border-subtle max-h-44 overflow-auto">
@@ -167,18 +169,20 @@ export function ProjectPicker({
           <div className="flex gap-1 text-xs">
             <button
               onClick={() => setMode("open")}
-              className={`px-2 py-1 rounded ${
-                mode === "open" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary"
+              className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
+                mode === "open" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
               }`}
             >
+              <FolderOpen size={12} strokeWidth={1.5} />
               Open folder
             </button>
             <button
               onClick={() => setMode("create")}
-              className={`px-2 py-1 rounded ${
-                mode === "create" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary"
+              className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
+                mode === "create" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
               }`}
             >
+              <FolderPlus size={12} strokeWidth={1.5} />
               Create new
             </button>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 const STORAGE_KEY = "adeptly:theme";
 
@@ -13,7 +14,6 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle() {
-  // Default to dark per ADR-011; SSR placeholder until client mounts to avoid hydration flicker.
   const [theme, setTheme] = useState<Theme>("dark");
   const [mounted, setMounted] = useState(false);
 
@@ -41,9 +41,15 @@ export function ThemeToggle() {
       onClick={toggle}
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
       aria-label="Toggle theme"
-      className="text-xs px-2 py-1 rounded border border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg transition-colors"
+      className="p-1.5 rounded border border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg transition-colors"
     >
-      {mounted ? (theme === "dark" ? "☾ Dark" : "☀ Light") : "—"}
+      {!mounted ? (
+        <span className="inline-block w-4 h-4" />
+      ) : theme === "dark" ? (
+        <Moon size={16} strokeWidth={1.5} />
+      ) : (
+        <Sun size={16} strokeWidth={1.5} />
+      )}
     </button>
   );
 }

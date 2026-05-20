@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import type { Plan, PlanStatus } from "@/lib/types";
 
 type PlanLite = Omit<Plan, "content">;
@@ -58,10 +59,10 @@ export function PlansList({
         <button
           onClick={onToggleCollapsed}
           title="Expand plans list"
-          className="p-1 rounded hover:bg-base text-fg-secondary"
+          className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
           aria-label="Expand plans"
         >
-          ▶
+          <ChevronRight size={16} strokeWidth={1.5} />
         </button>
         <div className="mt-2 text-[10px] text-fg-secondary [writing-mode:vertical-rl] rotate-180">
           Plans · {plans.length}
@@ -79,10 +80,10 @@ export function PlansList({
         <button
           onClick={onToggleCollapsed}
           title="Collapse plans list"
-          className="p-1 rounded hover:bg-base text-fg-secondary"
+          className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
           aria-label="Collapse plans"
         >
-          ◀
+          <ChevronLeft size={16} strokeWidth={1.5} />
         </button>
       </div>
       <div className="flex-1 overflow-auto">
@@ -93,8 +94,14 @@ export function PlansList({
           </div>
         )}
         {!loading && !error && plans.length === 0 && (
-          <div className="p-3 text-sm text-fg-secondary">
-            No plans yet. Plans live in <span className="font-mono">docs/plans/</span>.
+          <div className="p-6 text-center space-y-3">
+            <FileText size={32} className="mx-auto text-fg-tertiary" strokeWidth={1.5} />
+            <div className="text-sm text-fg-secondary">
+              No plans yet.
+            </div>
+            <div className="text-xs text-fg-tertiary">
+              Create one in <span className="font-mono">docs/plans/</span>.
+            </div>
           </div>
         )}
         <ul>

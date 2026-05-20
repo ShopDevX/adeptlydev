@@ -6,17 +6,47 @@ import remarkGfm from "remark-gfm";
 import mermaid from "mermaid";
 
 let mermaidInitialized = false;
+let mermaidThemeKey = "";
+
+function detectThemeKey(): string {
+  if (typeof document === "undefined") return "dark";
+  return document.documentElement.classList.contains("light") ? "light" : "dark";
+}
 
 function ensureMermaidInit() {
-  if (mermaidInitialized) return;
+  const themeKey = detectThemeKey();
+  if (mermaidInitialized && themeKey === mermaidThemeKey) return;
+
+  const dark = themeKey === "dark";
+  const css = getComputedStyle(document.documentElement);
+  const bg = css.getPropertyValue("--bg-elevated").trim() || (dark ? "#14161c" : "#ffffff");
+  const fg = css.getPropertyValue("--fg-primary").trim() || (dark ? "#e6e8ee" : "#14161c");
+  const border = css.getPropertyValue("--border-subtle").trim() || (dark ? "#20232c" : "#e6e8ee");
+  const accent = css.getPropertyValue("--accent-1").trim() || "#7c5cff";
+  const muted = css.getPropertyValue("--fg-tertiary").trim() || (dark ? "#5b6478" : "#9aa1b3");
+
   mermaid.initialize({
     startOnLoad: false,
-    theme: "default",
+    theme: "base",
     securityLevel: "loose",
     flowchart: { useMaxWidth: true, htmlLabels: true },
-    fontFamily: "inherit",
+    fontFamily: "var(--font-geist-mono), JetBrains Mono, ui-monospace, monospace",
+    themeVariables: {
+      primaryColor: bg,
+      primaryTextColor: fg,
+      primaryBorderColor: accent,
+      lineColor: muted,
+      secondaryColor: border,
+      tertiaryColor: bg,
+      background: bg,
+      mainBkg: bg,
+      textColor: fg,
+      labelTextColor: fg,
+      nodeBorder: accent,
+    },
   });
   mermaidInitialized = true;
+  mermaidThemeKey = themeKey;
 }
 
 export function MarkdownPreview({ content }: { content: string }) {

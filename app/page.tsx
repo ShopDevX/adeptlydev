@@ -1,10 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Command,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import { PlansList } from "@/components/PlansList";
 import { PlanEditor } from "@/components/PlanEditor";
 import { FeatureSidebar } from "@/components/FeatureSidebar";
 import { SessionsSidebar } from "@/components/SessionsSidebar";
+import { CommandPalette } from "@/components/CommandPalette";
 import {
   ProjectPicker,
   loadCurrentProject,
@@ -13,6 +21,7 @@ import {
   saveRecentProjects,
 } from "@/components/ProjectPicker";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useShortcut } from "@/lib/use-shortcut";
 import type { ProjectInfo } from "@/lib/types";
 
 const LEFT_KEY = "adeptly:leftCollapsed";
@@ -31,6 +40,8 @@ export default function Home() {
   const [highlightedFeatures, setHighlightedFeatures] = useState<Set<string>>(new Set());
   const [scrollToFeature, setScrollToFeature] = useState<string | null>(null);
   const [bootstrapped, setBootstrapped] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   // Initial mount: read collapse state + current project from localStorage,
   // then ask the server for project info.
@@ -106,9 +117,28 @@ export default function Home() {
     selectRightTab("features");
     setHighlightedFeatures(new Set([featureId]));
     setScrollToFeature(featureId);
-    // Clear scrollToFeature shortly after so subsequent clicks on the same id re-trigger
     setTimeout(() => setScrollToFeature(null), 250);
   }
+
+  // Keyboard shortcuts (Phase E)
+  useShortcut([
+    { key: "k", mod: true, handler: () => setPaletteOpen((o) => !o), whileTyping: true },
+    {
+      key: "f",
+      mod: true,
+      shift: true,
+      handler: () => setFocusMode((f) => !f),
+      whileTyping: true,
+    },
+    {
+      key: "Escape",
+      handler: () => {
+        if (focusMode) setFocusMode(false);
+      },
+      whileTyping: false,
+      prevent: false,
+    },
+  ]);
 
   return (
     <main className="h-screen flex flex-col">
@@ -117,15 +147,60 @@ export default function Home() {
           <div className="text-lg font-semibold tracking-tight bg-accent-gradient bg-clip-text text-transparent">
             Adeptly
           </div>
-          <div className="text-xs text-fg-secondary hidden lg:block">
+          <div className="text-xs text-fg-secondary hidden xl:block">
             Use Claude Code properly. Plan first, ship sharper.
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {project && (
+            <button
+              onClick={() => setPaletteOpen(true)}
+              title="Command palette (Ctrl+K)"
+              className="flex items-center gap-1.5 px-2 py-1 rounded border border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg transition-colors text-xs"
+            >
+              <Command size={14} strokeWidth={1.5} />
+              <span className="font-mono text-[10px] text-fg-tertiary">⌘K</span>
+            </button>
+          )}
+          {project && (
+            <button
+              onClick={() => setFocusMode((f) => !f)}
+              title={`${focusMode ? "Exit" : "Enter"} focus mode (Ctrl+Shift+F)`}
+              className="p-1.5 rounded border border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg transition-colors"
+              aria-label="Toggle focus mode"
+            >
+              {focusMode ? (
+                <Minimize2 size={14} strokeWidth={1.5} />
+              ) : (
+                <Maximize2 size={14} strokeWidth={1.5} />
+              )}
+            </button>
+          )}
           <ThemeToggle />
           <ProjectPicker current={project} onSelect={handleSelectProject} />
         </div>
       </header>
+
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        projectRoot={project?.path ?? null}
+        onSelectPlan={(slug) => {
+          setSelectedSlug(slug);
+          setPaletteOpen(false);
+        }}
+      />
+
+      {focusMode && project && (
+        <div
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 rounded-full border border-border-strong shadow-lg text-xs text-fg-secondary flex items-center gap-2"
+          style={{ background: "var(--bg-overlay)", backdropFilter: "blur(16px)" }}
+        >
+          <span>Focus mode</span>
+          <kbd>esc</kbd>
+          <span className="text-fg-tertiary">to exit</span>
+        </div>
+      )}
 
       {!project && bootstrapped && (
         <div className="flex-1 flex items-center justify-center bg-base">
@@ -140,14 +215,16 @@ export default function Home() {
 
       {project && (
         <div className="flex-1 flex min-h-0">
-          <PlansList
-            projectRoot={project.path}
-            selected={selectedSlug}
-            onSelect={setSelectedSlug}
-            refreshKey={refreshKey}
-            collapsed={leftCollapsed}
-            onToggleCollapsed={toggleLeft}
-          />
+          {!focusMode && (
+            <PlansList
+              projectRoot={project.path}
+              selected={selectedSlug}
+              onSelect={setSelectedSlug}
+              refreshKey={refreshKey}
+              collapsed={leftCollapsed}
+              onToggleCollapsed={toggleLeft}
+            />
+          )}
 
           <PlanEditor
             projectRoot={project.path}
@@ -155,15 +232,15 @@ export default function Home() {
             onJumpToFeature={jumpToFeature}
           />
 
-          {rightCollapsed ? (
+          {focusMode ? null : rightCollapsed ? (
             <aside className="w-10 border-l border-border-subtle bg-elevated flex flex-col items-center py-2 gap-2">
               <button
                 onClick={toggleRight}
                 title="Expand right panel"
-                className="p-1 rounded hover:bg-base text-fg-secondary"
+                className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
                 aria-label="Expand right panel"
               >
-                ◀
+                <ChevronLeft size={16} strokeWidth={1.5} />
               </button>
               <button
                 onClick={() => {
@@ -192,10 +269,10 @@ export default function Home() {
                 <button
                   onClick={toggleRight}
                   title="Collapse right panel"
-                  className="p-1 rounded hover:bg-base text-fg-secondary"
+                  className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
                   aria-label="Collapse right panel"
                 >
-                  ▶
+                  <ChevronRight size={16} strokeWidth={1.5} />
                 </button>
                 <button
                   onClick={() => selectRightTab("features")}

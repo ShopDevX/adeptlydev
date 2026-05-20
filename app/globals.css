@@ -109,6 +109,27 @@ button:not(:disabled):hover {
   filter: brightness(1.08);
 }
 
+/* Universal focus-visible ring — keyboard nav (Phase E) */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent-1);
+  border-radius: 0.25rem;
+}
+
+/* Keyboard hints */
+kbd {
+  font-family: var(--font-geist-mono), "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.6875rem;
+  background: var(--bg-base);
+  color: var(--fg-secondary);
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.2rem;
+  border: 1px solid var(--border-subtle);
+}
+
 /* ============================================================
    Markdown rendering
    ============================================================ */

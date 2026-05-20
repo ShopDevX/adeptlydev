@@ -1,6 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  Brain,
+  Wand2,
+  Webhook,
+  Gauge,
+  ListOrdered,
+  Compass,
+  MessageSquareQuote,
+  Sparkles,
+  Copy,
+  type LucideIcon,
+} from "lucide-react";
 import type { PlanRecipeRecord } from "@/lib/plan-recipe";
 
 interface Props {
@@ -113,10 +125,11 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
         <button
           onClick={generate}
           disabled={loading}
-          className={`text-xs px-3 py-1.5 rounded text-white transition-all ${
+          className={`text-xs px-3 py-1.5 rounded text-white transition-all flex items-center gap-1.5 ${
             loading ? "recipe-generating" : "bg-accent-gradient"
           } disabled:opacity-60`}
         >
+          <Sparkles size={14} strokeWidth={1.5} />
           {loading
             ? "Asking Claude…"
             : record
@@ -128,8 +141,9 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
         {record && (
           <button
             onClick={copyRecipeAsPrompt}
-            className="text-xs px-3 py-1.5 rounded bg-accent-gradient text-white"
+            className="text-xs px-3 py-1.5 rounded bg-accent-gradient text-white flex items-center gap-1.5"
           >
+            <Copy size={14} strokeWidth={1.5} />
             Copy plan + recipe as prompt
           </button>
         )}
@@ -177,29 +191,35 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
 
       {record && (
         <div className="space-y-3">
-          <RecipeBlock title="Rationale" body={<p className="text-sm">{record.recipe.rationale}</p>} />
+          <RecipeBlock
+            icon={MessageSquareQuote}
+            title="Rationale"
+            body={<p className="text-sm text-fg leading-relaxed">{record.recipe.rationale}</p>}
+          />
 
           <RecipeBlock
+            icon={Compass}
             title="Start"
             body={
-              <p className="text-sm">
+              <p className="text-sm text-fg">
                 {record.recipe.start_with_plan_mode
-                  ? "✓ Begin in Plan Mode — get the approach approved before any tool calls."
+                  ? "Begin in Plan Mode — get the approach approved before any tool calls."
                   : "Plan Mode not required for this scope."}
               </p>
             }
           />
 
           <RecipeBlock
+            icon={Brain}
             title={`Subagents (${record.recipe.subagents.length})`}
             body={
               record.recipe.subagents.length === 0 ? (
                 <div className="text-xs text-fg-secondary italic">None needed for this plan.</div>
               ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {record.recipe.subagents.map((s, i) => (
                     <li key={i} className="text-sm flex items-baseline gap-2">
-                      <span className="font-mono font-semibold text-accent-1">
+                      <span className="font-mono font-semibold text-accent-1 shrink-0">
                         {s.count} × {s.type}
                       </span>
                       <span className="text-fg">{s.for}</span>
@@ -211,15 +231,16 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
           />
 
           <RecipeBlock
+            icon={Wand2}
             title={`Skills (${record.recipe.skills.length})`}
             body={
               record.recipe.skills.length === 0 ? (
                 <div className="text-xs text-fg-secondary italic">None recommended.</div>
               ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {record.recipe.skills.map((s, i) => (
                     <li key={i} className="text-sm flex items-baseline gap-2">
-                      <span className="font-mono font-semibold text-accent-1">{s.name}</span>
+                      <span className="font-mono font-semibold text-accent-1 shrink-0">{s.name}</span>
                       <span className="text-fg">{s.when}</span>
                     </li>
                   ))}
@@ -229,15 +250,16 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
           />
 
           <RecipeBlock
+            icon={Webhook}
             title={`Hooks to consider (${record.recipe.hooks_to_consider.length})`}
             body={
               record.recipe.hooks_to_consider.length === 0 ? (
                 <div className="text-xs text-fg-secondary italic">No hook needed for this plan.</div>
               ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {record.recipe.hooks_to_consider.map((h, i) => (
                     <li key={i} className="text-sm flex items-baseline gap-2">
-                      <span className="font-mono font-semibold text-accent-1">{h.type}</span>
+                      <span className="font-mono font-semibold text-accent-1 shrink-0">{h.type}</span>
                       <span className="text-fg">{h.for}</span>
                     </li>
                   ))}
@@ -247,6 +269,7 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
           />
 
           <RecipeBlock
+            icon={Gauge}
             title="Estimates"
             body={
               <div className="text-sm grid grid-cols-2 gap-2">
@@ -254,13 +277,13 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
                   <div className="text-[10px] uppercase tracking-wide text-fg-secondary">
                     Expected turns
                   </div>
-                  <div className="font-mono text-lg">{record.recipe.expected_turns}</div>
+                  <div className="font-mono text-xl text-fg tracking-tight">{record.recipe.expected_turns}</div>
                 </div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wide text-fg-secondary">
                     Estimated cost
                   </div>
-                  <div className="font-mono text-lg">
+                  <div className="font-mono text-xl tracking-tight bg-accent-gradient bg-clip-text text-transparent">
                     ${record.recipe.estimated_cost_usd.toFixed(2)}
                   </div>
                 </div>
@@ -269,13 +292,18 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
           />
 
           <RecipeBlock
+            icon={ListOrdered}
             title={`Execution order (${record.recipe.execution_order.length} steps)`}
             body={
-              <ol className="space-y-1 list-decimal list-inside text-sm">
+              <ol className="space-y-1 text-sm">
                 {record.recipe.execution_order.map((step, i) => {
-                  // strip leading "N." or "N)" if present
                   const cleaned = step.replace(/^\s*\d+[\.\)]\s*/, "");
-                  return <li key={i}>{cleaned}</li>;
+                  return (
+                    <li key={i} className="flex gap-2 text-fg">
+                      <span className="font-mono text-accent-1 shrink-0 w-5">{i + 1}.</span>
+                      <span>{cleaned}</span>
+                    </li>
+                  );
                 })}
               </ol>
             }
@@ -286,10 +314,19 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
   );
 }
 
-function RecipeBlock({ title, body }: { title: string; body: React.ReactNode }) {
+function RecipeBlock({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: LucideIcon;
+  title: string;
+  body: React.ReactNode;
+}) {
   return (
-    <div className="border border-border-subtle rounded p-2 bg-elevated">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-fg-secondary mb-1">
+    <div className="border border-border-subtle rounded-md p-3 bg-elevated">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-fg-secondary mb-2">
+        <Icon size={12} strokeWidth={1.5} className="text-accent-1" />
         {title}
       </div>
       {body}
