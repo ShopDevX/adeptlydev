@@ -46,6 +46,7 @@ export default function Home() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedPlanTitle, setSelectedPlanTitle] = useState<string | null>(null);
+  const [planRefreshKey, setPlanRefreshKey] = useState(0);
 
   // Initial mount: read collapse state + current project from localStorage,
   // then ask the server for project info.
@@ -225,6 +226,12 @@ export default function Home() {
         projectRoot={project?.path ?? null}
         planSlug={selectedSlug}
         planTitle={selectedPlanTitle}
+        onPlanUpdated={() => setPlanRefreshKey((k) => k + 1)}
+        onPlanCreated={(slug, title) => {
+          setSelectedSlug(slug);
+          setSelectedPlanTitle(title);
+          setRefreshKey((k) => k + 1);
+        }}
       />
 
       {focusMode && project && (
@@ -266,6 +273,7 @@ export default function Home() {
             projectRoot={project.path}
             slug={selectedSlug}
             onJumpToFeature={jumpToFeature}
+            refreshKey={planRefreshKey}
           />
 
           {focusMode ? null : rightCollapsed ? (

@@ -19,10 +19,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const title = (body?.title as string | undefined)?.trim();
     const slug = (body?.slug as string | undefined)?.trim();
+    const content = typeof body?.content === "string" ? body.content : undefined;
     if (!title) {
       return NextResponse.json({ error: "title is required" }, { status: 400 });
     }
-    const created = await createPlan(title, projectRoot, slug);
+    const created = await createPlan(title, projectRoot, slug, content);
     return NextResponse.json({ created });
   } catch (err: any) {
     return NextResponse.json(

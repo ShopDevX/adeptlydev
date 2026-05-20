@@ -174,23 +174,40 @@ function slugify(s: string): string {
 export async function createPlan(
   title: string,
   projectRoot = getProjectRoot(),
-  customSlug?: string
+  customSlug?: string,
+  contentOverride?: string
 ): Promise<{ slug: string; filename: string }> {
-  const slug = (customSlug && slugify(customSlug)) || slugify(title) || "untitled-plan";
-  const filename = `${slug}.md`;
-  const filePath = path.join(getPlansDir(projectRoot), filename);
+  let slug = (customSlug && slugify(customSlug)) || slugify(title) || "untitled-plan";
+  const dir = getPlansDir(projectRoot);
+  await fs.mkdir(dir, { recursive: true });
 
-  await fs.mkdir(getPlansDir(projectRoot), { recursive: true });
-
-  // Refuse to overwrite an existing plan
-  try {
-    await fs.access(filePath);
-    throw new Error(`A plan named "${slug}.md" already exists. Pick a different title.`);
-  } catch (err: any) {
-    if (err?.code !== "ENOENT") throw err;
+  // If the slug is taken, suffix -2, -3, … instead of erroring (better UX for
+  // chat-generated plans where the user didn't pick the title).
+  const baseSlug = slug;
+  let n = 1;
+  while (true) {
+    const candidate = n === 1 ? baseSlug : `${baseSlug}-${n}`;
+    const cPath = path.join(dir, `${candidate}.md`);
+    try {
+      await fs.access(cPath);
+      n += 1;
+      if (n > 50) throw new Error("too many name collisions");
+    } catch (err: any) {
+      if (err?.code === "ENOENT") {
+        slug = candidate;
+        break;
+      }
+      throw err;
+    }
   }
 
-  await fs.writeFile(filePath, NEW_PLAN_TEMPLATE(title), "utf-8");
+  const filename = `${slug}.md`;
+  const filePath = path.join(dir, filename);
+
+  const body = contentOverride && contentOverride.trim().length > 0
+    ? contentOverride
+    : NEW_PLAN_TEMPLATE(title);
+  await fs.writeFile(filePath, body, "utf-8");
 
   // Seed an empty approval record so reviewers can be added
   const approval: Approval = {
@@ -269,6 +286,77 @@ export async function setReviewerStatus(
   else approval.status = "in-review";
   await writeApproval(slug, approval, projectRoot);
   return approval;
+}
+
+/**
+ * Inject markdown content under the heading that best matches `sectionHint`.
+ * Returns the updated plan content. If no heading matches, appends to the
+ * very end of the document under a new "## Notes" heading.
+ */
+export async function injectIntoSection(
+  slug: string,
+  sectionHint: string,
+  contentToInsert: string,
+  projectRoot = getProjectRoot()
+): Promise<{ updated: string; sectionMatched: string | null }> {
+  const plan = await readPlan(slug, projectRoot);
+  if (!plan) throw new Error(`plan "${slug}" not found`);
+
+  const raw = plan.content;
+  const lines = raw.split(/\r?\n/);
+
+  // Find the first heading whose text contains the hint (case-insensitive).
+  const hint = sectionHint.trim().toLowerCase();
+  let matchedIdx = -1;
+  let matchedHeading: string | null = null;
+  let matchedLevel = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^(#{1,6})\s+(.+?)\s*$/);
+    if (!m) continue;
+    const headingText = m[2].toLowerCase();
+    if (headingText.includes(hint)) {
+      matchedIdx = i;
+      matchedHeading = m[2];
+      matchedLevel = m[1].length;
+      break;
+    }
+  }
+
+  let insertAt: number;
+  if (matchedIdx === -1) {
+    // No match — append a new section at the end
+    if (lines.length > 0 && lines[lines.length - 1].trim() !== "") {
+      lines.push("");
+    }
+    lines.push(`## Notes (added from chat)`);
+    lines.push("");
+    insertAt = lines.length;
+  } else {
+    // Insert just before the next same-or-higher-level heading, or at EOF
+    insertAt = lines.length;
+    for (let j = matchedIdx + 1; j < lines.length; j++) {
+      const nm = lines[j].match(/^(#{1,6})\s+/);
+      if (nm && nm[1].length <= matchedLevel) {
+        insertAt = j;
+        break;
+      }
+    }
+  }
+
+  // Trim blank lines at the insertion boundary
+  while (insertAt > 0 && lines[insertAt - 1].trim() === "") {
+    insertAt -= 1;
+  }
+
+  const block = contentToInsert.replace(/\r\n/g, "\n").split("\n");
+  // Prepend a blank line for breathing room, append one
+  const toInsert = ["", ...block, ""];
+  lines.splice(insertAt, 0, ...toInsert);
+
+  const updated = lines.join("\n");
+  await writePlan(slug, updated, projectRoot);
+  return { updated, sectionMatched: matchedHeading };
 }
 
 export interface FileChange {
