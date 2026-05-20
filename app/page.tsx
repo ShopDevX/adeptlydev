@@ -12,6 +12,7 @@ import {
   loadRecentProjects,
   saveRecentProjects,
 } from "@/components/ProjectPicker";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { ProjectInfo } from "@/lib/types";
 
 const LEFT_KEY = "adeptly:leftCollapsed";
@@ -111,14 +112,19 @@ export default function Home() {
 
   return (
     <main className="h-screen flex flex-col">
-      <header className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white">
+      <header className="flex items-center justify-between px-4 py-2 border-b border-border-subtle bg-elevated">
         <div className="flex items-center gap-3">
-          <div className="text-lg font-semibold tracking-tight">Adeptly</div>
-          <div className="text-xs text-gray-500 hidden lg:block">
+          <div className="text-lg font-semibold tracking-tight bg-accent-gradient bg-clip-text text-transparent">
+            Adeptly
+          </div>
+          <div className="text-xs text-fg-secondary hidden lg:block">
             Use Claude Code properly. Plan first, ship sharper.
           </div>
         </div>
-        <ProjectPicker current={project} onSelect={handleSelectProject} />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <ProjectPicker current={project} onSelect={handleSelectProject} />
+        </div>
       </header>
 
       {!project && bootstrapped && (

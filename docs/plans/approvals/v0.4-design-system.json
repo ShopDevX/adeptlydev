@@ -1,13 +1,10 @@
 {
   "plan": "v0.4-design-system.md",
-  "status": "draft",
+  "status": "approved",
   "createdAt": "2026-05-20",
   "updatedAt": "2026-05-20",
   "author": "jai",
   "reviewers": [
-    { "name": "ben", "status": "pending", "comments": [] },
-    { "name": "alex", "status": "pending", "comments": [] },
-    { "name": "matt", "status": "pending", "comments": [] },
-    { "name": "external-designer", "status": "pending", "comments": [] }
+    { "name": "jai", "status": "approved", "comments": [], "decidedAt": "2026-05-20" }
   ]
 }
