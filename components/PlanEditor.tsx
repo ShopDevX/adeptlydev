@@ -258,7 +258,7 @@ export function PlanEditor({
           />
         ) : (
           <div className="p-4">
-            <MarkdownPreview content={editContent} />
+            <MarkdownPreview content={editContent} suggestions={suggestions} />
           </div>
         )}
       </div>

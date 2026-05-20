@@ -119,6 +119,93 @@ export async function setPlanStatus(slug: string, status: PlanStatus, projectRoo
   return approval;
 }
 
+const NEW_PLAN_TEMPLATE = (title: string) => `# ${title}
+
+**Status:** DRAFT — awaiting review
+**Author:** you
+**Created:** ${new Date().toISOString().slice(0, 10)}
+
+> Write the plan before you write the code. Approve it. Then ship.
+
+## 1. Problem
+
+What problem does this plan solve? One paragraph.
+
+## 2. Approach
+
+How are you going to solve it? Constraints, assumptions, trade-offs.
+
+## 3. Files to change
+
+- create path/to/new-file.ts
+- modify path/to/existing-file.ts
+- delete path/to/old-file.ts
+
+Adeptly checks each path against the codebase and warns on mismatches.
+
+## 4. Flow
+
+\`\`\`mermaid
+flowchart LR
+  A[Start] --> B[Step 1]
+  B --> C[Step 2]
+  C --> D[Done]
+\`\`\`
+
+## 5. Risks
+
+- Risk 1 — mitigation.
+
+## 6. Approval
+
+Approve in the panel below when ready.
+`;
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 64);
+}
+
+export async function createPlan(
+  title: string,
+  projectRoot = getProjectRoot(),
+  customSlug?: string
+): Promise<{ slug: string; filename: string }> {
+  const slug = (customSlug && slugify(customSlug)) || slugify(title) || "untitled-plan";
+  const filename = `${slug}.md`;
+  const filePath = path.join(getPlansDir(projectRoot), filename);
+
+  await fs.mkdir(getPlansDir(projectRoot), { recursive: true });
+
+  // Refuse to overwrite an existing plan
+  try {
+    await fs.access(filePath);
+    throw new Error(`A plan named "${slug}.md" already exists. Pick a different title.`);
+  } catch (err: any) {
+    if (err?.code !== "ENOENT") throw err;
+  }
+
+  await fs.writeFile(filePath, NEW_PLAN_TEMPLATE(title), "utf-8");
+
+  // Seed an empty approval record so reviewers can be added
+  const approval: Approval = {
+    plan: filename,
+    status: "draft",
+    createdAt: new Date().toISOString().slice(0, 10),
+    updatedAt: new Date().toISOString().slice(0, 10),
+    author: "you",
+    reviewers: [],
+  };
+  await writeApproval(slug, approval, projectRoot);
+
+  return { slug, filename };
+}
+
 export async function addReviewer(
   slug: string,
   name: string,

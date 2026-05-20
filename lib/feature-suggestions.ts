@@ -124,18 +124,33 @@ const RULES: SuggestionRule[] = [
   },
 ];
 
+function offsetToLine(content: string, offset: number): number {
+  let line = 1;
+  for (let i = 0; i < offset && i < content.length; i++) {
+    if (content[i] === "\n") line += 1;
+  }
+  return line;
+}
+
 export function suggestFeatures(content: string): FeatureSuggestion[] {
   const seen = new Map<string, FeatureSuggestion>();
   for (const rule of RULES) {
-    const match = rule.pattern.exec(content);
-    if (!match) continue;
-    for (const featureId of rule.featureIds) {
-      if (seen.has(featureId)) continue;
-      seen.set(featureId, {
-        featureId,
-        reason: rule.reason,
-        matchedText: match[0],
-      });
+    // Reset lastIndex on global flag matches
+    const pattern = new RegExp(rule.pattern.source, rule.pattern.flags.includes("g") ? rule.pattern.flags : rule.pattern.flags + "g");
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(content)) !== null) {
+      const lineNumber = offsetToLine(content, match.index);
+      for (const featureId of rule.featureIds) {
+        if (seen.has(featureId)) continue;
+        seen.set(featureId, {
+          featureId,
+          reason: rule.reason,
+          matchedText: match[0],
+          line: lineNumber,
+        } as FeatureSuggestion);
+      }
+      // Only need one match per rule
+      break;
     }
   }
   return Array.from(seen.values());

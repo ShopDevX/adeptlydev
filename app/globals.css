@@ -236,6 +236,20 @@ textarea.plan-content {
   border-left: 2px solid var(--accent-1);
 }
 
+/* Inline feature-suggestion underline in rendered plan preview */
+.suggestion-mark {
+  background: linear-gradient(transparent 62%, rgba(124, 92, 255, 0.30) 62%);
+  text-decoration: underline dotted var(--accent-1);
+  text-underline-offset: 3px;
+  cursor: help;
+  border-radius: 2px;
+  padding: 0 1px;
+  transition: background 120ms ease;
+}
+.suggestion-mark:hover {
+  background: linear-gradient(transparent 0%, rgba(124, 92, 255, 0.45) 0%);
+}
+
 /* One-shot pulse on status change */
 @keyframes status-pulse {
   0%   { filter: brightness(1.0); }

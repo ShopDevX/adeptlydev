@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Plus } from "lucide-react";
+import { NewPlanModal } from "./NewPlanModal";
 import type { Plan, PlanStatus } from "@/lib/types";
 
 type PlanLite = Omit<Plan, "content">;
@@ -38,6 +39,8 @@ export function PlansList({
   const [plans, setPlans] = useState<PlanLite[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [newOpen, setNewOpen] = useState(false);
+  const [internalRefresh, setInternalRefresh] = useState(0);
 
   useEffect(() => {
     if (!projectRoot) return;
@@ -51,7 +54,7 @@ export function PlansList({
       })
       .catch((e) => setError(e.message ?? String(e)))
       .finally(() => setLoading(false));
-  }, [projectRoot, refreshKey]);
+  }, [projectRoot, refreshKey, internalRefresh]);
 
   if (collapsed) {
     return (
@@ -78,6 +81,14 @@ export function PlansList({
           Plans {plans.length > 0 && <span className="text-fg-tertiary">({plans.length})</span>}
         </div>
         <button
+          onClick={() => setNewOpen(true)}
+          title="New plan"
+          aria-label="New plan"
+          className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
+        >
+          <Plus size={16} strokeWidth={1.5} />
+        </button>
+        <button
           onClick={onToggleCollapsed}
           title="Collapse plans list"
           className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
@@ -96,12 +107,14 @@ export function PlansList({
         {!loading && !error && plans.length === 0 && (
           <div className="p-6 text-center space-y-3">
             <FileText size={32} className="mx-auto text-fg-tertiary" strokeWidth={1.5} />
-            <div className="text-sm text-fg-secondary">
-              No plans yet.
-            </div>
-            <div className="text-xs text-fg-tertiary">
-              Create one in <span className="font-mono">docs/plans/</span>.
-            </div>
+            <div className="text-sm text-fg-secondary">No plans yet.</div>
+            <button
+              onClick={() => setNewOpen(true)}
+              className="text-xs px-3 py-1.5 rounded bg-accent-gradient text-white inline-flex items-center gap-1.5"
+            >
+              <Plus size={12} strokeWidth={1.5} />
+              Create your first plan
+            </button>
           </div>
         )}
         <ul>
@@ -129,6 +142,15 @@ export function PlansList({
           })}
         </ul>
       </div>
+      <NewPlanModal
+        open={newOpen}
+        projectRoot={projectRoot}
+        onClose={() => setNewOpen(false)}
+        onCreated={(slug) => {
+          setInternalRefresh((k) => k + 1);
+          onSelect(slug);
+        }}
+      />
     </aside>
   );
 }

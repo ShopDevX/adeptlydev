@@ -65,6 +65,8 @@ export interface FeatureSuggestion {
   featureId: string;
   reason: string;
   matchedText?: string;
+  /** 1-based line number in the plan markdown where the match occurred. */
+  line?: number;
 }
 
 export interface GitHubCollaborator {

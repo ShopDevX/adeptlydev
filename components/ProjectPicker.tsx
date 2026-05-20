@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Folder, FolderPlus, FolderOpen, Clock } from "lucide-react";
+import { ChevronDown, Folder, FolderPlus, FolderOpen, FolderSearch, Clock } from "lucide-react";
+import { FolderBrowser } from "./FolderBrowser";
 import type { ProjectInfo } from "@/lib/types";
 
 interface RecentProject {
@@ -48,7 +49,7 @@ export function ProjectPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<RecentProject[]>([]);
-  const [mode, setMode] = useState<"open" | "create">("open");
+  const [mode, setMode] = useState<"browse" | "open" | "create">("browse");
   const [openPath, setOpenPath] = useState("");
   const [createParent, setCreateParent] = useState("");
   const [createName, setCreateName] = useState("");
@@ -137,7 +138,15 @@ export function ProjectPicker({
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1 right-0 z-30 w-[520px] max-w-[90vw] max-h-[80vh] overflow-auto bg-elevated border border-border-subtle rounded shadow-lg p-3 space-y-3">
+        <div
+          className="absolute top-full mt-1 right-0 z-30 w-[520px] max-w-[90vw] max-h-[80vh] overflow-auto rounded-md p-3 space-y-3"
+          style={{
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-strong)",
+            boxShadow:
+              "0 10px 40px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(124, 92, 255, 0.06)",
+          }}
+        >
           {error && (
             <div className="text-xs chip-changes p-2 rounded">
               {error}
@@ -168,13 +177,22 @@ export function ProjectPicker({
 
           <div className="flex gap-1 text-xs">
             <button
+              onClick={() => setMode("browse")}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
+                mode === "browse" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
+              }`}
+            >
+              <FolderSearch size={12} strokeWidth={1.5} />
+              Browse
+            </button>
+            <button
               onClick={() => setMode("open")}
               className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
                 mode === "open" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
               }`}
             >
               <FolderOpen size={12} strokeWidth={1.5} />
-              Open folder
+              Paste path
             </button>
             <button
               onClick={() => setMode("create")}
@@ -187,7 +205,35 @@ export function ProjectPicker({
             </button>
           </div>
 
-          {mode === "open" ? (
+          {mode === "browse" && (
+            <FolderBrowser
+              initialPath={current?.path}
+              onSelect={(p) => {
+                setOpenPath(p);
+                // Trigger the same logic as openExisting using p directly
+                (async () => {
+                  setError(null);
+                  setBusy(true);
+                  try {
+                    const res = await fetch(
+                      `/api/projects?projectRoot=${encodeURIComponent(p)}`
+                    );
+                    const data = await res.json();
+                    if (data?.error) throw new Error(data.error);
+                    onSelect(data.project.path);
+                    setOpen(false);
+                  } catch (e: any) {
+                    setError(e.message ?? String(e));
+                  } finally {
+                    setBusy(false);
+                  }
+                })();
+              }}
+              onCancel={() => setOpen(false)}
+            />
+          )}
+
+          {mode === "open" && (
             <div className="space-y-2">
               <label className="block text-xs font-semibold uppercase tracking-wide text-fg-secondary">
                 Folder path
@@ -210,7 +256,9 @@ export function ProjectPicker({
                 {busy ? "Opening…" : "Open"}
               </button>
             </div>
-          ) : (
+          )}
+
+          {mode === "create" && (
             <div className="space-y-2">
               <label className="block text-xs font-semibold uppercase tracking-wide text-fg-secondary">
                 Parent folder

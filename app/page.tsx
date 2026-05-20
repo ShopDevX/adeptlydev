@@ -7,12 +7,14 @@ import {
   Command,
   Maximize2,
   Minimize2,
+  MessageSquare,
 } from "lucide-react";
 import { PlansList } from "@/components/PlansList";
 import { PlanEditor } from "@/components/PlanEditor";
 import { FeatureSidebar } from "@/components/FeatureSidebar";
 import { SessionsSidebar } from "@/components/SessionsSidebar";
 import { CommandPalette } from "@/components/CommandPalette";
+import { ChatPanel } from "@/components/ChatPanel";
 import {
   ProjectPicker,
   loadCurrentProject,
@@ -42,6 +44,8 @@ export default function Home() {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [selectedPlanTitle, setSelectedPlanTitle] = useState<string | null>(null);
 
   // Initial mount: read collapse state + current project from localStorage,
   // then ask the server for project info.
@@ -120,7 +124,7 @@ export default function Home() {
     setTimeout(() => setScrollToFeature(null), 250);
   }
 
-  // Keyboard shortcuts (Phase E)
+  // Keyboard shortcuts (Phase E + chat)
   useShortcut([
     { key: "k", mod: true, handler: () => setPaletteOpen((o) => !o), whileTyping: true },
     {
@@ -130,6 +134,7 @@ export default function Home() {
       handler: () => setFocusMode((f) => !f),
       whileTyping: true,
     },
+    { key: "i", mod: true, handler: () => setChatOpen((o) => !o), whileTyping: true },
     {
       key: "Escape",
       handler: () => {
@@ -139,6 +144,18 @@ export default function Home() {
       prevent: false,
     },
   ]);
+
+  // Look up the selected plan's title for the chat panel header
+  useEffect(() => {
+    if (!project || !selectedSlug) {
+      setSelectedPlanTitle(null);
+      return;
+    }
+    fetch(`/api/plans/${selectedSlug}?projectRoot=${encodeURIComponent(project.path)}`)
+      .then((r) => r.json())
+      .then((data) => setSelectedPlanTitle(data?.plan?.title ?? null))
+      .catch(() => setSelectedPlanTitle(null));
+  }, [selectedSlug, project]);
 
   return (
     <main className="h-screen flex flex-col">
@@ -152,6 +169,17 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {project && (
+            <button
+              onClick={() => setChatOpen(true)}
+              title="Chat with Claude (Ctrl+I)"
+              className="flex items-center gap-1.5 px-2 py-1 rounded border border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg transition-colors text-xs"
+            >
+              <MessageSquare size={14} strokeWidth={1.5} />
+              <span className="hidden sm:inline">Chat</span>
+              <span className="font-mono text-[10px] text-fg-tertiary">⌘I</span>
+            </button>
+          )}
           {project && (
             <button
               onClick={() => setPaletteOpen(true)}
@@ -189,6 +217,14 @@ export default function Home() {
           setSelectedSlug(slug);
           setPaletteOpen(false);
         }}
+      />
+
+      <ChatPanel
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        projectRoot={project?.path ?? null}
+        planSlug={selectedSlug}
+        planTitle={selectedPlanTitle}
       />
 
       {focusMode && project && (
