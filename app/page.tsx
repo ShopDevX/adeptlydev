@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -47,6 +47,15 @@ export default function Home() {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedPlanTitle, setSelectedPlanTitle] = useState<string | null>(null);
   const [planRefreshKey, setPlanRefreshKey] = useState(0);
+  /** Transient status banner. Cleared by a timer after a few seconds. */
+  const [lastAction, setLastAction] = useState<{ kind: "created" | "updated"; text: string } | null>(null);
+  const lastActionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function flashAction(kind: "created" | "updated", text: string) {
+    setLastAction({ kind, text });
+    if (lastActionTimer.current) clearTimeout(lastActionTimer.current);
+    lastActionTimer.current = setTimeout(() => setLastAction(null), 4000);
+  }
 
   // Initial mount: read collapse state + current project from localStorage,
   // then ask the server for project info.
@@ -172,9 +181,13 @@ export default function Home() {
         <div className="flex items-center gap-2">
           {project && (
             <button
-              onClick={() => setChatOpen(true)}
+              onClick={() => setChatOpen((o) => !o)}
               title="Chat with Claude (Ctrl+I)"
-              className="flex items-center gap-1.5 px-2 py-1 rounded border border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg transition-colors text-xs"
+              className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors text-xs ${
+                chatOpen
+                  ? "border-accent-1 text-accent-1 bg-accent-1/10"
+                  : "border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg"
+              }`}
             >
               <MessageSquare size={14} strokeWidth={1.5} />
               <span className="hidden sm:inline">Chat</span>
@@ -220,20 +233,6 @@ export default function Home() {
         }}
       />
 
-      <ChatPanel
-        open={chatOpen}
-        onClose={() => setChatOpen(false)}
-        projectRoot={project?.path ?? null}
-        planSlug={selectedSlug}
-        planTitle={selectedPlanTitle}
-        onPlanUpdated={() => setPlanRefreshKey((k) => k + 1)}
-        onPlanCreated={(slug, title) => {
-          setSelectedSlug(slug);
-          setSelectedPlanTitle(title);
-          setRefreshKey((k) => k + 1);
-        }}
-      />
-
       {focusMode && project && (
         <div
           className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 px-3 py-1.5 rounded-full border border-border-strong shadow-lg text-xs text-fg-secondary flex items-center gap-2"
@@ -269,14 +268,49 @@ export default function Home() {
             />
           )}
 
-          <PlanEditor
-            projectRoot={project.path}
-            slug={selectedSlug}
-            onJumpToFeature={jumpToFeature}
-            refreshKey={planRefreshKey}
-          />
+          <div className="flex-1 flex flex-col min-w-0 relative">
+            {lastAction && (
+              <div
+                className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 shadow-lg"
+                style={{
+                  background: "var(--bg-overlay)",
+                  backdropFilter: "blur(16px)",
+                  borderColor: "var(--status-approved)",
+                  color: "var(--status-approved)",
+                }}
+              >
+                ✓ {lastAction.text}
+              </div>
+            )}
+            <PlanEditor
+              projectRoot={project.path}
+              slug={selectedSlug}
+              onJumpToFeature={jumpToFeature}
+              refreshKey={planRefreshKey}
+            />
+          </div>
 
-          {focusMode ? null : rightCollapsed ? (
+          {!focusMode && chatOpen && (
+            <ChatPanel
+              open={chatOpen}
+              onClose={() => setChatOpen(false)}
+              projectRoot={project?.path ?? null}
+              planSlug={selectedSlug}
+              planTitle={selectedPlanTitle}
+              onPlanUpdated={() => {
+                setPlanRefreshKey((k) => k + 1);
+                flashAction("updated", `Plan updated`);
+              }}
+              onPlanCreated={(slug, title) => {
+                setSelectedSlug(slug);
+                setSelectedPlanTitle(title);
+                setRefreshKey((k) => k + 1);
+                flashAction("created", `Plan created: ${title}`);
+              }}
+            />
+          )}
+
+          {focusMode || chatOpen ? null : rightCollapsed ? (
             <aside className="w-10 border-l border-border-subtle bg-elevated flex flex-col items-center py-2 gap-2">
               <button
                 onClick={toggleRight}

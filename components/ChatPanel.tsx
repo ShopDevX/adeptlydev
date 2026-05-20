@@ -162,10 +162,9 @@ export function ChatPanel({
 
   return (
     <aside
-      className="fixed top-0 right-0 bottom-0 z-40 w-[440px] max-w-[95vw] flex flex-col border-l border-border-strong shadow-2xl"
+      className="w-[420px] shrink-0 flex flex-col border-l border-border-strong"
       style={{ background: "var(--bg-elevated)" }}
-      role="dialog"
-      aria-modal="false"
+      role="complementary"
       aria-label="Chat with Claude"
     >
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border-subtle">
