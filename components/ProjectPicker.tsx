@@ -136,7 +136,7 @@ export function ProjectPicker({
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1 left-0 z-30 w-[520px] bg-white border border-gray-200 rounded shadow-lg p-3 space-y-3">
+        <div className="absolute top-full mt-1 right-0 z-30 w-[520px] max-w-[90vw] max-h-[80vh] overflow-auto bg-white border border-gray-200 rounded shadow-lg p-3 space-y-3">
           {error && (
             <div className="text-xs bg-rose-50 border border-rose-200 text-rose-800 p-2 rounded">
               {error}
