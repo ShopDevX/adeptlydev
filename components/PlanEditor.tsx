@@ -20,26 +20,29 @@ const STATUS_LABELS: Record<PlanStatus, string> = {
   "changes-requested": "Changes Requested",
 };
 
-const STATUS_COLOURS: Record<PlanStatus, string> = {
-  draft: "bg-gray-200 text-gray-700",
-  "in-review": "bg-amber-100 text-amber-800",
-  approved: "bg-emerald-100 text-emerald-800",
-  "changes-requested": "bg-rose-100 text-rose-800",
+const STATUS_CHIP: Record<PlanStatus, string> = {
+  draft: "chip chip-draft",
+  "in-review": "chip chip-review",
+  approved: "chip chip-approved",
+  "changes-requested": "chip chip-changes",
+};
+
+const STATUS_UNDERLINE: Record<PlanStatus, string> = {
+  draft: "status-underline-draft",
+  "in-review": "status-underline-review",
+  approved: "status-underline-approved",
+  "changes-requested": "status-underline-changes",
 };
 
 function StatusChip({ status }: { status: PlanStatus }) {
-  return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded ${STATUS_COLOURS[status]}`}>
-      {STATUS_LABELS[status]}
-    </span>
-  );
+  return <span className={STATUS_CHIP[status]}>{STATUS_LABELS[status]}</span>;
 }
 
 function ChangeIcon({ change }: { change: FileChange }) {
   const map = {
-    create: { icon: "+", colour: "text-emerald-600" },
-    modify: { icon: "~", colour: "text-amber-600" },
-    delete: { icon: "−", colour: "text-rose-600" },
+    create: { icon: "+", colour: "text-status-approved" },
+    modify: { icon: "~", colour: "text-status-review" },
+    delete: { icon: "−", colour: "text-status-changes" },
   } as const;
   const m = map[change.kind];
   const existsHint = change.exists ? "exists" : "missing";
@@ -48,8 +51,8 @@ function ChangeIcon({ change }: { change: FileChange }) {
   return (
     <li className="flex items-center gap-2 text-sm py-0.5">
       <span className={`font-mono font-bold ${m.colour}`}>{m.icon}</span>
-      <span className="font-mono">{change.path}</span>
-      <span className={`text-xs ${warn ? "text-rose-600" : "text-gray-500"}`}>
+      <span className="font-mono text-fg">{change.path}</span>
+      <span className={`text-xs ${warn ? "text-status-changes" : "text-fg-secondary"}`}>
         ({existsHint}
         {warn ? " — plan/codebase mismatch" : ""})
       </span>
@@ -176,7 +179,7 @@ export function PlanEditor({
 
   if (!projectRoot) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
+      <div className="flex-1 flex items-center justify-center text-fg-secondary text-sm">
         Select or create a project to begin.
       </div>
     );
@@ -184,43 +187,49 @@ export function PlanEditor({
 
   if (!slug) {
     return (
-      <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
+      <div className="flex-1 flex items-center justify-center text-fg-secondary text-sm">
         Select a plan from the left, or create one in <span className="font-mono ml-1">docs/plans/</span>.
       </div>
     );
   }
 
   if (!plan && !error) {
-    return <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">Loading…</div>;
+    return <div className="flex-1 flex items-center justify-center text-fg-secondary text-sm">Loading…</div>;
   }
 
+  const statusUnderline = approval ? STATUS_UNDERLINE[approval.status] : "";
+
   return (
-    <div className="flex-1 flex flex-col min-w-0">
-      <div className="border-b border-gray-200 p-3 flex items-center gap-3">
+    <div className="flex-1 flex flex-col min-w-0 bg-elevated">
+      <div className={`p-3 flex items-center gap-3 ${statusUnderline || "border-b border-border-subtle"}`}>
         <div className="flex-1 min-w-0">
-          <div className="text-lg font-semibold truncate">{plan?.title ?? slug}</div>
-          <div className="text-xs text-gray-500 font-mono">{plan?.filename}</div>
+          <div className="text-lg font-semibold truncate text-fg tracking-tight">{plan?.title ?? slug}</div>
+          <div className="text-xs text-fg-tertiary font-mono">{plan?.filename}</div>
         </div>
         {approval && <StatusChip status={approval.status} />}
       </div>
 
       {error && (
-        <div className="bg-rose-50 border-b border-rose-200 text-rose-800 text-sm px-3 py-2">{error}</div>
+        <div className="chip-changes border-b border-border-subtle text-sm px-3 py-2">{error}</div>
       )}
 
-      <div className="border-b border-gray-200 px-3 pt-2 flex items-center gap-2">
+      <div className="border-b border-border-subtle px-3 pt-2 flex items-center gap-2 bg-elevated">
         <button
           onClick={() => setTab("edit")}
-          className={`text-sm px-3 py-1 rounded-t ${
-            tab === "edit" ? "bg-white border border-gray-200 border-b-white -mb-px font-medium" : "text-gray-500"
+          className={`text-sm px-3 py-1 rounded-t transition-colors ${
+            tab === "edit"
+              ? "bg-base border border-border-subtle border-b-base -mb-px font-medium text-fg"
+              : "text-fg-secondary hover:text-fg"
           }`}
         >
           Edit
         </button>
         <button
           onClick={() => setTab("preview")}
-          className={`text-sm px-3 py-1 rounded-t ${
-            tab === "preview" ? "bg-white border border-gray-200 border-b-white -mb-px font-medium" : "text-gray-500"
+          className={`text-sm px-3 py-1 rounded-t transition-colors ${
+            tab === "preview"
+              ? "bg-base border border-border-subtle border-b-base -mb-px font-medium text-fg"
+              : "text-fg-secondary hover:text-fg"
           }`}
         >
           Preview
@@ -229,13 +238,13 @@ export function PlanEditor({
         <button
           onClick={save}
           disabled={!dirty || saving}
-          className="text-sm px-3 py-1 rounded bg-adept-600 text-white disabled:bg-gray-300"
+          className="text-sm px-3 py-1 rounded bg-accent-gradient text-white disabled:opacity-40 disabled:bg-none disabled:bg-border-subtle"
         >
           {saving ? "Saving…" : dirty ? "Save" : "Saved"}
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto bg-white">
+      <div className="flex-1 overflow-auto bg-base">
         {tab === "edit" ? (
           <textarea
             value={editContent}
@@ -244,7 +253,7 @@ export function PlanEditor({
               setDirty(true);
             }}
             spellCheck={false}
-            className="w-full h-full p-4 font-mono text-sm resize-none focus:outline-none"
+            className="plan-content w-full h-full p-4 text-sm resize-none focus:outline-none text-fg"
             placeholder="# Plan title…"
           />
         ) : (
@@ -254,13 +263,13 @@ export function PlanEditor({
         )}
       </div>
 
-      <div className="border-t border-gray-200 bg-gray-50">
+      <div className="border-t border-border-subtle bg-elevated">
         <div className="flex items-center gap-1 px-3 pt-2">
           {(
             [
               ["approval", "Approval"],
               ["reviewers", "GitHub reviewers"],
-              ["recipe", "✨ Claude recipe"],
+              ["recipe", "Claude recipe"],
               ["changes", `Changes${mismatchCount ? ` · ${mismatchCount} ⚠` : ""}`],
               ["suggestions", `Suggestions · ${suggestions.length}`],
             ] as const
@@ -268,30 +277,30 @@ export function PlanEditor({
             <button
               key={key}
               onClick={() => setBottomTab(key)}
-              className={`text-xs px-2 py-1 rounded-t ${
+              className={`text-xs px-2 py-1 rounded-t transition-colors ${
                 bottomTab === key
-                  ? "bg-white border border-gray-200 border-b-white -mb-px font-medium"
-                  : "text-gray-500"
+                  ? "bg-base border border-border-subtle border-b-base -mb-px font-medium text-fg"
+                  : "text-fg-secondary hover:text-fg"
               }`}
             >
               {label}
             </button>
           ))}
         </div>
-        <div className="max-h-96 overflow-auto bg-white border-t border-gray-200 p-3">
+        <div className="max-h-96 overflow-auto bg-base border-t border-border-subtle p-3">
           {bottomTab === "approval" &&
             (!approval ? (
-              <div className="text-xs text-gray-500 italic">
+              <div className="text-xs text-fg-secondary italic">
                 No approval record yet. The file will be created when you submit for review or add a reviewer.
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="text-xs text-gray-600 flex items-center gap-2 flex-wrap">
+                <div className="text-xs text-fg-secondary flex items-center gap-2 flex-wrap">
                   Status: <StatusChip status={approval.status} />
-                  <span>Author: <span className="font-mono">{approval.author}</span></span>
+                  <span>Author: <span className="font-mono text-fg">{approval.author}</span></span>
                 </div>
                 {approval.reviewers.length === 0 ? (
-                  <div className="text-xs text-gray-500 italic">
+                  <div className="text-xs text-fg-secondary italic">
                     No reviewers yet. Add one from the GitHub reviewers tab.
                   </div>
                 ) : (
@@ -301,15 +310,15 @@ export function PlanEditor({
                         {r.avatarUrl && (
                           <img src={r.avatarUrl} alt="" className="w-4 h-4 rounded-full" />
                         )}
-                        <span className="font-mono">{r.name}</span>
+                        <span className="font-mono text-fg">{r.name}</span>
                         <span
-                          className={`px-1.5 py-0.5 rounded text-[10px] ${
+                          className={`chip ${
                             r.status === "approved"
-                              ? "bg-emerald-100 text-emerald-800"
+                              ? "chip-approved"
                               : r.status === "changes-requested"
-                              ? "bg-rose-100 text-rose-800"
-                              : "bg-gray-200 text-gray-600"
-                          }`}
+                              ? "chip-changes"
+                              : "chip-draft"
+                          } !text-[10px] !px-1.5`}
                         >
                           {r.status}
                         </span>
@@ -319,7 +328,7 @@ export function PlanEditor({
                               onClick={() =>
                                 patchApproval({ reviewer: r.name, reviewerStatus: "approved" })
                               }
-                              className="text-emerald-700 hover:underline"
+                              className="text-status-approved hover:underline"
                             >
                               approve
                             </button>
@@ -327,7 +336,7 @@ export function PlanEditor({
                               onClick={() =>
                                 patchApproval({ reviewer: r.name, reviewerStatus: "changes-requested" })
                               }
-                              className="text-rose-700 hover:underline"
+                              className="text-status-changes hover:underline"
                             >
                               request changes
                             </button>
@@ -335,7 +344,7 @@ export function PlanEditor({
                         )}
                         <button
                           onClick={() => patchApproval({ removeReviewer: r.name })}
-                          className="text-gray-400 hover:text-rose-600 hover:underline ml-auto"
+                          className="text-fg-tertiary hover:text-status-changes hover:underline ml-auto"
                         >
                           remove
                         </button>
@@ -347,7 +356,7 @@ export function PlanEditor({
                   {approval.status === "draft" && (
                     <button
                       onClick={() => patchApproval({ status: "in-review" })}
-                      className="text-xs px-2 py-1 rounded bg-adept-600 text-white"
+                      className="text-xs px-2 py-1 rounded bg-accent-gradient text-white"
                     >
                       Submit for review
                     </button>
@@ -356,7 +365,7 @@ export function PlanEditor({
                     onClick={copyAsPrompt}
                     disabled={sendDisabled}
                     title={sendDisabled ? "Plan must be approved before sending to Claude Code" : ""}
-                    className="text-xs px-2 py-1 rounded bg-emerald-600 text-white disabled:bg-gray-300"
+                    className="text-xs px-2 py-1 rounded bg-accent-gradient text-white disabled:opacity-40 disabled:bg-none disabled:bg-border-subtle"
                   >
                     Copy as Claude Code prompt
                   </button>
@@ -384,7 +393,7 @@ export function PlanEditor({
 
           {bottomTab === "changes" &&
             (changes.length === 0 ? (
-              <div className="text-xs text-gray-500 italic">
+              <div className="text-xs text-fg-secondary italic">
                 No "create X / modify Y / delete Z" lines detected in the plan yet.
               </div>
             ) : (

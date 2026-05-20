@@ -6,10 +6,17 @@ import type { Plan, PlanStatus } from "@/lib/types";
 type PlanLite = Omit<Plan, "content">;
 
 const STATUS_DOT: Record<PlanStatus, string> = {
-  draft: "bg-gray-400",
-  "in-review": "bg-amber-500",
-  approved: "bg-emerald-500",
-  "changes-requested": "bg-rose-500",
+  draft: "bg-status-draft",
+  "in-review": "bg-status-review",
+  approved: "bg-status-approved",
+  "changes-requested": "bg-status-changes",
+};
+
+const STATUS_EDGE: Record<PlanStatus, string> = {
+  draft: "status-edge-draft",
+  "in-review": "status-edge-review",
+  approved: "status-edge-approved",
+  "changes-requested": "status-edge-changes",
 };
 
 export function PlansList({
@@ -47,16 +54,16 @@ export function PlansList({
 
   if (collapsed) {
     return (
-      <aside className="w-10 border-r border-gray-200 bg-white flex flex-col items-center py-2">
+      <aside className="w-10 border-r border-border-subtle bg-elevated flex flex-col items-center py-2">
         <button
           onClick={onToggleCollapsed}
           title="Expand plans list"
-          className="p-1 rounded hover:bg-gray-100 text-gray-600"
+          className="p-1 rounded hover:bg-base text-fg-secondary"
           aria-label="Expand plans"
         >
           ▶
         </button>
-        <div className="mt-2 text-[10px] text-gray-500 [writing-mode:vertical-rl] rotate-180">
+        <div className="mt-2 text-[10px] text-fg-secondary [writing-mode:vertical-rl] rotate-180">
           Plans · {plans.length}
         </div>
       </aside>
@@ -64,50 +71,51 @@ export function PlansList({
   }
 
   return (
-    <aside className="w-72 border-r border-gray-200 bg-white flex flex-col">
-      <div className="p-3 border-b border-gray-200 flex items-center gap-2">
-        <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 flex-1">
-          Plans {plans.length > 0 && <span className="text-gray-400">({plans.length})</span>}
+    <aside className="w-72 border-r border-border-subtle bg-elevated flex flex-col">
+      <div className="p-3 border-b border-border-subtle flex items-center gap-2">
+        <div className="text-xs font-semibold uppercase tracking-wide text-fg-secondary flex-1">
+          Plans {plans.length > 0 && <span className="text-fg-tertiary">({plans.length})</span>}
         </div>
         <button
           onClick={onToggleCollapsed}
           title="Collapse plans list"
-          className="p-1 rounded hover:bg-gray-100 text-gray-600"
+          className="p-1 rounded hover:bg-base text-fg-secondary"
           aria-label="Collapse plans"
         >
           ◀
         </button>
       </div>
       <div className="flex-1 overflow-auto">
-        {loading && <div className="p-3 text-sm text-gray-500">Loading…</div>}
+        {loading && <div className="p-3 text-sm text-fg-secondary">Loading…</div>}
         {error && (
-          <div className="m-3 text-sm bg-rose-50 border border-rose-200 text-rose-800 p-2 rounded">
+          <div className="m-3 text-sm chip-changes p-2 rounded">
             {error}
           </div>
         )}
         {!loading && !error && plans.length === 0 && (
-          <div className="p-3 text-sm text-gray-500">
+          <div className="p-3 text-sm text-fg-secondary">
             No plans yet. Plans live in <span className="font-mono">docs/plans/</span>.
           </div>
         )}
         <ul>
           {plans.map((p) => {
-            const status = p.approval?.status ?? "draft";
+            const status: PlanStatus = p.approval?.status ?? "draft";
+            const isSelected = selected === p.slug;
             return (
               <li key={p.slug}>
                 <button
                   onClick={() => onSelect(p.slug)}
-                  className={`w-full text-left px-3 py-2 hover:bg-gray-50 border-l-4 ${
-                    selected === p.slug
-                      ? "bg-adept-50 border-adept-500"
-                      : "border-transparent"
-                  }`}
+                  className={`w-full text-left px-3 py-2 transition-colors border-l-2 ${
+                    isSelected
+                      ? "bg-base border-accent-1"
+                      : "border-transparent hover:bg-base/60"
+                  } ${STATUS_EDGE[status]}`}
                 >
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${STATUS_DOT[status]}`} aria-hidden />
-                    <span className="text-sm font-medium truncate">{p.title}</span>
+                    <span className="text-sm font-medium truncate text-fg">{p.title}</span>
                   </div>
-                  <div className="text-xs text-gray-500 font-mono truncate">{p.filename}</div>
+                  <div className="text-xs text-fg-tertiary font-mono truncate">{p.filename}</div>
                 </button>
               </li>
             );

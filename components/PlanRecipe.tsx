@@ -113,7 +113,9 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
         <button
           onClick={generate}
           disabled={loading}
-          className="text-xs px-2 py-1 rounded bg-adept-600 text-white disabled:bg-gray-300"
+          className={`text-xs px-3 py-1.5 rounded text-white transition-all ${
+            loading ? "recipe-generating" : "bg-accent-gradient"
+          } disabled:opacity-60`}
         >
           {loading
             ? "Asking Claude…"
@@ -126,32 +128,32 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
         {record && (
           <button
             onClick={copyRecipeAsPrompt}
-            className="text-xs px-2 py-1 rounded bg-emerald-600 text-white"
+            className="text-xs px-3 py-1.5 rounded bg-accent-gradient text-white"
           >
             Copy plan + recipe as prompt
           </button>
         )}
         {record && (
-          <span className="text-[10px] text-gray-500 font-mono">
+          <span className="text-[10px] text-fg-secondary font-mono">
             {record.source === "claude-cli" ? "via claude --print" : "fallback (no Claude CLI)"} ·{" "}
             {new Date(record.generatedAt).toLocaleString()}
           </span>
         )}
         {stale && (
-          <span className="text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">
+          <span className="chip chip-review !text-[10px] !px-1.5">
             stale — plan content has changed since this recipe was generated
           </span>
         )}
       </div>
 
       {error && (
-        <div className="text-xs bg-rose-50 border border-rose-200 text-rose-800 p-2 rounded">
+        <div className="text-xs chip-changes p-2 rounded">
           {error}
         </div>
       )}
 
       {record?.error && (
-        <div className="text-xs bg-amber-50 border border-amber-200 text-amber-800 p-2 rounded">
+        <div className="text-xs chip-review p-2 rounded">
           <div className="font-semibold">Notice</div>
           {record.error}
           {record.source === "fallback-keyword" && (
@@ -165,7 +167,7 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
       )}
 
       {!record && !loading && (
-        <div className="text-xs text-gray-500 italic">
+        <div className="text-xs text-fg-secondary italic">
           No recipe yet. Click <strong>Generate Claude Code recipe</strong> — Adeptly shells out to
           your local <span className="font-mono">claude --print</span> (no API key needed) and asks
           it which subagents, skills, hooks, and execution order best fit this plan. Falls back to a
@@ -192,15 +194,15 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
             title={`Subagents (${record.recipe.subagents.length})`}
             body={
               record.recipe.subagents.length === 0 ? (
-                <div className="text-xs text-gray-500 italic">None needed for this plan.</div>
+                <div className="text-xs text-fg-secondary italic">None needed for this plan.</div>
               ) : (
                 <ul className="space-y-1">
                   {record.recipe.subagents.map((s, i) => (
                     <li key={i} className="text-sm flex items-baseline gap-2">
-                      <span className="font-mono font-semibold text-adept-700">
+                      <span className="font-mono font-semibold text-accent-1">
                         {s.count} × {s.type}
                       </span>
-                      <span className="text-gray-700">{s.for}</span>
+                      <span className="text-fg">{s.for}</span>
                     </li>
                   ))}
                 </ul>
@@ -212,13 +214,13 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
             title={`Skills (${record.recipe.skills.length})`}
             body={
               record.recipe.skills.length === 0 ? (
-                <div className="text-xs text-gray-500 italic">None recommended.</div>
+                <div className="text-xs text-fg-secondary italic">None recommended.</div>
               ) : (
                 <ul className="space-y-1">
                   {record.recipe.skills.map((s, i) => (
                     <li key={i} className="text-sm flex items-baseline gap-2">
-                      <span className="font-mono font-semibold text-adept-700">{s.name}</span>
-                      <span className="text-gray-700">{s.when}</span>
+                      <span className="font-mono font-semibold text-accent-1">{s.name}</span>
+                      <span className="text-fg">{s.when}</span>
                     </li>
                   ))}
                 </ul>
@@ -230,13 +232,13 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
             title={`Hooks to consider (${record.recipe.hooks_to_consider.length})`}
             body={
               record.recipe.hooks_to_consider.length === 0 ? (
-                <div className="text-xs text-gray-500 italic">No hook needed for this plan.</div>
+                <div className="text-xs text-fg-secondary italic">No hook needed for this plan.</div>
               ) : (
                 <ul className="space-y-1">
                   {record.recipe.hooks_to_consider.map((h, i) => (
                     <li key={i} className="text-sm flex items-baseline gap-2">
-                      <span className="font-mono font-semibold text-adept-700">{h.type}</span>
-                      <span className="text-gray-700">{h.for}</span>
+                      <span className="font-mono font-semibold text-accent-1">{h.type}</span>
+                      <span className="text-fg">{h.for}</span>
                     </li>
                   ))}
                 </ul>
@@ -249,13 +251,13 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
             body={
               <div className="text-sm grid grid-cols-2 gap-2">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-500">
+                  <div className="text-[10px] uppercase tracking-wide text-fg-secondary">
                     Expected turns
                   </div>
                   <div className="font-mono text-lg">{record.recipe.expected_turns}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase tracking-wide text-gray-500">
+                  <div className="text-[10px] uppercase tracking-wide text-fg-secondary">
                     Estimated cost
                   </div>
                   <div className="font-mono text-lg">
@@ -286,8 +288,8 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
 
 function RecipeBlock({ title, body }: { title: string; body: React.ReactNode }) {
   return (
-    <div className="border border-gray-200 rounded p-2 bg-white">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">
+    <div className="border border-border-subtle rounded p-2 bg-elevated">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-fg-secondary mb-1">
         {title}
       </div>
       {body}

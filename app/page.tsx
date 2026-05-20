@@ -128,10 +128,10 @@ export default function Home() {
       </header>
 
       {!project && bootstrapped && (
-        <div className="flex-1 flex items-center justify-center bg-white">
+        <div className="flex-1 flex items-center justify-center bg-base">
           <div className="max-w-md text-center space-y-3">
-            <div className="text-lg font-semibold">No project selected</div>
-            <div className="text-sm text-gray-600">
+            <div className="text-lg font-semibold text-fg tracking-tight">No project selected</div>
+            <div className="text-sm text-fg-secondary">
               Click "Project" in the top right to open an existing folder or create a new one.
             </div>
           </div>
@@ -156,11 +156,11 @@ export default function Home() {
           />
 
           {rightCollapsed ? (
-            <aside className="w-10 border-l border-gray-200 bg-white flex flex-col items-center py-2 gap-2">
+            <aside className="w-10 border-l border-border-subtle bg-elevated flex flex-col items-center py-2 gap-2">
               <button
                 onClick={toggleRight}
                 title="Expand right panel"
-                className="p-1 rounded hover:bg-gray-100 text-gray-600"
+                className="p-1 rounded hover:bg-base text-fg-secondary"
                 aria-label="Expand right panel"
               >
                 ◀
@@ -171,7 +171,7 @@ export default function Home() {
                   toggleRight();
                 }}
                 title="Features"
-                className="text-[10px] text-gray-500 [writing-mode:vertical-rl] rotate-180 hover:text-gray-900"
+                className="text-[10px] text-fg-secondary [writing-mode:vertical-rl] rotate-180 hover:text-fg"
               >
                 Features
               </button>
@@ -181,38 +181,38 @@ export default function Home() {
                   toggleRight();
                 }}
                 title="Sessions"
-                className="text-[10px] text-gray-500 [writing-mode:vertical-rl] rotate-180 hover:text-gray-900"
+                className="text-[10px] text-fg-secondary [writing-mode:vertical-rl] rotate-180 hover:text-fg"
               >
                 Sessions
               </button>
             </aside>
           ) : (
-            <aside className="w-80 border-l border-gray-200 bg-white flex flex-col">
-              <div className="px-2 py-1.5 border-b border-gray-200 flex items-center gap-1">
+            <aside className="w-80 border-l border-border-subtle bg-elevated flex flex-col">
+              <div className="px-2 py-1.5 border-b border-border-subtle flex items-center gap-1">
                 <button
                   onClick={toggleRight}
                   title="Collapse right panel"
-                  className="p-1 rounded hover:bg-gray-100 text-gray-600"
+                  className="p-1 rounded hover:bg-base text-fg-secondary"
                   aria-label="Collapse right panel"
                 >
                   ▶
                 </button>
                 <button
                   onClick={() => selectRightTab("features")}
-                  className={`text-xs px-2 py-1 rounded ${
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
                     rightTab === "features"
-                      ? "bg-adept-50 text-adept-700 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-base text-accent-1 font-medium"
+                      : "text-fg-secondary hover:bg-base hover:text-fg"
                   }`}
                 >
                   Features
                 </button>
                 <button
                   onClick={() => selectRightTab("sessions")}
-                  className={`text-xs px-2 py-1 rounded ${
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
                     rightTab === "sessions"
-                      ? "bg-adept-50 text-adept-700 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-base text-accent-1 font-medium"
+                      : "text-fg-secondary hover:bg-base hover:text-fg"
                   }`}
                 >
                   Sessions

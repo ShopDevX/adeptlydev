@@ -89,65 +89,8 @@ body::before {
 }
 
 /* ============================================================
-   Phase-A bridge: paint existing Tailwind utility colours with
-   semantic tokens so v0.3 components look dark immediately
-   without rewriting every className. Phase B replaces the
-   utilities themselves.
+   Inputs
    ============================================================ */
-
-/* Backgrounds */
-.bg-white                 { background-color: var(--bg-elevated) !important; }
-.bg-gray-50               { background-color: var(--bg-elevated) !important; }
-.bg-gray-100              { background-color: var(--bg-elevated) !important; }
-.bg-gray-200              { background-color: var(--border-subtle) !important; }
-.bg-gray-900              { background-color: var(--bg-base) !important; }
-
-/* Borders */
-.border-gray-100          { border-color: var(--border-subtle) !important; }
-.border-gray-200          { border-color: var(--border-subtle) !important; }
-.border-gray-300          { border-color: var(--border-strong) !important; }
-
-/* Text */
-.text-gray-100,
-.text-gray-200            { color: var(--fg-primary) !important; }
-.text-gray-400            { color: var(--fg-tertiary) !important; }
-.text-gray-500            { color: var(--fg-secondary) !important; }
-.text-gray-600            { color: var(--fg-secondary) !important; }
-.text-gray-700            { color: var(--fg-primary) !important; }
-.text-gray-800,
-.text-gray-900            { color: var(--fg-primary) !important; }
-
-/* Status backgrounds the existing components use */
-.bg-amber-50              { background-color: rgba(244, 183, 64, 0.10) !important; }
-.bg-amber-100             { background-color: rgba(244, 183, 64, 0.18) !important; }
-.text-amber-700,
-.text-amber-800           { color: var(--status-review) !important; }
-
-.bg-emerald-50            { background-color: rgba(40, 200, 120, 0.10) !important; }
-.bg-emerald-100           { background-color: rgba(40, 200, 120, 0.18) !important; }
-.text-emerald-700,
-.text-emerald-800         { color: var(--status-approved) !important; }
-.bg-emerald-600           { background: var(--accent-gradient) !important; }
-
-.bg-rose-50               { background-color: rgba(255, 90, 110, 0.10) !important; }
-.bg-rose-100              { background-color: rgba(255, 90, 110, 0.18) !important; }
-.text-rose-700,
-.text-rose-800,
-.text-rose-600,
-.text-red-600             { color: var(--status-changes) !important; }
-.border-rose-200          { border-color: rgba(255, 90, 110, 0.35) !important; }
-.border-amber-200         { border-color: rgba(244, 183, 64, 0.35) !important; }
-
-/* The old "adept-blue" primary — bridge to the new gradient */
-.bg-adept-50              { background-color: rgba(124, 92, 255, 0.10) !important; }
-.bg-adept-500,
-.bg-adept-600,
-.bg-adept-700             { background: var(--accent-gradient) !important; color: #fff !important; }
-.text-adept-600,
-.text-adept-700           { color: var(--accent-1) !important; }
-.border-adept-500         { border-color: var(--accent-1) !important; }
-
-/* Inputs and textareas */
 input, textarea, select {
   background-color: var(--bg-base);
   color: var(--fg-primary);
@@ -227,15 +170,72 @@ textarea.plan-content {
 }
 
 /* ============================================================
-   Ambient status — placeholder utility classes Phase C wires
-   up. Defined here so Phase B can use them without churn.
+   Ambient status (ADR-012) — Phase C
    ============================================================ */
+
+.chip {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  display: inline-block;
+}
+.chip-draft    { background: rgba(91, 100, 120, 0.20); color: var(--status-draft); }
+.chip-review   { background: rgba(244, 183, 64, 0.18); color: var(--status-review); }
+.chip-approved { background: rgba(40, 200, 120, 0.18); color: var(--status-approved); }
+.chip-changes  { background: rgba(255, 90, 110, 0.18); color: var(--status-changes); }
+
+.status-edge-draft,
+.status-edge-review,
+.status-edge-approved,
+.status-edge-changes {
+  transition: box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
 .status-edge-draft    { box-shadow: inset -3px 0 0 0 var(--status-draft); }
 .status-edge-review   { box-shadow: inset -3px 0 0 0 var(--status-review); }
 .status-edge-approved { box-shadow: inset -3px 0 0 0 var(--status-approved); }
 .status-edge-changes  { box-shadow: inset -3px 0 0 0 var(--status-changes); }
 
+.status-underline-draft,
+.status-underline-review,
+.status-underline-approved,
+.status-underline-changes {
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
+  transition: border-color 220ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.status-underline-draft    { border-bottom-color: var(--status-draft); }
+.status-underline-review   { border-bottom-color: var(--status-review); }
+.status-underline-approved { border-bottom-color: var(--status-approved); }
+.status-underline-changes  { border-bottom-color: var(--status-changes); }
+
+/* Suggested feature row — subtle violet glow */
+.suggested-row {
+  background: rgba(124, 92, 255, 0.08);
+  border-left: 2px solid var(--accent-1);
+}
+
+/* One-shot pulse on status change */
+@keyframes status-pulse {
+  0%   { filter: brightness(1.0); }
+  35%  { filter: brightness(1.5); }
+  100% { filter: brightness(1.0); }
+}
+.status-pulsing { animation: status-pulse 600ms ease-out; }
+
+/* AI loading state — pulsing accent gradient on Generate-Recipe */
+@keyframes accent-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 92, 255, 0.0); }
+  50%      { box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.40); }
+}
+.recipe-generating {
+  background: var(--accent-gradient) !important;
+  color: #fff !important;
+  animation: accent-pulse 1.4s ease-in-out infinite;
+}
+
 /* Motion (ADR-012) — respect reduced-motion preference */
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .status-pulsing, .recipe-generating { animation: none !important; }
 }

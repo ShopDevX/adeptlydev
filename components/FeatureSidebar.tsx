@@ -66,28 +66,28 @@ export function FeatureSidebar({
   }, [filtered]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-3 py-2 border-b border-gray-200 sticky top-0 bg-white z-10">
-        <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+    <div className="flex flex-col h-full bg-elevated">
+      <div className="px-3 py-2 border-b border-border-subtle sticky top-0 bg-elevated z-10">
+        <div className="text-xs font-semibold uppercase tracking-wide text-fg-secondary">
           Claude Code features
         </div>
-        <div className="text-xs text-gray-500 mt-0.5">
+        <div className="text-xs text-fg-tertiary mt-0.5">
           {CLAUDE_CODE_FEATURES.length} features · most users use 3
         </div>
         <input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter…"
-          className="mt-2 w-full text-xs border border-gray-300 rounded px-2 py-1"
+          className="mt-2 w-full text-xs border border-border-strong bg-base text-fg rounded px-2 py-1"
         />
       </div>
       <div className="flex-1 overflow-auto">
         {grouped.map((g) => (
           <div key={g.category}>
-            <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0">
+            <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-fg-tertiary bg-base border-b border-border-subtle sticky top-0">
               {g.category}
             </div>
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-border-subtle">
               {g.items.map((f) => {
                 const open = openId === f.id;
                 const highlighted = highlightedIds.has(f.id);
@@ -95,35 +95,35 @@ export function FeatureSidebar({
                   <li key={f.id} id={`feature-${f.id}`}>
                     <button
                       onClick={() => setOpenId(open ? null : f.id)}
-                      className={`w-full text-left px-3 py-2 hover:bg-gray-50 ${
-                        highlighted ? "bg-amber-50" : ""
+                      className={`w-full text-left px-3 py-2 transition-colors ${
+                        highlighted ? "suggested-row" : "hover:bg-base"
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium flex-1">{f.name}</span>
+                        <span className="text-sm font-medium flex-1 text-fg">{f.name}</span>
                         {highlighted && (
                           <span
                             title="Suggested for the current plan"
-                            className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-1 rounded"
+                            className="text-[10px] font-semibold text-accent-1 px-1 rounded uppercase tracking-wider"
                           >
-                            SUGGESTED
+                            suggested
                           </span>
                         )}
                       </div>
                       {open && (
                         <div className="mt-1 space-y-1">
-                          <p className="text-xs text-gray-700 leading-snug">{f.description}</p>
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-fg leading-snug">{f.description}</p>
+                          <p className="text-xs text-fg-secondary">
                             <span className="font-semibold">When:</span> {f.whenToUse}
                           </p>
                           {f.invocation && (
-                            <p className="text-xs">
+                            <p className="text-xs text-fg-secondary">
                               <span className="font-semibold">How:</span>{" "}
-                              <span className="font-mono">{f.invocation}</span>
+                              <span className="font-mono text-accent-1 bg-base px-1 py-0.5 rounded">{f.invocation}</span>
                             </p>
                           )}
                           {f.docsHint && (
-                            <p className="text-xs text-gray-500 italic leading-snug">
+                            <p className="text-xs text-fg-tertiary italic leading-snug">
                               {f.docsHint}
                             </p>
                           )}

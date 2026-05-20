@@ -56,18 +56,18 @@ export function GitHubReviewers({
 
   if (!projectRoot) return null;
   if (loading) {
-    return <div className="text-xs text-gray-500 px-3 py-2">Detecting GitHub remote…</div>;
+    return <div className="text-xs text-fg-secondary px-3 py-2">Detecting GitHub remote…</div>;
   }
   if (error) {
     return (
-      <div className="m-3 text-xs bg-rose-50 border border-rose-200 text-rose-800 p-2 rounded">
+      <div className="m-3 text-xs chip-changes p-2 rounded">
         {error}
       </div>
     );
   }
   if (!github) {
     return (
-      <div className="text-xs text-gray-500 px-3 py-2 italic">
+      <div className="text-xs text-fg-secondary px-3 py-2 italic">
         This project has no GitHub remote (no <span className="font-mono">.git/config</span> with a github.com URL).
       </div>
     );
@@ -77,21 +77,21 @@ export function GitHubReviewers({
 
   return (
     <div className="space-y-2 px-3 py-2">
-      <div className="text-xs text-gray-600">
+      <div className="text-xs text-fg">
         <span className="font-mono">{github.owner}/{github.repo}</span>
       </div>
       {github.collaboratorsError && (
-        <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 p-1.5 rounded">
+        <div className="text-xs chip-changes p-1.5 rounded">
           {github.collaboratorsError}
           {github.collaboratorsError.includes("404") && (
-            <div className="mt-1 text-gray-700">
+            <div className="mt-1 text-fg">
               Tip: set <span className="font-mono">GITHUB_TOKEN</span> in your env for private repos.
             </div>
           )}
         </div>
       )}
       {github.collaborators.length === 0 ? (
-        <div className="text-xs text-gray-500 italic">
+        <div className="text-xs text-fg-secondary italic">
           No collaborators returned (the repo may be private — set <span className="font-mono">GITHUB_TOKEN</span>).
         </div>
       ) : (
@@ -105,21 +105,21 @@ export function GitHubReviewers({
                   href={c.htmlUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-mono text-adept-700 hover:underline"
+                  className="font-mono text-accent-1 hover:underline"
                 >
                   {c.login}
                 </a>
                 {typeof c.contributions === "number" && (
-                  <span className="text-gray-400">({c.contributions})</span>
+                  <span className="text-fg-tertiary">({c.contributions})</span>
                 )}
                 <div className="flex-1" />
                 {already ? (
-                  <span className="text-gray-400">added</span>
+                  <span className="text-fg-tertiary">added</span>
                 ) : (
                   <button
                     disabled={!planSlug}
                     onClick={() => addAsReviewer(c.login, c.htmlUrl, c.avatarUrl)}
-                    className="text-adept-700 hover:underline disabled:text-gray-300"
+                    className="text-accent-1 hover:underline disabled:text-fg-tertiary"
                   >
                     + reviewer
                   </button>
