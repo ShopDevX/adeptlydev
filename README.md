@@ -106,7 +106,10 @@ MIT.
 
 ## Status
 
-v0.4 — beta, runs locally, full feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, approval workflow, command palette, focus mode, dark + light. **Not yet published on npm — `npm publish` is the next step.**
+v0.4.0 — **published on npm** (2026-05-21). Beta. Full feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, approval workflow, command palette, focus mode, dark + light.
+
+- npm: https://www.npmjs.com/package/adeptly
+- Install: `npm install -g adeptly` or run once with `npx adeptly`
 
 ## Built by
 
