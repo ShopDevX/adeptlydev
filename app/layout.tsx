@@ -1,11 +1,36 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Adeptly — Use Claude Code properly",
-  description: "Plan-first Claude Code for teams. Free, open source, runs on your machine.",
+  description:
+    "Plan-first companion for Claude Code. Describe what you want to build, get a full plan back with the right Claude Code features baked into each section. Free, open source, runs on your machine.",
+  applicationName: "Adeptly",
+  keywords: [
+    "claude code",
+    "ai planning",
+    "developer tools",
+    "plan first",
+    "anthropic",
+    "subagents",
+    "skills",
+  ],
+  openGraph: {
+    title: "Adeptly — Use Claude Code properly",
+    description:
+      "Describe what you want to build. Adeptly drafts the plan and picks the right Claude Code features for each section. Free, open source.",
+    siteName: "Adeptly",
+    type: "website",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0a0b0e" },
+    { media: "(prefers-color-scheme: light)", color: "#eef0f4" },
+  ],
 };
 
 /**

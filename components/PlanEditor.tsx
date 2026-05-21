@@ -199,7 +199,19 @@ export function PlanEditor({
   }
 
   if (!plan && !error) {
-    return <div className="flex-1 flex items-center justify-center text-fg-secondary text-sm">Loading…</div>;
+    return (
+      <div className="flex-1 bg-elevated p-6 space-y-3" aria-busy="true" aria-label="Loading plan">
+        <div className="skeleton h-6 w-1/2" />
+        <div className="skeleton h-3 w-1/3" />
+        <div className="mt-6 space-y-2.5">
+          <div className="skeleton h-3 w-full" />
+          <div className="skeleton h-3 w-11/12" />
+          <div className="skeleton h-3 w-10/12" />
+          <div className="skeleton h-3 w-9/12" />
+          <div className="skeleton h-3 w-full" />
+        </div>
+      </div>
+    );
   }
 
   const statusUnderline = approval ? STATUS_UNDERLINE[approval.status] : "";

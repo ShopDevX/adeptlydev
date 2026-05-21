@@ -32,7 +32,16 @@ export function SessionsSidebar({ projectRoot }: { projectRoot: string | null })
         </div>
       </div>
       <div className="flex-1 overflow-auto">
-        {loading && <div className="p-3 text-xs text-fg-secondary">Loading…</div>}
+        {loading && (
+          <ul className="p-3 space-y-3" aria-busy="true" aria-label="Loading sessions">
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="space-y-1.5 pl-3">
+                <div className="skeleton h-3 w-full" />
+                <div className="skeleton h-2.5 w-2/3" />
+              </li>
+            ))}
+          </ul>
+        )}
         {error && (
           <div className="m-3 text-xs chip-changes p-2 rounded">{error}</div>
         )}

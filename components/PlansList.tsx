@@ -100,7 +100,16 @@ export function PlansList({
         </button>
       </div>
       <div className="flex-1 overflow-auto">
-        {loading && <div className="p-3 text-sm text-fg-secondary">Loading…</div>}
+        {loading && (
+          <ul className="p-3 space-y-2" aria-busy="true" aria-label="Loading plans">
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="space-y-1.5">
+                <div className="skeleton h-3.5 w-3/4" />
+                <div className="skeleton h-2.5 w-1/2" />
+              </li>
+            ))}
+          </ul>
+        )}
         {error && (
           <div className="m-3 text-sm chip-changes p-2 rounded">
             {error}

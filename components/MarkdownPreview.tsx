@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import mermaid from "mermaid";
@@ -158,6 +158,26 @@ export function MarkdownPreview({
   suggestions?: FeatureSuggestion[];
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [themeTick, setThemeTick] = useState(0);
+
+  // Watch the <html> class for theme changes and force re-render of any
+  // Mermaid blocks (they bake colours in at render time and can't restyle
+  // via CSS once they're SVGs).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const html = document.documentElement;
+    let last = html.classList.contains("light") ? "light" : "dark";
+    const observer = new MutationObserver(() => {
+      const current = html.classList.contains("light") ? "light" : "dark";
+      if (current !== last) {
+        last = current;
+        mermaidInitialized = false; // force re-init with new theme vars
+        setThemeTick((t) => t + 1);
+      }
+    });
+    observer.observe(html, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     ensureMermaidInit();
@@ -187,7 +207,7 @@ export function MarkdownPreview({
     return () => {
       cancelled = true;
     };
-  }, [content]);
+  }, [content, themeTick]);
 
   // Apply suggestion marks AFTER markdown render + mermaid is settled
   useEffect(() => {
@@ -200,7 +220,7 @@ export function MarkdownPreview({
 
   return (
     <div ref={containerRef} className="prose-adept max-w-none">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <ReactMarkdown key={themeTick} remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     </div>
   );
 }

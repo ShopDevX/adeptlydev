@@ -43,11 +43,21 @@ export function saveCurrentProject(p: string) {
 export function ProjectPicker({
   current,
   onSelect,
+  forceOpen,
+  onOpenChange,
 }: {
   current: ProjectInfo | null;
   onSelect: (path: string) => void;
+  forceOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = forceOpen ?? internalOpen;
+  function setOpen(v: boolean | ((prev: boolean) => boolean)) {
+    const next = typeof v === "function" ? (v as (prev: boolean) => boolean)(open) : v;
+    if (forceOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
+  }
   const [recent, setRecent] = useState<RecentProject[]>([]);
   const [mode, setMode] = useState<"browse" | "open" | "create">("browse");
   const [openPath, setOpenPath] = useState("");

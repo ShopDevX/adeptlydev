@@ -8,6 +8,7 @@ import {
   Maximize2,
   Minimize2,
   MessageSquare,
+  Keyboard,
 } from "lucide-react";
 import { PlansList } from "@/components/PlansList";
 import { PlanEditor } from "@/components/PlanEditor";
@@ -15,6 +16,9 @@ import { FeatureSidebar } from "@/components/FeatureSidebar";
 import { SessionsSidebar } from "@/components/SessionsSidebar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ChatPanel } from "@/components/ChatPanel";
+import { Wordmark } from "@/components/Wordmark";
+import { WelcomeEmpty } from "@/components/WelcomeEmpty";
+import { ShortcutsOverlay } from "@/components/ShortcutsOverlay";
 import {
   ProjectPicker,
   loadCurrentProject,
@@ -47,6 +51,8 @@ export default function Home() {
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedPlanTitle, setSelectedPlanTitle] = useState<string | null>(null);
   const [planRefreshKey, setPlanRefreshKey] = useState(0);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   /** Transient status banner. Cleared by a timer after a few seconds. */
   const [lastAction, setLastAction] = useState<{ kind: "created" | "updated"; text: string } | null>(null);
   const lastActionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -145,6 +151,7 @@ export default function Home() {
       whileTyping: true,
     },
     { key: "i", mod: true, handler: () => setChatOpen((o) => !o), whileTyping: true },
+    { key: "?", shift: true, handler: () => setShortcutsOpen((o) => !o), whileTyping: false },
     {
       key: "Escape",
       handler: () => {
@@ -170,11 +177,9 @@ export default function Home() {
   return (
     <main className="h-screen flex flex-col">
       <header className="flex items-center justify-between px-4 py-2 border-b border-border-subtle bg-elevated">
-        <div className="flex items-center gap-3">
-          <div className="text-lg font-semibold tracking-tight bg-accent-gradient bg-clip-text text-transparent">
-            Adeptly
-          </div>
-          <div className="text-xs text-fg-secondary hidden xl:block">
+        <div className="flex items-center gap-3 min-w-0">
+          <Wordmark size="md" />
+          <div className="text-xs text-fg-secondary hidden lg:block truncate">
             Use Claude Code properly. Plan first, ship sharper.
           </div>
         </div>
@@ -218,10 +223,25 @@ export default function Home() {
               )}
             </button>
           )}
+          <button
+            onClick={() => setShortcutsOpen(true)}
+            title="Keyboard shortcuts (Shift+?)"
+            aria-label="Keyboard shortcuts"
+            className="p-1.5 rounded border border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg transition-colors"
+          >
+            <Keyboard size={14} strokeWidth={1.5} />
+          </button>
           <ThemeToggle />
-          <ProjectPicker current={project} onSelect={handleSelectProject} />
+          <ProjectPicker
+            current={project}
+            onSelect={handleSelectProject}
+            forceOpen={pickerOpen}
+            onOpenChange={setPickerOpen}
+          />
         </div>
       </header>
+
+      <ShortcutsOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
 
       <CommandPalette
         open={paletteOpen}
@@ -244,15 +264,13 @@ export default function Home() {
         </div>
       )}
 
-      {!project && bootstrapped && (
-        <div className="flex-1 flex items-center justify-center bg-base">
-          <div className="max-w-md text-center space-y-3">
-            <div className="text-lg font-semibold text-fg tracking-tight">No project selected</div>
-            <div className="text-sm text-fg-secondary">
-              Click "Project" in the top right to open an existing folder or create a new one.
-            </div>
-          </div>
-        </div>
+      {!project && (
+        <WelcomeEmpty
+          onOpenProject={() => setPickerOpen(true)}
+          onOpenSelf={() => handleSelectProject("")}
+          onOpenShortcuts={() => setShortcutsOpen(true)}
+          selfProjectPath="(Adeptly itself)"
+        />
       )}
 
       {project && (

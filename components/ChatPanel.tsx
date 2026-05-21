@@ -200,24 +200,38 @@ export function ChatPanel({
 
       <div ref={scrollRef} className="flex-1 overflow-auto p-3 space-y-3 bg-base">
         {history.length === 0 && !busy && (
-          <div className="text-xs text-fg-secondary italic leading-relaxed space-y-2">
+          <div className="text-xs text-fg-secondary leading-relaxed space-y-3">
             {planSlug ? (
-              <>
-                <div>
-                  Refining <strong className="text-fg">{planTitle}</strong>. Ask anything — when Claude recommends a Claude Code feature, you'll get a one-click <strong className="text-accent-1">Add to plan</strong> button that drops it in the right section.
-                </div>
-              </>
+              <div>
+                Refining <strong className="text-fg">{planTitle}</strong>. Ask anything — when Claude recommends a Claude Code feature, you'll get a one-click{" "}
+                <strong className="text-accent-1">Add to plan</strong> button that drops it in the right section.
+              </div>
             ) : (
               <>
-                <div className="text-fg not-italic">
-                  Describe what you want to build. Claude will write the full plan for you and pick the right Claude Code features for each section automatically.
+                <div className="text-fg text-sm">
+                  Describe what you want to build. Claude will write the full plan and pick the right Claude Code features automatically.
                 </div>
-                <div className="text-fg-tertiary">
-                  Try: <em>"I want to build an API that tracks subscription renewals"</em> or <em>"I'm refactoring auth in this Next.js app"</em>.
+                <div className="space-y-1.5 pt-1">
+                  <div className="text-[10px] uppercase tracking-wider text-fg-tertiary font-semibold">
+                    Try one of these
+                  </div>
+                  {[
+                    "I want to build a CLI that summarises recent git commits",
+                    "I'm refactoring auth in an existing Next.js app",
+                    "I want to add Stripe subscription billing to my SaaS",
+                  ].map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setInput(p)}
+                      className="block w-full text-left text-xs px-2 py-1.5 rounded border border-border-subtle hover:border-accent-1 hover:bg-base text-fg-secondary hover:text-fg transition-colors"
+                    >
+                      {p}
+                    </button>
+                  ))}
                 </div>
               </>
             )}
-            <div className="text-fg-tertiary">
+            <div className="text-fg-tertiary text-[10px]">
               Runs on your local <span className="font-mono">claude --print</span>. No API key. Uses your Claude Code subscription.
             </div>
           </div>
