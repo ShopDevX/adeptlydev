@@ -52,10 +52,18 @@ export function PlansList({
       .then((r) => r.json())
       .then((data) => {
         if (data?.error) throw new Error(data.error);
-        setPlans(data.plans ?? []);
+        const list: PlanLite[] = data.plans ?? [];
+        setPlans(list);
+        // Auto-select first plan when none is selected (eliminates the
+        // "select a plan from the left" empty state for projects that
+        // already have plans).
+        if (!selected && list.length > 0) {
+          onSelect(list[0].slug);
+        }
       })
       .catch((e) => setError(e.message ?? String(e)))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectRoot, refreshKey, internalRefresh]);
 
   if (collapsed) {

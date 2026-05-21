@@ -208,8 +208,19 @@ export function PlanEditor({
 
   if (!slug) {
     return (
-      <div className="flex-1 flex items-center justify-center text-fg-secondary text-sm">
-        Select a plan from the left, or create one in <span className="font-mono ml-1">docs/plans/</span>.
+      <div className="flex-1 flex items-center justify-center p-6 bg-elevated">
+        <div className="text-center space-y-4 max-w-sm">
+          <div className="text-base text-fg font-medium tracking-tight">
+            No plan selected
+          </div>
+          <div className="text-xs text-fg-secondary leading-relaxed">
+            Pick a plan from the left — or open <kbd>⌘I</kbd> chat and describe
+            what you want to build. Claude will draft the plan for you.
+          </div>
+          <div className="text-[10px] text-fg-tertiary font-mono">
+            Plans live in <span className="text-fg-secondary">docs/plans/</span>
+          </div>
+        </div>
       </div>
     );
   }
