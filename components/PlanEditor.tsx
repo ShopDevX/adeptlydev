@@ -354,11 +354,11 @@ export function PlanEditor({
               setDirty(true);
             }}
             spellCheck={false}
-            className="plan-content w-full h-full p-4 text-sm resize-none focus:outline-none text-fg"
+            className="plan-content block w-full min-h-full p-4 text-sm resize-none focus:outline-none text-fg bg-base"
             placeholder="# Plan title…"
           />
         ) : (
-          <div className="p-4">
+          <div className="p-4 min-h-full">
             <MarkdownPreview content={editContent} suggestions={suggestions} />
           </div>
         )}
