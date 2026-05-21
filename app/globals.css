@@ -278,6 +278,27 @@ html.light .bg-accent-medium { background-color: rgba(90, 63, 230, 0.16); }
 }
 .status-pulsing { animation: status-pulse 600ms ease-out; }
 
+/* Approval celebration — a soft three-pulse glow when a plan flips to
+   "approved". Brief, calm, no confetti — Adeptly's design language. */
+@keyframes approve-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(40, 200, 120, 0);
+  }
+  25% {
+    box-shadow: 0 0 0 8px rgba(40, 200, 120, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 0 rgba(40, 200, 120, 0);
+  }
+  75% {
+    box-shadow: 0 0 0 6px rgba(40, 200, 120, 0.18);
+  }
+}
+.approve-celebrating {
+  animation: approve-glow 1.4s ease-out;
+  border-radius: 0.25rem;
+}
+
 /* Loading skeleton — subtle shimmer placeholder shown while data loads */
 @keyframes skeleton-shimmer {
   0%   { background-position: -200px 0; }

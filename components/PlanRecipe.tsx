@@ -181,11 +181,19 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
       )}
 
       {!record && !loading && (
-        <div className="text-xs text-fg-secondary italic">
-          No recipe yet. Click <strong>Generate Claude Code recipe</strong> — Adeptly shells out to
-          your local <span className="font-mono">claude --print</span> (no API key needed) and asks
-          it which subagents, skills, hooks, and execution order best fit this plan. Falls back to a
-          generic recipe if the CLI isn't on PATH.
+        <div className="border border-dashed border-border-strong rounded-md p-4 text-center space-y-2">
+          <div className="flex justify-center">
+            <Sparkles size={20} className="text-accent-1" strokeWidth={1.5} />
+          </div>
+          <div className="text-sm text-fg font-medium">No recipe yet</div>
+          <div className="text-xs text-fg-secondary leading-relaxed max-w-md mx-auto">
+            Click <strong className="text-fg">Generate Claude Code recipe</strong> above.
+            Adeptly will ask Claude which subagents, skills, hooks, and execution order best
+            fit <em>this specific plan</em>, plus an upfront cost estimate.
+          </div>
+          <div className="text-[10px] text-fg-tertiary pt-1">
+            Uses your local <span className="font-mono">claude --print</span>. No API key.
+          </div>
         </div>
       )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Copy as CopyIcon, Check as CheckIcon } from "lucide-react";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { SuggestedFeatures } from "./SuggestedFeatures";
@@ -85,6 +85,8 @@ export function PlanEditor({
     "changes" | "suggestions" | "approval" | "reviewers" | "recipe"
   >("approval");
   const [pathCopied, setPathCopied] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
+  const prevStatusRef = useRef<PlanStatus | null>(null);
 
   useEffect(() => {
     if (!slug || !projectRoot) {
@@ -110,6 +112,20 @@ export function PlanEditor({
   }, [slug, projectRoot, refreshKey]);
 
   const approval = plan?.approval ?? null;
+
+  // Celebration: when the approval status transitions to "approved" (from
+  // anything else), briefly pulse a green glow on the editor header.
+  useEffect(() => {
+    const current = approval?.status ?? null;
+    const prev = prevStatusRef.current;
+    if (current === "approved" && prev !== null && prev !== "approved") {
+      setCelebrate(true);
+      const t = setTimeout(() => setCelebrate(false), 1500);
+      prevStatusRef.current = current;
+      return () => clearTimeout(t);
+    }
+    prevStatusRef.current = current;
+  }, [approval?.status]);
 
   async function save() {
     if (!slug || !projectRoot) return;
@@ -237,7 +253,11 @@ export function PlanEditor({
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-elevated">
-      <div className={`p-3 flex items-center gap-3 ${statusUnderline || "border-b border-border-subtle"}`}>
+      <div
+        className={`p-3 flex items-center gap-3 ${statusUnderline || "border-b border-border-subtle"} ${
+          celebrate ? "approve-celebrating" : ""
+        }`}
+      >
         <div className="flex-1 min-w-0">
           <div className="text-lg font-semibold truncate text-fg tracking-tight">{plan?.title ?? slug}</div>
           <div className="text-xs text-fg-tertiary font-mono flex items-center gap-1.5">
@@ -316,26 +336,39 @@ export function PlanEditor({
       </div>
 
       <div className="border-t border-border-subtle bg-elevated">
-        <div className="flex items-center gap-1 px-3 pt-2">
+        <div className="flex items-center gap-0.5 px-2 pt-2 overflow-x-auto">
           {(
             [
-              ["approval", "Approval"],
-              ["reviewers", "GitHub reviewers"],
-              ["recipe", "Claude recipe"],
-              ["changes", `Changes${mismatchCount ? ` · ${mismatchCount} ⚠` : ""}`],
-              ["suggestions", `Suggestions · ${suggestions.length}`],
+              ["approval", "Approval", approval ? null : null],
+              ["reviewers", "Reviewers", approval?.reviewers.length ? approval.reviewers.length : null],
+              ["recipe", "Claude recipe", null],
+              ["changes", "Changes", mismatchCount > 0 ? mismatchCount : null],
+              ["suggestions", "Suggestions", suggestions.length > 0 ? suggestions.length : null],
             ] as const
-          ).map(([key, label]) => (
+          ).map(([key, label, badge]) => (
             <button
               key={key}
               onClick={() => setBottomTab(key)}
-              className={`text-xs px-2 py-1 rounded-t transition-colors ${
+              className={`text-xs px-2.5 py-1 rounded-t transition-colors whitespace-nowrap flex items-center gap-1.5 ${
                 bottomTab === key
                   ? "bg-base border border-border-subtle border-b-base -mb-px font-medium text-fg"
-                  : "text-fg-secondary hover:text-fg"
+                  : "text-fg-secondary hover:text-fg hover:bg-base/40"
               }`}
             >
-              {label}
+              <span>{label}</span>
+              {badge !== null && (
+                <span
+                  className={`text-[10px] font-mono px-1 rounded ${
+                    key === "changes" && mismatchCount > 0
+                      ? "chip-changes"
+                      : bottomTab === key
+                      ? "text-accent-1"
+                      : "text-fg-tertiary"
+                  }`}
+                >
+                  {badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
