@@ -157,12 +157,18 @@ export function MarkdownPreview({
   content: string;
   suggestions?: FeatureSuggestion[];
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  // sourceRef is React-owned; outputRef is ours to mutate freely.
+  // We mirror sourceRef.innerHTML → outputRef, then run mermaid render and
+  // suggestion-mark wrapping on outputRef so React never sees the mutations.
+  // This avoids "removeChild: node is not a child" errors on theme toggle
+  // and content updates.
+  const sourceRef = useRef<HTMLDivElement | null>(null);
+  const outputRef = useRef<HTMLDivElement | null>(null);
   const [themeTick, setThemeTick] = useState(0);
+  const [renderTick, setRenderTick] = useState(0);
 
-  // Watch the <html> class for theme changes and force re-render of any
-  // Mermaid blocks (they bake colours in at render time and can't restyle
-  // via CSS once they're SVGs).
+  // Watch the <html> class for theme changes — re-render mermaid SVGs with
+  // the new theme variables and bump renderTick so we re-mirror the markdown.
   useEffect(() => {
     if (typeof document === "undefined") return;
     const html = document.documentElement;
@@ -171,7 +177,7 @@ export function MarkdownPreview({
       const current = html.classList.contains("light") ? "light" : "dark";
       if (current !== last) {
         last = current;
-        mermaidInitialized = false; // force re-init with new theme vars
+        mermaidInitialized = false;
         setThemeTick((t) => t + 1);
       }
     });
@@ -179,10 +185,15 @@ export function MarkdownPreview({
     return () => observer.disconnect();
   }, []);
 
+  // When React finishes painting sourceRef, mirror its HTML into outputRef
+  // and run mutation passes (mermaid + suggestion marks). renderTick is
+  // bumped from a layout effect below so we always mirror the latest HTML.
   useEffect(() => {
+    if (!outputRef.current || !sourceRef.current) return;
     ensureMermaidInit();
-    if (!containerRef.current) return;
-    const nodes = containerRef.current.querySelectorAll("code.language-mermaid");
+    outputRef.current.innerHTML = sourceRef.current.innerHTML;
+
+    const nodes = outputRef.current.querySelectorAll("code.language-mermaid");
     let cancelled = false;
     (async () => {
       let i = 0;
@@ -203,24 +214,27 @@ export function MarkdownPreview({
           node.parentElement?.replaceWith(errBlock);
         }
       }
+      if (!cancelled && outputRef.current) {
+        wrapSuggestionsInDom(outputRef.current, suggestions ?? []);
+      }
     })();
     return () => {
       cancelled = true;
     };
+  }, [content, suggestions, themeTick, renderTick]);
+
+  // Bump renderTick after the React render commits to sourceRef so the
+  // mirror effect runs against the freshest HTML, not a stale snapshot.
+  useEffect(() => {
+    setRenderTick((t) => t + 1);
   }, [content, themeTick]);
 
-  // Apply suggestion marks AFTER markdown render + mermaid is settled
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const tick = setTimeout(() => {
-      if (containerRef.current) wrapSuggestionsInDom(containerRef.current, suggestions ?? []);
-    }, 50);
-    return () => clearTimeout(tick);
-  }, [content, suggestions]);
-
   return (
-    <div ref={containerRef} className="prose-adept max-w-none">
-      <ReactMarkdown key={themeTick} remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+    <div className="prose-adept max-w-none">
+      <div ref={sourceRef} style={{ display: "none" }} aria-hidden>
+        <ReactMarkdown key={themeTick} remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      </div>
+      <div ref={outputRef} />
     </div>
   );
 }

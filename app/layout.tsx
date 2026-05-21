@@ -57,7 +57,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body>{children}</body>
+      {/* suppressHydrationWarning on <body> tolerates attributes injected by
+          browser extensions (e.g. ColorZilla's cz-shortcut-listen) that would
+          otherwise trigger React's hydration warning in development. */}
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
