@@ -12,13 +12,13 @@
     "subagents",
     "cli"
   ],
-  "homepage": "https://github.com/jai-thoughtlume/adeptly",
+  "homepage": "https://github.com/Thoughtlume/adeptly",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jai-thoughtlume/adeptly.git"
+    "url": "https://github.com/Thoughtlume/adeptly.git"
   },
   "license": "MIT",
-  "author": "Jai (Openesia Ltd)",
+  "author": "Jai (Thoughtlume)",
   "bin": {
     "adeptly": "./bin/adeptly.js"
   },

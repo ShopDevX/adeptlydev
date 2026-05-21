@@ -113,4 +113,4 @@ v0.4.0 — **published on npm** (2026-05-21). Beta. Full feature set: plan creat
 
 ## Built by
 
-[Openesia Ltd](https://openesia.com).
+[Thoughtlume](https://github.com/Thoughtlume).
