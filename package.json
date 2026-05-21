@@ -12,13 +12,13 @@
     "subagents",
     "cli"
   ],
-  "homepage": "https://github.com/Thoughtlume/adeptly",
+  "homepage": "https://github.com/ShopDevX/adeptlydev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Thoughtlume/adeptly.git"
+    "url": "https://github.com/ShopDevX/adeptlydev.git"
   },
   "license": "MIT",
-  "author": "Jai (Thoughtlume)",
+  "author": "Jai (ShopDevX)",
   "bin": {
     "adeptly": "./bin/adeptly.js"
   },
