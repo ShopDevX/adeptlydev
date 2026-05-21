@@ -264,7 +264,7 @@ export function PlanEditor({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-elevated">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-elevated">
       <div
         className={`p-3 flex items-center gap-3 ${statusUnderline || "border-b border-border-subtle"} ${
           celebrate ? "approve-celebrating" : ""
@@ -288,23 +288,7 @@ export function PlanEditor({
                 )}
               </button>
             )}
-            {plan?.git?.lastAuthor && (
-              <>
-                <span className="text-fg-tertiary">·</span>
-                <span className="text-fg-secondary normal-case">
-                  last edit{" "}
-                  <span className="text-fg">{plan.git.lastAuthor}</span>
-                  {plan.git.lastDate && (
-                    <span className="text-fg-tertiary"> · {formatRelative(plan.git.lastDate)}</span>
-                  )}
-                </span>
-              </>
-            )}
-            {plan?.git && (plan.git.dirty || plan.git.untracked) && (
-              <span className="chip chip-review !text-[10px] !px-1.5">
-                {plan.git.untracked ? "untracked" : "unsaved changes"}
-              </span>
-            )}
+            {/* Git status hidden in v0.5 per user feedback — coming back as a toggle in v0.6 */}
           </div>
         </div>
         {approval && <StatusChip status={approval.status} />}

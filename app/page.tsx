@@ -19,6 +19,7 @@ import { ChatPanel } from "@/components/ChatPanel";
 import { Wordmark } from "@/components/Wordmark";
 import { WelcomeEmpty } from "@/components/WelcomeEmpty";
 import { ShortcutsOverlay } from "@/components/ShortcutsOverlay";
+import { Splitter } from "@/components/Splitter";
 import {
   ProjectPicker,
   loadCurrentProject,
@@ -48,11 +49,15 @@ export default function Home() {
   const [bootstrapped, setBootstrapped] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
+  // Chat opens by default so first-time users see the primary affordance.
+  // Persists across reloads via localStorage.
+  const [chatOpen, setChatOpen] = useState(true);
   const [selectedPlanTitle, setSelectedPlanTitle] = useState<string | null>(null);
   const [planRefreshKey, setPlanRefreshKey] = useState(0);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [leftWidth, setLeftWidth] = useState(288);
+  const [chatWidth, setChatWidth] = useState(420);
   /** Transient status banner. Cleared by a timer after a few seconds. */
   const [lastAction, setLastAction] = useState<{ kind: "created" | "updated"; text: string } | null>(null);
   const lastActionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -276,21 +281,34 @@ export default function Home() {
       {project && (
         <div className="flex-1 flex min-h-0">
           {!focusMode && (
-            <PlansList
-              projectRoot={project.path}
-              selected={selectedSlug}
-              onSelect={setSelectedSlug}
-              refreshKey={refreshKey}
-              collapsed={leftCollapsed}
-              onToggleCollapsed={toggleLeft}
-              onPlanCreated={(slug, title) => {
-                setSelectedPlanTitle(title);
-                flashAction("created", `Plan created: ${title}`);
-              }}
-            />
+            <>
+              <PlansList
+                projectRoot={project.path}
+                selected={selectedSlug}
+                onSelect={setSelectedSlug}
+                refreshKey={refreshKey}
+                collapsed={leftCollapsed}
+                onToggleCollapsed={toggleLeft}
+                onPlanCreated={(slug, title) => {
+                  setSelectedPlanTitle(title);
+                  flashAction("created", `Plan created: ${title}`);
+                }}
+                width={leftWidth}
+              />
+              {!leftCollapsed && (
+                <Splitter
+                  storageKey="adeptly:left-width"
+                  defaultWidth={288}
+                  min={200}
+                  max={520}
+                  side="left"
+                  onChange={setLeftWidth}
+                />
+              )}
+            </>
           )}
 
-          <div className="flex-1 flex flex-col min-w-0 relative">
+          <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
             {lastAction && (
               <div
                 className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 shadow-lg"
@@ -313,23 +331,34 @@ export default function Home() {
           </div>
 
           {!focusMode && chatOpen && (
-            <ChatPanel
-              open={chatOpen}
-              onClose={() => setChatOpen(false)}
-              projectRoot={project?.path ?? null}
-              planSlug={selectedSlug}
-              planTitle={selectedPlanTitle}
-              onPlanUpdated={() => {
-                setPlanRefreshKey((k) => k + 1);
-                flashAction("updated", `Plan updated`);
-              }}
-              onPlanCreated={(slug, title) => {
-                setSelectedSlug(slug);
-                setSelectedPlanTitle(title);
-                setRefreshKey((k) => k + 1);
-                flashAction("created", `Plan created: ${title}`);
-              }}
-            />
+            <>
+              <Splitter
+                storageKey="adeptly:chat-width"
+                defaultWidth={420}
+                min={320}
+                max={720}
+                side="right"
+                onChange={setChatWidth}
+              />
+              <ChatPanel
+                open={chatOpen}
+                onClose={() => setChatOpen(false)}
+                projectRoot={project?.path ?? null}
+                planSlug={selectedSlug}
+                planTitle={selectedPlanTitle}
+                onPlanUpdated={() => {
+                  setPlanRefreshKey((k) => k + 1);
+                  flashAction("updated", `Plan updated`);
+                }}
+                onPlanCreated={(slug, title) => {
+                  setSelectedSlug(slug);
+                  setSelectedPlanTitle(title);
+                  setRefreshKey((k) => k + 1);
+                  flashAction("created", `Plan created: ${title}`);
+                }}
+                width={chatWidth}
+              />
+            </>
           )}
 
           {focusMode || chatOpen ? null : rightCollapsed ? (

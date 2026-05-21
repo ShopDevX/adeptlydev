@@ -6,8 +6,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        base:     "var(--bg-base)",
-        elevated: "var(--bg-elevated)",
+        // Colors that need `bg-base/40` etc. opacity support use the
+        // rgb-tuple var pattern. Plain colors use a flat var.
+        base:     "rgb(var(--bg-base-rgb) / <alpha-value>)",
+        elevated: "rgb(var(--bg-elevated-rgb) / <alpha-value>)",
         overlay:  "var(--bg-overlay)",
         "fg":     "var(--fg-primary)",
         "fg-secondary": "var(--fg-secondary)",
@@ -15,7 +17,7 @@ const config: Config = {
         "border-subtle": "var(--border-subtle)",
         "border-strong": "var(--border-strong)",
         accent: {
-          1: "var(--accent-1)",
+          1: "rgb(var(--accent-1-rgb) / <alpha-value>)",
           2: "var(--accent-2)",
         },
         status: {

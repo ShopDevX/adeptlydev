@@ -29,6 +29,7 @@ export function PlansList({
   collapsed,
   onToggleCollapsed,
   onPlanCreated,
+  width,
 }: {
   projectRoot: string | null;
   selected: string | null;
@@ -37,6 +38,8 @@ export function PlansList({
   collapsed: boolean;
   onToggleCollapsed: () => void;
   onPlanCreated?: (slug: string, title: string) => void;
+  /** Pixel width when not collapsed. Defaults to 288 (the previous w-72). */
+  width?: number;
 }) {
   const [plans, setPlans] = useState<PlanLite[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +71,7 @@ export function PlansList({
 
   if (collapsed) {
     return (
-      <aside className="w-10 border-r border-border-subtle bg-elevated flex flex-col items-center py-2">
+      <aside className="w-10 border-r border-border-subtle bg-elevated flex flex-col items-center py-2 shrink-0">
         <button
           onClick={onToggleCollapsed}
           title="Expand plans list"
@@ -85,7 +88,10 @@ export function PlansList({
   }
 
   return (
-    <aside className="w-72 border-r border-border-subtle bg-elevated flex flex-col">
+    <aside
+      className="border-r border-border-subtle bg-elevated flex flex-col shrink-0"
+      style={{ width: width ?? 288 }}
+    >
       <div className="p-3 border-b border-border-subtle flex items-center gap-2">
         <div className="text-xs font-semibold uppercase tracking-wide text-fg-secondary flex-1">
           Plans {plans.length > 0 && <span className="text-fg-tertiary">({plans.length})</span>}
@@ -140,25 +146,6 @@ export function PlansList({
           {plans.map((p) => {
             const status: PlanStatus = p.approval?.status ?? "draft";
             const isSelected = selected === p.slug;
-            const git = (p as any).git as
-              | {
-                  lastAuthor: string | null;
-                  lastDate: string | null;
-                  dirty: boolean;
-                  untracked: boolean;
-                  staged: boolean;
-                }
-              | null
-              | undefined;
-            const gitMark =
-              git?.untracked
-                ? { dot: "bg-status-review", label: "untracked" }
-                : git?.dirty
-                ? { dot: "bg-status-review", label: "modified locally" }
-                : git?.staged
-                ? { dot: "bg-status-approved", label: "staged" }
-                : null;
-
             return (
               <li key={p.slug}>
                 <button
@@ -172,20 +159,8 @@ export function PlansList({
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${STATUS_DOT[status]}`} aria-hidden />
                     <span className="text-sm font-medium truncate text-fg flex-1">{p.title}</span>
-                    {gitMark && (
-                      <span
-                        title={gitMark.label}
-                        className={`w-1.5 h-1.5 rounded-full ${gitMark.dot} shrink-0`}
-                        aria-label={`git: ${gitMark.label}`}
-                      />
-                    )}
                   </div>
-                  <div className="text-xs text-fg-tertiary font-mono truncate">
-                    {p.filename}
-                    {git?.lastAuthor && (
-                      <span className="ml-1 text-fg-tertiary"> · {git.lastAuthor.split(" ")[0]}</span>
-                    )}
-                  </div>
+                  <div className="text-xs text-fg-tertiary font-mono truncate">{p.filename}</div>
                 </button>
               </li>
             );

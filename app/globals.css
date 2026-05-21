@@ -17,6 +17,11 @@ html.dark {
   --border-subtle: #20232c;
   --border-strong: #2e3340;
 
+  /* RGB tuples for Tailwind opacity modifiers (bg-base/70 etc.) */
+  --bg-base-rgb:     10 11 14;
+  --bg-elevated-rgb: 20 22 28;
+  --accent-1-rgb:    124 92 255;
+
   /* Foreground */
   --fg-primary:    #e6e8ee;
   --fg-secondary:  #9aa1b3;
@@ -47,6 +52,11 @@ html.light {
   --bg-overlay:    rgba(255, 255, 255, 0.82);
   --border-subtle: #dfe2e8;
   --border-strong: #b9bfca;
+
+  /* RGB tuples for Tailwind opacity modifiers in light mode */
+  --bg-base-rgb:     238 240 244;
+  --bg-elevated-rgb: 255 255 255;
+  --accent-1-rgb:    90 63 230;
 
   /* Foreground — primary near-black, tertiary still legible on white */
   --fg-primary:    #14161c;

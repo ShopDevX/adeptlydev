@@ -36,6 +36,7 @@ export function ChatPanel({
   planTitle,
   onPlanUpdated,
   onPlanCreated,
+  width,
 }: {
   open: boolean;
   onClose: () => void;
@@ -45,6 +46,8 @@ export function ChatPanel({
   onPlanUpdated?: () => void;
   /** Called when chat generates and creates a brand-new plan. Switches the editor to it. */
   onPlanCreated?: (slug: string, title: string) => void;
+  /** Pixel width. Defaults to 420 (previous fixed value). */
+  width?: number;
 }) {
   const [history, setHistory] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
@@ -162,8 +165,8 @@ export function ChatPanel({
 
   return (
     <aside
-      className="w-[420px] shrink-0 flex flex-col border-l border-border-strong"
-      style={{ background: "var(--bg-elevated)" }}
+      className="shrink-0 flex flex-col border-l border-border-strong"
+      style={{ background: "var(--bg-elevated)", width: width ?? 420 }}
       role="complementary"
       aria-label="Chat with Claude"
     >
