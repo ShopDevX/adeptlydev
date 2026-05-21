@@ -185,7 +185,7 @@ export default function Home() {
               title="Chat with Claude (Ctrl+I)"
               className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-colors text-xs ${
                 chatOpen
-                  ? "border-accent-1 text-accent-1 bg-accent-1/10"
+                  ? "border-accent-1 text-accent-1 bg-accent-soft"
                   : "border-border-subtle hover:border-border-strong text-fg-secondary hover:text-fg"
               }`}
             >

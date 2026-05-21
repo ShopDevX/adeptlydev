@@ -279,7 +279,7 @@ export function ChatPanel({
                             onClick={() => applyInjection(i, j, inj)}
                             className={`text-xs px-2 py-1 rounded inline-flex items-center gap-1 transition-colors ${
                               status === "applied"
-                                ? "bg-status-approved/20 text-status-approved cursor-default"
+                                ? "chip-approved cursor-default"
                                 : status === "applying"
                                 ? "bg-base text-fg-tertiary cursor-wait"
                                 : "bg-accent-gradient text-white"

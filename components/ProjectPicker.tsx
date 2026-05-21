@@ -179,7 +179,7 @@ export function ProjectPicker({
             <button
               onClick={() => setMode("browse")}
               className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
-                mode === "browse" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
+                mode === "browse" ? "bg-accent-soft text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
               }`}
             >
               <FolderSearch size={12} strokeWidth={1.5} />
@@ -188,7 +188,7 @@ export function ProjectPicker({
             <button
               onClick={() => setMode("open")}
               className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
-                mode === "open" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
+                mode === "open" ? "bg-accent-soft text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
               }`}
             >
               <FolderOpen size={12} strokeWidth={1.5} />
@@ -197,7 +197,7 @@ export function ProjectPicker({
             <button
               onClick={() => setMode("create")}
               className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${
-                mode === "create" ? "bg-accent-1/10 text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
+                mode === "create" ? "bg-accent-soft text-accent-1 font-medium" : "text-fg-secondary hover:text-fg"
               }`}
             >
               <FolderPlus size={12} strokeWidth={1.5} />

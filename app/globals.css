@@ -41,17 +41,28 @@ html.dark {
 }
 
 html.light {
-  --bg-base:       #f8f9fb;
+  /* Surfaces — base darker than elevated for visible hover/selection contrast */
+  --bg-base:       #eef0f4;
   --bg-elevated:   #ffffff;
   --bg-overlay:    rgba(255, 255, 255, 0.82);
-  --border-subtle: #e6e8ee;
-  --border-strong: #cfd3dc;
+  --border-subtle: #dfe2e8;
+  --border-strong: #b9bfca;
 
+  /* Foreground — primary near-black, tertiary still legible on white */
   --fg-primary:    #14161c;
-  --fg-secondary:  #5b6478;
-  --fg-tertiary:   #9aa1b3;
+  --fg-secondary:  #4d556a;
+  --fg-tertiary:   #7d859a;
 
-  --status-draft:    #9aa1b3;
+  /* Accent — darker variant of the gradient so it remains legible against
+     white. Violet stays violet; the cyan end darkens to a teal-blue so it
+     still reads as a gradient but doesn't disappear on white. White text
+     on top of buttons using this gradient remains readable. */
+  --accent-1:        #5a3fe6;
+  --accent-2:        #1f7fb6;
+  --accent-gradient: linear-gradient(120deg, #5a3fe6 0%, #1f7fb6 100%);
+  --accent-glow:     radial-gradient(circle, rgba(90, 63, 230, 0.25) 0%, transparent 70%);
+
+  --status-draft:    #6f7889;
   --status-review:   #b9851a;
   --status-approved: #1f8a52;
   --status-changes:  #c93747;
@@ -235,6 +246,15 @@ textarea.plan-content {
   background: rgba(124, 92, 255, 0.08);
   border-left: 2px solid var(--accent-1);
 }
+html.light .suggested-row { background: rgba(90, 63, 230, 0.07); }
+
+/* Soft accent fills — for selected tabs / chips / pill bgs. Tailwind
+   opacity modifiers don't work on hex-backed CSS vars, so these are
+   defined explicitly per mode. */
+.bg-accent-soft   { background-color: rgba(124, 92, 255, 0.12); }
+.bg-accent-medium { background-color: rgba(124, 92, 255, 0.20); }
+html.light .bg-accent-soft   { background-color: rgba(90, 63, 230, 0.10); }
+html.light .bg-accent-medium { background-color: rgba(90, 63, 230, 0.16); }
 
 /* Inline feature-suggestion underline in rendered plan preview */
 .suggestion-mark {
