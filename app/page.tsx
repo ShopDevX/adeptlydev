@@ -265,6 +265,10 @@ export default function Home() {
               refreshKey={refreshKey}
               collapsed={leftCollapsed}
               onToggleCollapsed={toggleLeft}
+              onPlanCreated={(slug, title) => {
+                setSelectedPlanTitle(title);
+                flashAction("created", `Plan created: ${title}`);
+              }}
             />
           )}
 

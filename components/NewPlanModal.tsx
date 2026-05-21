@@ -12,7 +12,7 @@ export function NewPlanModal({
   open: boolean;
   projectRoot: string | null;
   onClose: () => void;
-  onCreated: (slug: string) => void;
+  onCreated: (slug: string, title: string) => void;
 }) {
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
@@ -42,7 +42,7 @@ export function NewPlanModal({
       );
       const data = await res.json();
       if (data?.error) throw new Error(data.error);
-      onCreated(data.created.slug);
+      onCreated(data.created.slug, title.trim());
       onClose();
     } catch (e: any) {
       setError(e.message ?? String(e));

@@ -28,6 +28,7 @@ export function PlansList({
   refreshKey,
   collapsed,
   onToggleCollapsed,
+  onPlanCreated,
 }: {
   projectRoot: string | null;
   selected: string | null;
@@ -35,6 +36,7 @@ export function PlansList({
   refreshKey: number;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  onPlanCreated?: (slug: string, title: string) => void;
 }) {
   const [plans, setPlans] = useState<PlanLite[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -146,9 +148,10 @@ export function PlansList({
         open={newOpen}
         projectRoot={projectRoot}
         onClose={() => setNewOpen(false)}
-        onCreated={(slug) => {
+        onCreated={(slug, title) => {
           setInternalRefresh((k) => k + 1);
           onSelect(slug);
+          onPlanCreated?.(slug, title);
         }}
       />
     </aside>

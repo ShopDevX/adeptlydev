@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Copy as CopyIcon, Check as CheckIcon } from "lucide-react";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { SuggestedFeatures } from "./SuggestedFeatures";
 import { GitHubReviewers } from "./GitHubReviewers";
@@ -64,10 +65,13 @@ export function PlanEditor({
   projectRoot,
   slug,
   onJumpToFeature,
+  refreshKey,
 }: {
   projectRoot: string | null;
   slug: string | null;
   onJumpToFeature?: (featureId: string) => void;
+  /** Bumping this number from a parent refetches the plan (e.g. after chat injection). */
+  refreshKey?: number;
 }) {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [changes, setChanges] = useState<FileChange[]>([]);
@@ -80,6 +84,7 @@ export function PlanEditor({
   const [bottomTab, setBottomTab] = useState<
     "changes" | "suggestions" | "approval" | "reviewers" | "recipe"
   >("approval");
+  const [pathCopied, setPathCopied] = useState(false);
 
   useEffect(() => {
     if (!slug || !projectRoot) {
@@ -102,7 +107,7 @@ export function PlanEditor({
         setDirty(false);
       })
       .catch((e) => setError(e.message ?? String(e)));
-  }, [slug, projectRoot]);
+  }, [slug, projectRoot, refreshKey]);
 
   const approval = plan?.approval ?? null;
 
@@ -199,12 +204,47 @@ export function PlanEditor({
 
   const statusUnderline = approval ? STATUS_UNDERLINE[approval.status] : "";
 
+  // Build a display path. Server hands us only the filename; we know plans live
+  // under <projectRoot>/docs/plans/. Show both the project-relative path AND
+  // the absolute path on hover/click — the absolute path is what the user
+  // needs if they want to open the file in their editor outside Adeptly.
+  const isWindows = projectRoot?.includes("\\");
+  const sep = isWindows ? "\\" : "/";
+  const relativePath = plan?.filename ? `docs${sep}plans${sep}${plan.filename}` : "";
+  const absolutePath =
+    projectRoot && plan?.filename ? `${projectRoot}${sep}${relativePath}` : "";
+
+  async function copyAbsolutePath() {
+    if (!absolutePath) return;
+    try {
+      await navigator.clipboard.writeText(absolutePath);
+      setPathCopied(true);
+      setTimeout(() => setPathCopied(false), 1500);
+    } catch {}
+  }
+
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-elevated">
       <div className={`p-3 flex items-center gap-3 ${statusUnderline || "border-b border-border-subtle"}`}>
         <div className="flex-1 min-w-0">
           <div className="text-lg font-semibold truncate text-fg tracking-tight">{plan?.title ?? slug}</div>
-          <div className="text-xs text-fg-tertiary font-mono">{plan?.filename}</div>
+          <div className="text-xs text-fg-tertiary font-mono flex items-center gap-1.5">
+            <span className="truncate" title={absolutePath}>{relativePath || plan?.filename}</span>
+            {absolutePath && (
+              <button
+                onClick={copyAbsolutePath}
+                title={`Copy absolute path: ${absolutePath}`}
+                aria-label="Copy file path"
+                className="p-0.5 rounded hover:bg-base text-fg-tertiary hover:text-accent-1 transition-colors shrink-0"
+              >
+                {pathCopied ? (
+                  <CheckIcon size={11} strokeWidth={2} className="text-status-approved" />
+                ) : (
+                  <CopyIcon size={11} strokeWidth={1.5} />
+                )}
+              </button>
+            )}
+          </div>
         </div>
         {approval && <StatusChip status={approval.status} />}
       </div>
