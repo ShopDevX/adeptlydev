@@ -1,0 +1,35 @@
+# The `files` field in package.json is the source of truth for what
+# gets published. This file is a fallback safety net to exclude common
+# noise in case `files` is removed.
+
+# Source we don't need at runtime (Next.js standalone bundle has its own copies)
+app/
+components/
+lib/
+scripts/
+docs/
+
+# Dev / build
+.next/cache/
+.next/trace
+.next/types/
+node_modules/
+*.tsbuildinfo
+next-env.d.ts
+tsconfig.json
+next.config.mjs
+tailwind.config.ts
+postcss.config.mjs
+
+# Git, IDE, OS
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local files
+.env*
+*.log

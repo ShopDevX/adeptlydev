@@ -135,6 +135,7 @@ export const CLAUDE_CODE_FEATURES: ClaudeCodeFeature[] = [
     name: "/help",
     category: "Skills",
     description: "Get help with using Claude Code.",
+    whenToUse: "When you forget a feature or a command.",
     invocation: "/help",
   },
   {
@@ -150,6 +151,7 @@ export const CLAUDE_CODE_FEATURES: ClaudeCodeFeature[] = [
     name: "/config",
     category: "Skills",
     description: "Quick settings: theme, model selection, and other lightweight harness toggles.",
+    whenToUse: "Changing theme or model mid-session without leaving Claude Code.",
     invocation: "/config",
   },
   {
@@ -181,6 +183,7 @@ export const CLAUDE_CODE_FEATURES: ClaudeCodeFeature[] = [
     name: "keybindings-help skill",
     category: "Skills",
     description: "Customise keyboard shortcuts, rebind keys, add chord bindings.",
+    whenToUse: "When you want to rebind keys or add chord shortcuts to Claude Code.",
     invocation: "Edit ~/.claude/keybindings.json",
   },
 

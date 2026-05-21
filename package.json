@@ -1,14 +1,48 @@
 {
   "name": "adeptly",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Use Claude Code properly. Plan first, team review, every feature surfaced.",
+  "version": "0.4.0",
+  "description": "Plan-first companion for Claude Code. Describe what to build — Adeptly drafts the plan with the right Claude Code features baked into each section. Free, open source, runs on your machine.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "ai",
+    "planning",
+    "developer-tools",
+    "subagents",
+    "cli"
+  ],
+  "homepage": "https://github.com/jai-thoughtlume/adeptly",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jai-thoughtlume/adeptly.git"
+  },
+  "license": "MIT",
+  "author": "Jai (Openesia Ltd)",
+  "bin": {
+    "adeptly": "./bin/adeptly.js"
+  },
+  "files": [
+    "bin/",
+    ".next/standalone/",
+    ".next/static/",
+    "public/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:package": "next build && node scripts/pack-assets.js",
+    "pack:assets": "node scripts/pack-assets.js",
     "start": "next start",
+    "start:standalone": "node .next/standalone/server.js",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "npm run build:package"
   },
   "dependencies": {
     "geist": "^1.7.0",
