@@ -20,12 +20,23 @@ export interface Approval {
   reviewers: Reviewer[];
 }
 
+export interface GitPlanInfo {
+  lastAuthor: string | null;
+  lastEmail: string | null;
+  lastDate: string | null;
+  lastHash: string | null;
+  dirty: boolean;
+  untracked: boolean;
+  staged: boolean;
+}
+
 export interface Plan {
   slug: string;
   filename: string;
   title: string;
   content: string;
   approval: Approval | null;
+  git?: GitPlanInfo | null;
 }
 
 export interface SessionSummary {

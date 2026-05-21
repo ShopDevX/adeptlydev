@@ -140,6 +140,25 @@ export function PlansList({
           {plans.map((p) => {
             const status: PlanStatus = p.approval?.status ?? "draft";
             const isSelected = selected === p.slug;
+            const git = (p as any).git as
+              | {
+                  lastAuthor: string | null;
+                  lastDate: string | null;
+                  dirty: boolean;
+                  untracked: boolean;
+                  staged: boolean;
+                }
+              | null
+              | undefined;
+            const gitMark =
+              git?.untracked
+                ? { dot: "bg-status-review", label: "untracked" }
+                : git?.dirty
+                ? { dot: "bg-status-review", label: "modified locally" }
+                : git?.staged
+                ? { dot: "bg-status-approved", label: "staged" }
+                : null;
+
             return (
               <li key={p.slug}>
                 <button
@@ -152,9 +171,21 @@ export function PlansList({
                 >
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${STATUS_DOT[status]}`} aria-hidden />
-                    <span className="text-sm font-medium truncate text-fg">{p.title}</span>
+                    <span className="text-sm font-medium truncate text-fg flex-1">{p.title}</span>
+                    {gitMark && (
+                      <span
+                        title={gitMark.label}
+                        className={`w-1.5 h-1.5 rounded-full ${gitMark.dot} shrink-0`}
+                        aria-label={`git: ${gitMark.label}`}
+                      />
+                    )}
                   </div>
-                  <div className="text-xs text-fg-tertiary font-mono truncate">{p.filename}</div>
+                  <div className="text-xs text-fg-tertiary font-mono truncate">
+                    {p.filename}
+                    {git?.lastAuthor && (
+                      <span className="ml-1 text-fg-tertiary"> · {git.lastAuthor.split(" ")[0]}</span>
+                    )}
+                  </div>
                 </button>
               </li>
             );

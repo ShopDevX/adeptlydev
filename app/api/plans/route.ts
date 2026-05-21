@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listPlans, createPlan } from "@/lib/plans";
 import { resolveProjectRoot } from "@/lib/projects";
+import { getGitInfoForPlans } from "@/lib/git";
 
 export async function GET(req: NextRequest) {
   try {
     const projectRoot = resolveProjectRoot(req.nextUrl.searchParams.get("projectRoot"));
     const plans = await listPlans(projectRoot);
-    const lite = plans.map(({ content, ...rest }) => rest);
+    const relPaths = plans.map((p) => `docs/plans/${p.filename}`);
+    const gitInfo = await getGitInfoForPlans(projectRoot, relPaths);
+    const lite = plans.map(({ content, ...rest }) => ({
+      ...rest,
+      git: gitInfo[`docs/plans/${rest.filename}`] ?? null,
+    }));
     return NextResponse.json({ projectRoot, plans: lite });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? String(err) }, { status: 500 });

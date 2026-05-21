@@ -6,6 +6,7 @@ import { MarkdownPreview } from "./MarkdownPreview";
 import { SuggestedFeatures } from "./SuggestedFeatures";
 import { GitHubReviewers } from "./GitHubReviewers";
 import { PlanRecipe } from "./PlanRecipe";
+import { formatRelative } from "@/lib/format-time";
 import type { Approval, FeatureSuggestion, Plan, PlanStatus } from "@/lib/types";
 
 interface FileChange {
@@ -271,7 +272,7 @@ export function PlanEditor({
       >
         <div className="flex-1 min-w-0">
           <div className="text-lg font-semibold truncate text-fg tracking-tight">{plan?.title ?? slug}</div>
-          <div className="text-xs text-fg-tertiary font-mono flex items-center gap-1.5">
+          <div className="text-xs text-fg-tertiary font-mono flex items-center gap-1.5 flex-wrap">
             <span className="truncate" title={absolutePath}>{relativePath || plan?.filename}</span>
             {absolutePath && (
               <button
@@ -286,6 +287,23 @@ export function PlanEditor({
                   <CopyIcon size={11} strokeWidth={1.5} />
                 )}
               </button>
+            )}
+            {plan?.git?.lastAuthor && (
+              <>
+                <span className="text-fg-tertiary">·</span>
+                <span className="text-fg-secondary normal-case">
+                  last edit{" "}
+                  <span className="text-fg">{plan.git.lastAuthor}</span>
+                  {plan.git.lastDate && (
+                    <span className="text-fg-tertiary"> · {formatRelative(plan.git.lastDate)}</span>
+                  )}
+                </span>
+              </>
+            )}
+            {plan?.git && (plan.git.dirty || plan.git.untracked) && (
+              <span className="chip chip-review !text-[10px] !px-1.5">
+                {plan.git.untracked ? "untracked" : "unsaved changes"}
+              </span>
             )}
           </div>
         </div>
