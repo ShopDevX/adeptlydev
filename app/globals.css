@@ -99,6 +99,43 @@ body::before {
   pointer-events: none;
 }
 
+/* Subtle fade-in for the welcome screen on first paint */
+@keyframes fade-up {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.fade-up         { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.fade-up-delay-1 { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both; }
+.fade-up-delay-2 { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 160ms both; }
+.fade-up-delay-3 { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both; }
+.fade-up-delay-4 { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 320ms both; }
+
+/* Custom scrollbars — subtle, theme-aware. Default browser scrollbars look
+   loud on a dark UI; these read as part of the chrome. */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-subtle);
+  border-radius: 6px;
+  border: 2px solid var(--bg-base);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--border-strong);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+}
+
 /* ============================================================
    Inputs
    ============================================================ */

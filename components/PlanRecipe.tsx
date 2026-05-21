@@ -180,6 +180,33 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
         </div>
       )}
 
+      {!record && loading && (
+        <div className="space-y-3" aria-busy="true" aria-label="Asking Claude for a recipe">
+          {[
+            { titleW: "w-1/3", lines: 2 },
+            { titleW: "w-1/4", lines: 1 },
+            { titleW: "w-1/2", lines: 3 },
+            { titleW: "w-1/3", lines: 3 },
+            { titleW: "w-1/4", lines: 2 },
+          ].map((s, i) => (
+            <div key={i} className="border border-border-subtle rounded-md p-3 bg-elevated space-y-2">
+              <div className={`skeleton h-2.5 ${s.titleW}`} />
+              {Array.from({ length: s.lines }).map((_, j) => (
+                <div
+                  key={j}
+                  className={`skeleton h-3 ${
+                    j === 0 ? "w-full" : j === 1 ? "w-11/12" : "w-9/12"
+                  }`}
+                />
+              ))}
+            </div>
+          ))}
+          <div className="text-[10px] text-fg-tertiary text-center pt-1 italic">
+            Claude is reading the plan and choosing the right features. Usually 20-40s.
+          </div>
+        </div>
+      )}
+
       {!record && !loading && (
         <div className="border border-dashed border-border-strong rounded-md p-4 text-center space-y-2">
           <div className="flex justify-center">

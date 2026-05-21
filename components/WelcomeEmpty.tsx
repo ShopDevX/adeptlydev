@@ -25,7 +25,7 @@ export function WelcomeEmpty({
     <div className="flex-1 overflow-auto bg-base">
       <div className="max-w-3xl mx-auto px-6 py-12 md:py-16 space-y-10">
         {/* Hero */}
-        <section className="space-y-4 text-center">
+        <section className="space-y-4 text-center fade-up">
           <div className="flex justify-center">
             <Wordmark size="lg" />
           </div>
@@ -40,7 +40,7 @@ export function WelcomeEmpty({
         </section>
 
         {/* Primary CTAs */}
-        <section className="grid md:grid-cols-2 gap-3">
+        <section className="grid md:grid-cols-2 gap-3 fade-up-delay-1">
           <button
             onClick={onOpenProject}
             className="group text-left p-4 rounded-md border border-border-subtle hover:border-accent-1 bg-elevated transition-colors"
@@ -82,7 +82,7 @@ export function WelcomeEmpty({
         </section>
 
         {/* How it works */}
-        <section className="space-y-3">
+        <section className="space-y-3 fade-up-delay-2">
           <div className="text-xs font-bold uppercase tracking-wider text-fg-tertiary">
             How it works
           </div>
@@ -125,7 +125,7 @@ export function WelcomeEmpty({
         </section>
 
         {/* Example prompts */}
-        <section className="space-y-2">
+        <section className="space-y-2 fade-up-delay-3">
           <div className="text-xs font-bold uppercase tracking-wider text-fg-tertiary">
             Example things to ask Claude to plan
           </div>
@@ -143,7 +143,7 @@ export function WelcomeEmpty({
         </section>
 
         {/* Helpful pointers */}
-        <section className="text-xs text-fg-tertiary flex items-center gap-3 flex-wrap pt-2 border-t border-border-subtle">
+        <section className="text-xs text-fg-tertiary flex items-center gap-3 flex-wrap pt-2 border-t border-border-subtle fade-up-delay-4">
           <button
             onClick={onOpenShortcuts}
             className="inline-flex items-center gap-1 text-fg-secondary hover:text-accent-1 transition-colors"
