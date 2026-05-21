@@ -10,8 +10,11 @@ import {
   Sparkles,
   PlusCircle,
   Check,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { getFeatureById } from "@/lib/features";
+import { useSpeechRecognition } from "@/lib/use-speech-recognition";
 
 interface FeatureInjection {
   section_hint: string;
@@ -58,6 +61,30 @@ export function ChatPanel({
   const [injectError, setInjectError] = useState<Record<string, string>>({});
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Voice input (push-to-talk). The mic button is hidden if the browser
+  // doesn't support the Web Speech API. While listening, the textarea is
+  // mic-controlled: input = inputBase + " " + finalTranscript + " " + interim.
+  const speech = useSpeechRecognition();
+  const inputBaseRef = useRef<string>("");
+  useEffect(() => {
+    if (!speech.listening) return;
+    const base = inputBaseRef.current;
+    const finalised = speech.transcript;
+    const interim = speech.interim;
+    const join = (a: string, b: string) =>
+      a && b ? `${a.replace(/\s+$/, "")} ${b.replace(/^\s+/, "")}` : a + b;
+    setInput(join(join(base, finalised), interim));
+  }, [speech.transcript, speech.interim, speech.listening]);
+
+  function toggleMic() {
+    if (speech.listening) {
+      speech.stop();
+    } else {
+      inputBaseRef.current = input;
+      speech.start();
+    }
+  }
 
   // Load + persist per-plan conversation
   useEffect(() => {
@@ -369,11 +396,35 @@ export function ChatPanel({
                 : "Describe what you want to build — Claude will write the plan…"
             }
             disabled={busy || !projectRoot}
-            className="flex-1 bg-base text-fg border border-border-strong rounded px-2 py-1.5 text-sm resize-none focus:outline-none disabled:opacity-50"
+            readOnly={speech.listening}
+            className="flex-1 bg-base text-fg border border-border-strong rounded px-2 py-1.5 text-sm resize-none focus:outline-none disabled:opacity-50 read-only:cursor-default"
           />
+          {speech.supported && (
+            <button
+              onClick={toggleMic}
+              disabled={busy || !projectRoot}
+              className={`p-2 rounded border transition-colors disabled:opacity-40 ${
+                speech.listening
+                  ? "border-status-changes text-status-changes bg-status-changes/10 animate-pulse"
+                  : "border-border-strong text-fg-secondary hover:text-fg hover:border-border-strong"
+              }`}
+              aria-label={speech.listening ? "Stop listening" : "Start voice input"}
+              title={
+                speech.listening
+                  ? "Click to stop · transcribing live into the input"
+                  : "Click to start voice input"
+              }
+            >
+              {speech.listening ? (
+                <MicOff size={14} strokeWidth={1.5} />
+              ) : (
+                <Mic size={14} strokeWidth={1.5} />
+              )}
+            </button>
+          )}
           <button
             onClick={send}
-            disabled={busy || !input.trim() || !projectRoot}
+            disabled={busy || !input.trim() || !projectRoot || speech.listening}
             className="p-2 rounded bg-accent-gradient text-white disabled:opacity-40 disabled:bg-none disabled:bg-border-subtle"
             aria-label="Send"
             title="Send (Enter)"
@@ -381,8 +432,20 @@ export function ChatPanel({
             <Send size={14} strokeWidth={1.5} />
           </button>
         </div>
+        {speech.error && (
+          <div className="text-[10px] text-status-changes mt-1">{speech.error}</div>
+        )}
         <div className="text-[10px] text-fg-tertiary font-mono mt-1 flex items-center gap-2">
-          <kbd>↵</kbd> send · <kbd>shift+↵</kbd> newline · <kbd>esc</kbd> close
+          {speech.listening ? (
+            <>
+              <span className="inline-block w-2 h-2 rounded-full bg-status-changes animate-pulse" />
+              <span>listening · click mic to stop</span>
+            </>
+          ) : (
+            <>
+              <kbd>↵</kbd> send · <kbd>shift+↵</kbd> newline · <kbd>esc</kbd> close
+            </>
+          )}
         </div>
       </div>
     </aside>
