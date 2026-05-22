@@ -21,6 +21,7 @@ import { WelcomeEmpty } from "@/components/WelcomeEmpty";
 import { ShortcutsOverlay } from "@/components/ShortcutsOverlay";
 import { Splitter } from "@/components/Splitter";
 import { ClaudePreflightBanner } from "@/components/ClaudePreflightBanner";
+import { FileExplorer, FilePreviewModal } from "@/components/FileExplorer";
 import {
   ProjectPicker,
   loadCurrentProject,
@@ -35,8 +36,10 @@ import type { ProjectInfo } from "@/lib/types";
 const LEFT_KEY = "adeptly:leftCollapsed";
 const RIGHT_KEY = "adeptly:rightCollapsed";
 const RIGHT_TAB_KEY = "adeptly:rightTab";
+const LEFT_TAB_KEY = "adeptly:leftTab";
 
 type RightTab = "features" | "sessions";
+type LeftTab = "plans" | "files";
 
 export default function Home() {
   const [project, setProject] = useState<ProjectInfo | null>(null);
@@ -59,6 +62,8 @@ export default function Home() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [leftWidth, setLeftWidth] = useState(288);
   const [chatWidth, setChatWidth] = useState(420);
+  const [leftTab, setLeftTab] = useState<LeftTab>("plans");
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
   /** Transient status banner. Cleared by a timer after a few seconds. */
   const [lastAction, setLastAction] = useState<{ kind: "created" | "updated"; text: string } | null>(null);
   const lastActionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,6 +82,8 @@ export default function Home() {
     setRightCollapsed(window.localStorage.getItem(RIGHT_KEY) === "1");
     const savedTab = window.localStorage.getItem(RIGHT_TAB_KEY) as RightTab | null;
     if (savedTab === "features" || savedTab === "sessions") setRightTab(savedTab);
+    const savedLeftTab = window.localStorage.getItem(LEFT_TAB_KEY) as LeftTab | null;
+    if (savedLeftTab === "plans" || savedLeftTab === "files") setLeftTab(savedLeftTab);
 
     const stored = loadCurrentProject();
     const initialPath = stored ?? "";
@@ -135,6 +142,11 @@ export default function Home() {
   function selectRightTab(t: RightTab) {
     setRightTab(t);
     if (typeof window !== "undefined") window.localStorage.setItem(RIGHT_TAB_KEY, t);
+  }
+
+  function selectLeftTab(t: LeftTab) {
+    setLeftTab(t);
+    if (typeof window !== "undefined") window.localStorage.setItem(LEFT_TAB_KEY, t);
   }
 
   function jumpToFeature(featureId: string) {
@@ -283,6 +295,12 @@ export default function Home() {
         </div>
       )}
 
+      <FilePreviewModal
+        projectRoot={project?.path ?? null}
+        filePath={previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
+
       {!project && (
         <WelcomeEmpty
           onOpenProject={() => setPickerOpen(true)}
@@ -296,19 +314,81 @@ export default function Home() {
         <div className="flex-1 flex min-h-0">
           {!focusMode && (
             <>
-              <PlansList
-                projectRoot={project.path}
-                selected={selectedSlug}
-                onSelect={setSelectedSlug}
-                refreshKey={refreshKey}
-                collapsed={leftCollapsed}
-                onToggleCollapsed={toggleLeft}
-                onPlanCreated={(slug, title) => {
-                  setSelectedPlanTitle(title);
-                  flashAction("created", `Plan created: ${title}`);
-                }}
-                width={leftWidth}
-              />
+              {leftCollapsed ? (
+                <PlansList
+                  projectRoot={project.path}
+                  selected={selectedSlug}
+                  onSelect={setSelectedSlug}
+                  refreshKey={refreshKey}
+                  collapsed={leftCollapsed}
+                  onToggleCollapsed={toggleLeft}
+                  onPlanCreated={(slug, title) => {
+                    setSelectedPlanTitle(title);
+                    flashAction("created", `Plan created: ${title}`);
+                  }}
+                  width={leftWidth}
+                />
+              ) : (
+                <aside
+                  className="border-r border-border-subtle bg-elevated flex flex-col shrink-0"
+                  style={{ width: leftWidth }}
+                >
+                  <div className="flex items-center gap-0.5 px-2 pt-2 border-b border-border-subtle">
+                    <button
+                      onClick={() => selectLeftTab("plans")}
+                      className={`text-xs px-2.5 py-1 rounded-t transition-colors ${
+                        leftTab === "plans"
+                          ? "bg-base border border-border-subtle border-b-base -mb-px font-medium text-fg"
+                          : "text-fg-secondary hover:text-fg"
+                      }`}
+                    >
+                      Plans
+                    </button>
+                    <button
+                      onClick={() => selectLeftTab("files")}
+                      className={`text-xs px-2.5 py-1 rounded-t transition-colors ${
+                        leftTab === "files"
+                          ? "bg-base border border-border-subtle border-b-base -mb-px font-medium text-fg"
+                          : "text-fg-secondary hover:text-fg"
+                      }`}
+                    >
+                      Files
+                    </button>
+                    <button
+                      onClick={toggleLeft}
+                      title="Collapse left panel"
+                      aria-label="Collapse left panel"
+                      className="ml-auto p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
+                    >
+                      <ChevronLeft size={14} strokeWidth={1.5} />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-auto min-h-0">
+                    {leftTab === "plans" ? (
+                      <PlansList
+                        projectRoot={project.path}
+                        selected={selectedSlug}
+                        onSelect={setSelectedSlug}
+                        refreshKey={refreshKey}
+                        collapsed={false}
+                        onToggleCollapsed={toggleLeft}
+                        onPlanCreated={(slug, title) => {
+                          setSelectedPlanTitle(title);
+                          flashAction("created", `Plan created: ${title}`);
+                        }}
+                        width={leftWidth}
+                        embedded
+                      />
+                    ) : (
+                      <FileExplorer
+                        projectRoot={project.path}
+                        width={leftWidth}
+                        onPreviewFile={(filePath) => setPreviewFile(filePath)}
+                      />
+                    )}
+                  </div>
+                </aside>
+              )}
               {!leftCollapsed && (
                 <Splitter
                   storageKey="adeptly:left-width"

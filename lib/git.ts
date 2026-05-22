@@ -127,6 +127,54 @@ export async function getGitPlanInfo(
   return info;
 }
 
+export interface PlanHistoryEntry {
+  hash: string;       // short hash, 7 chars
+  fullHash: string;   // full hash for diff lookups
+  author: string;
+  email: string;
+  date: string;       // ISO 8601
+  subject: string;    // first line of commit message
+}
+
+/**
+ * Return the recent commit history for a specific plan file. Limited to
+ * `limit` entries (default 20) to keep the UI fast and the git call cheap.
+ *
+ * Empty array if the project isn't a git repo, the file has never been
+ * committed, or the call fails for any reason. Never throws.
+ */
+export async function getPlanHistory(
+  projectRoot: string,
+  fileRelPath: string,
+  limit = 20
+): Promise<PlanHistoryEntry[]> {
+  if (!(await isGitRepo(projectRoot))) return [];
+  // Tab-separated format avoids ambiguity with subjects that contain |
+  // or other punctuation; nothing in git's output uses literal tabs.
+  const FMT = "%H%x09%an%x09%ae%x09%aI%x09%s";
+  const r = await run(
+    "git",
+    ["log", `--max-count=${limit}`, `--pretty=format:${FMT}`, "--", fileRelPath],
+    projectRoot
+  );
+  if (r.code !== 0 || !r.stdout) return [];
+  const out: PlanHistoryEntry[] = [];
+  for (const line of r.stdout.split("\n")) {
+    if (!line.trim()) continue;
+    const [hash, author, email, date, ...rest] = line.split("\t");
+    if (!hash) continue;
+    out.push({
+      hash: hash.slice(0, 7),
+      fullHash: hash,
+      author: author || "(unknown)",
+      email: email || "",
+      date: date || "",
+      subject: rest.join("\t") || "(no commit message)",
+    });
+  }
+  return out;
+}
+
 /**
  * Get git info for many files in parallel. Used by the plans-list endpoint.
  */

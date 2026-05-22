@@ -17,19 +17,28 @@ export function GitHubReviewers({
   const [github, setGithub] = useState<GitHubInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [codeowners, setCodeowners] = useState<string[]>([]);
+  const [codeownersSource, setCodeownersSource] = useState<string | null>(null);
 
   useEffect(() => {
     if (!projectRoot) {
       setGithub(null);
+      setCodeowners([]);
       return;
     }
     setLoading(true);
     setError(null);
-    fetch(`/api/github?projectRoot=${encodeURIComponent(projectRoot)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.error) throw new Error(data.error);
-        setGithub(data.github);
+    Promise.all([
+      fetch(`/api/github?projectRoot=${encodeURIComponent(projectRoot)}`).then((r) => r.json()),
+      fetch(`/api/codeowners?projectRoot=${encodeURIComponent(projectRoot)}`).then((r) => r.json()),
+    ])
+      .then(([gh, co]) => {
+        if (gh?.error) throw new Error(gh.error);
+        setGithub(gh.github);
+        if (co && Array.isArray(co.owners)) {
+          setCodeowners(co.owners);
+          setCodeownersSource(co.source ?? null);
+        }
       })
       .catch((e) => setError(e.message ?? String(e)))
       .finally(() => setLoading(false));
@@ -80,6 +89,42 @@ export function GitHubReviewers({
       <div className="text-xs text-fg">
         <span className="font-mono">{github.owner}/{github.repo}</span>
       </div>
+      {codeowners.length > 0 && (
+        <div className="text-xs space-y-1 pb-1 border-b border-border-subtle">
+          <div className="text-[10px] uppercase tracking-wider text-fg-tertiary font-semibold">
+            From <span className="font-mono">{codeownersSource}</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {codeowners.map((login) => {
+              const already = existingLogins.has(login.toLowerCase());
+              return (
+                <button
+                  key={login}
+                  onClick={() =>
+                    already
+                      ? undefined
+                      : addAsReviewer(
+                          login,
+                          `https://github.com/${login}`,
+                          `https://github.com/${login}.png?size=20`
+                        )
+                  }
+                  disabled={already}
+                  className={`text-[11px] font-mono px-1.5 py-0.5 rounded border transition-colors ${
+                    already
+                      ? "border-border-subtle text-fg-tertiary cursor-default"
+                      : "border-border-subtle hover:border-accent-1 text-accent-1 hover:bg-accent-soft"
+                  }`}
+                  title={already ? `${login} is already a reviewer` : `Add @${login} as reviewer`}
+                >
+                  @{login}
+                  {already && <span className="ml-1 text-fg-tertiary">✓</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {github.collaboratorsError && (
         <div className="text-xs chip-changes p-1.5 rounded">
           {github.collaboratorsError}

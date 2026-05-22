@@ -160,7 +160,12 @@ export function ChatPanel({
     }
   }
 
-  // Load + persist per-plan conversation
+  // Load + persist per-plan conversation. localStorage is the fast path
+  // (used immediately so the UI doesn't flash empty). When a plan slug AND
+  // projectRoot are present, the file at <projectRoot>/.adeptly/chat-history/
+  // is the canonical source: we fetch it, and if it has *more* turns than
+  // localStorage we replace. This lets the user switch browsers / machines
+  // (via git) without losing the conversation that goes with the plan.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const raw = window.localStorage.getItem(STORAGE_KEY(planSlug));
@@ -168,12 +173,53 @@ export function ChatPanel({
     setError(null);
     setInjectStatus({});
     setInjectError({});
-  }, [planSlug]);
+
+    if (planSlug && projectRoot) {
+      let cancelled = false;
+      fetch(
+        `/api/chat-history/${planSlug}?projectRoot=${encodeURIComponent(projectRoot)}`
+      )
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return;
+          const fileTurns: Turn[] = Array.isArray(data?.turns) ? data.turns : [];
+          // Adopt the file copy when it has at least as many turns AND
+          // isn't empty — protects against an empty file overwriting an
+          // unsaved-yet local session.
+          if (fileTurns.length > 0) {
+            const lsCount = raw ? (JSON.parse(raw) as Turn[]).length : 0;
+            if (fileTurns.length >= lsCount) {
+              setHistory(fileTurns);
+              window.localStorage.setItem(STORAGE_KEY(planSlug), JSON.stringify(fileTurns));
+            }
+          }
+        })
+        .catch(() => {});
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [planSlug, projectRoot]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(STORAGE_KEY(planSlug), JSON.stringify(history));
-  }, [history, planSlug]);
+    // Debounced file write — chat is bursty so we wait 800ms after the
+    // last change. Skip if no plan or no project (chat from welcome screen
+    // is ephemeral by design until a plan is created).
+    if (!planSlug || !projectRoot) return;
+    const t = setTimeout(() => {
+      fetch(
+        `/api/chat-history/${planSlug}?projectRoot=${encodeURIComponent(projectRoot)}`,
+        {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ turns: history }),
+        }
+      ).catch(() => {});
+    }, 800);
+    return () => clearTimeout(t);
+  }, [history, planSlug, projectRoot]);
 
   useEffect(() => {
     if (open) {

@@ -83,8 +83,12 @@ export function PlanEditor({
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [error, setError] = useState<string | null>(null);
   const [bottomTab, setBottomTab] = useState<
-    "changes" | "suggestions" | "approval" | "reviewers" | "recipe"
+    "changes" | "suggestions" | "approval" | "reviewers" | "recipe" | "history"
   >("approval");
+  const [history, setHistory] = useState<
+    Array<{ hash: string; fullHash: string; author: string; email: string; date: string; subject: string }>
+  >([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   // Suppress the "N suggestions" top-of-editor banner once the user has
   // clicked through to the Suggestions tab. Resets per-plan so a new plan
   // with new suggestions shows it again.
@@ -95,6 +99,31 @@ export function PlanEditor({
   useEffect(() => {
     if (bottomTab === "suggestions") setSuggestionsViewed(true);
   }, [bottomTab]);
+
+  // Lazy-load history when the tab is opened (skip refetch if already loaded
+  // for this slug; resetting on slug change is below).
+  useEffect(() => {
+    if (bottomTab !== "history") return;
+    if (historyLoaded) return;
+    if (!slug || !projectRoot) return;
+    fetch(`/api/plans/${slug}/history?projectRoot=${encodeURIComponent(projectRoot)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.error) throw new Error(data.error);
+        setHistory(data.history ?? []);
+        setHistoryLoaded(true);
+      })
+      .catch(() => {
+        setHistory([]);
+        setHistoryLoaded(true);
+      });
+  }, [bottomTab, historyLoaded, slug, projectRoot]);
+
+  // Reset cached history when switching plans.
+  useEffect(() => {
+    setHistory([]);
+    setHistoryLoaded(false);
+  }, [slug]);
   const [pathCopied, setPathCopied] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
   const prevStatusRef = useRef<PlanStatus | null>(null);
@@ -332,6 +361,30 @@ export function PlanEditor({
         </button>
       )}
 
+      {approval?.status === "approved" && (
+        <div
+          className="border-b border-border-subtle px-3 py-2 flex items-center gap-2 text-xs"
+          style={{
+            background:
+              "color-mix(in srgb, var(--status-approved) 10%, var(--bg-elevated))",
+            borderBottomColor:
+              "color-mix(in srgb, var(--status-approved) 35%, var(--border-subtle))",
+          }}
+        >
+          <span aria-hidden>🔒</span>
+          <span className="text-fg flex-1">
+            <strong>Locked</strong> — this plan is approved. Edits are disabled until status changes.
+          </span>
+          <button
+            onClick={() => patchApproval({ status: "in-review" })}
+            className="text-accent-1 hover:underline font-medium"
+            title="Move status back to in-review to allow edits"
+          >
+            Reopen for edits
+          </button>
+        </div>
+      )}
+
       <div className="border-b border-border-subtle px-3 pt-2 flex items-center gap-2 bg-elevated">
         <button
           onClick={() => setTab("edit")}
@@ -356,7 +409,12 @@ export function PlanEditor({
         <div className="flex-1" />
         <button
           onClick={save}
-          disabled={!dirty || saving}
+          disabled={!dirty || saving || approval?.status === "approved"}
+          title={
+            approval?.status === "approved"
+              ? "Plan is locked. Reopen for edits to save."
+              : undefined
+          }
           className="text-sm px-3 py-1 rounded bg-accent-gradient text-white disabled:opacity-40 disabled:bg-none disabled:bg-border-subtle"
         >
           {saving ? "Saving…" : dirty ? "Save" : "Saved"}
@@ -372,7 +430,8 @@ export function PlanEditor({
               setDirty(true);
             }}
             spellCheck={false}
-            className="plan-content block w-full min-h-full p-4 text-base resize-none focus:outline-none text-fg bg-base"
+            readOnly={approval?.status === "approved"}
+            className="plan-content block w-full min-h-full p-4 text-base resize-none focus:outline-none text-fg bg-base read-only:cursor-default"
             placeholder="# Plan title…"
           />
         ) : (
@@ -391,6 +450,7 @@ export function PlanEditor({
               ["recipe", "Claude recipe", null],
               ["changes", "Changes", mismatchCount > 0 ? mismatchCount : null],
               ["suggestions", "Suggestions", suggestions.length > 0 ? suggestions.length : null],
+              ["history", "History", null],
             ] as const
           ).map(([key, label, badge]) => (
             <button
@@ -544,6 +604,35 @@ export function PlanEditor({
               planTitle={plan?.title ?? slug ?? ""}
             />
           )}
+
+          {bottomTab === "history" &&
+            (!historyLoaded ? (
+              <div className="text-xs text-fg-secondary italic">loading history…</div>
+            ) : history.length === 0 ? (
+              <div className="text-xs text-fg-secondary italic">
+                No git history for this plan yet. Commit it to see the audit trail here.
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {history.map((h) => (
+                  <li
+                    key={h.fullHash}
+                    className="text-xs border border-border-subtle rounded p-2 bg-base/40 space-y-1"
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-accent-1 text-[11px]">{h.hash}</span>
+                      <span className="text-fg-tertiary">·</span>
+                      <span className="font-mono text-fg">{h.author}</span>
+                      <span className="text-fg-tertiary">·</span>
+                      <span className="text-fg-tertiary" title={new Date(h.date).toLocaleString()}>
+                        {formatRelative(h.date)}
+                      </span>
+                    </div>
+                    <div className="text-fg leading-relaxed">{h.subject}</div>
+                  </li>
+                ))}
+              </ul>
+            ))}
         </div>
       </div>
     </div>

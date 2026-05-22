@@ -31,6 +31,7 @@ export function PlansList({
   onToggleCollapsed,
   onPlanCreated,
   width,
+  embedded = false,
 }: {
   projectRoot: string | null;
   selected: string | null;
@@ -41,6 +42,9 @@ export function PlansList({
   onPlanCreated?: (slug: string, title: string) => void;
   /** Pixel width when not collapsed. Defaults to 288 (the previous w-72). */
   width?: number;
+  /** When true, the parent renders the outer <aside> + tab switcher.
+   *  PlansList only renders the title/new-button row + the list. */
+  embedded?: boolean;
 }) {
   const [plans, setPlans] = useState<PlanLite[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -100,11 +104,8 @@ export function PlansList({
     );
   }
 
-  return (
-    <aside
-      className="border-r border-border-subtle bg-elevated flex flex-col shrink-0"
-      style={{ width: width ?? 288 }}
-    >
+  const inner = (
+    <>
       <div className="border-b border-border-subtle">
         <div className="p-3 flex items-center gap-2">
           <div className="text-xs font-semibold uppercase tracking-wide text-fg-secondary flex-1">
@@ -122,14 +123,16 @@ export function PlansList({
           >
             <Plus size={16} strokeWidth={1.5} />
           </button>
-          <button
-            onClick={onToggleCollapsed}
-            title="Collapse plans list"
-            className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
-            aria-label="Collapse plans"
-          >
-            <ChevronLeft size={16} strokeWidth={1.5} />
-          </button>
+          {!embedded && (
+            <button
+              onClick={onToggleCollapsed}
+              title="Collapse plans list"
+              className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
+              aria-label="Collapse plans"
+            >
+              <ChevronLeft size={16} strokeWidth={1.5} />
+            </button>
+          )}
         </div>
         {plans.length >= 5 && (
           <div className="px-3 pb-2">
@@ -246,6 +249,18 @@ export function PlansList({
           onPlanCreated?.(slug, title);
         }}
       />
+    </>
+  );
+
+  // Embedded inside the LeftSidebar tab container — caller owns the aside.
+  if (embedded) return inner;
+
+  return (
+    <aside
+      className="border-r border-border-subtle bg-elevated flex flex-col shrink-0"
+      style={{ width: width ?? 288 }}
+    >
+      {inner}
     </aside>
   );
 }
