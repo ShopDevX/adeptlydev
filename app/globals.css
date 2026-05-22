@@ -64,18 +64,18 @@ html.light {
   --fg-tertiary:   #7d859a;
 
   /* Accent — darker variant of the gradient so it remains legible against
-     white. Violet stays violet; the cyan end darkens to a teal-blue so it
-     still reads as a gradient but doesn't disappear on white. White text
-     on top of buttons using this gradient remains readable. */
+     white. Violet stays violet; the cyan end darkens to a deeper teal so
+     white text on buttons hits WCAG AA contrast on the lighter end. */
   --accent-1:        #5a3fe6;
-  --accent-2:        #1f7fb6;
-  --accent-gradient: linear-gradient(120deg, #5a3fe6 0%, #1f7fb6 100%);
+  --accent-2:        #176998;
+  --accent-gradient: linear-gradient(120deg, #5a3fe6 0%, #176998 100%);
   --accent-glow:     radial-gradient(circle, rgba(90, 63, 230, 0.25) 0%, transparent 70%);
 
+  /* Status — slightly deeper so chip text reads cleanly against white. */
   --status-draft:    #6f7889;
-  --status-review:   #b9851a;
-  --status-approved: #1f8a52;
-  --status-changes:  #c93747;
+  --status-review:   #a36e07;
+  --status-approved: #14633e;
+  --status-changes:  #b32a3b;
 
   color-scheme: light;
 }
@@ -119,6 +119,7 @@ body::before {
 .fade-up-delay-2 { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 160ms both; }
 .fade-up-delay-3 { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 240ms both; }
 .fade-up-delay-4 { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 320ms both; }
+.fade-up-delay-5 { animation: fade-up 480ms cubic-bezier(0.16, 1, 0.3, 1) 400ms both; }
 
 /* Custom scrollbars — subtle, theme-aware. Default browser scrollbars look
    loud on a dark UI; these read as part of the chrome. */
@@ -259,10 +260,25 @@ textarea.plan-content {
   border-radius: 0.25rem;
   display: inline-block;
 }
-.chip-draft    { background: rgba(91, 100, 120, 0.20); color: var(--status-draft); }
-.chip-review   { background: rgba(244, 183, 64, 0.18); color: var(--status-review); }
-.chip-approved { background: rgba(40, 200, 120, 0.18); color: var(--status-approved); }
-.chip-changes  { background: rgba(255, 90, 110, 0.18); color: var(--status-changes); }
+/* Chip backgrounds use color-mix so the alpha-blended fill always reads
+   correctly against the active theme's --bg-elevated. Hardcoded rgba()
+   alphas were nearly invisible on white in light mode. */
+.chip-draft {
+  background: color-mix(in srgb, var(--status-draft) 18%, var(--bg-elevated));
+  color: var(--status-draft);
+}
+.chip-review {
+  background: color-mix(in srgb, var(--status-review) 16%, var(--bg-elevated));
+  color: var(--status-review);
+}
+.chip-approved {
+  background: color-mix(in srgb, var(--status-approved) 16%, var(--bg-elevated));
+  color: var(--status-approved);
+}
+.chip-changes {
+  background: color-mix(in srgb, var(--status-changes) 16%, var(--bg-elevated));
+  color: var(--status-changes);
+}
 
 .status-edge-draft,
 .status-edge-review,
@@ -274,6 +290,47 @@ textarea.plan-content {
 .status-edge-review   { box-shadow: inset -3px 0 0 0 var(--status-review); }
 .status-edge-approved { box-shadow: inset -3px 0 0 0 var(--status-approved); }
 .status-edge-changes  { box-shadow: inset -3px 0 0 0 var(--status-changes); }
+
+/* Mermaid render-error block — replaces the previous one-line red stripe
+   so users actually see what broke and how to fix it. */
+.mermaid-error-block {
+  margin: 0.75rem 0;
+  border: 1px solid color-mix(in srgb, var(--status-changes) 40%, var(--border-subtle));
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--status-changes) 10%, var(--bg-elevated));
+  padding: 0.75rem 1rem;
+}
+.mermaid-error-header { margin-bottom: 0.5rem; }
+.mermaid-error-title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--status-changes);
+}
+.mermaid-error-msg {
+  display: block;
+  font-family: var(--font-geist-mono, monospace);
+  font-size: 0.75rem;
+  color: var(--fg-secondary);
+  white-space: pre-wrap;
+  margin-top: 0.25rem;
+}
+.mermaid-error-source {
+  background: var(--bg-base) !important;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.75rem !important;
+  color: var(--fg-secondary);
+  overflow-x: auto;
+  margin: 0.25rem 0 !important;
+}
+.mermaid-error-hint {
+  font-size: 0.6875rem;
+  color: var(--fg-tertiary);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
 
 .status-underline-draft,
 .status-underline-review,

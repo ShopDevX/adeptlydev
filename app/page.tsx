@@ -20,6 +20,7 @@ import { Wordmark } from "@/components/Wordmark";
 import { WelcomeEmpty } from "@/components/WelcomeEmpty";
 import { ShortcutsOverlay } from "@/components/ShortcutsOverlay";
 import { Splitter } from "@/components/Splitter";
+import { ClaudePreflightBanner } from "@/components/ClaudePreflightBanner";
 import {
   ProjectPicker,
   loadCurrentProject,
@@ -181,6 +182,7 @@ export default function Home() {
 
   return (
     <main className="h-screen flex flex-col">
+      <ClaudePreflightBanner />
       <header className="flex items-center justify-between px-4 py-2 border-b border-border-subtle bg-elevated">
         <div className="flex items-center gap-3 min-w-0">
           <Wordmark size="md" />

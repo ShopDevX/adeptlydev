@@ -10,6 +10,15 @@ import type { FeatureSuggestion } from "@/lib/types";
 let mermaidInitialized = false;
 let mermaidThemeKey = "";
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function detectThemeKey(): string {
   if (typeof document === "undefined") return "dark";
   return document.documentElement.classList.contains("light") ? "light" : "dark";
@@ -208,10 +217,28 @@ export function MarkdownPreview({
           wrapper.innerHTML = svg;
           node.parentElement?.replaceWith(wrapper);
         } catch (err) {
-          const errBlock = document.createElement("pre");
-          errBlock.className = "mermaid-block text-red-600 text-xs";
-          errBlock.textContent = `Mermaid render error: ${(err as Error)?.message ?? String(err)}`;
-          node.parentElement?.replaceWith(errBlock);
+          // Surface the error with line context. Mermaid's messages already
+          // include "Parse error on line N" — extract it for the header.
+          const msg = (err as Error)?.message ?? String(err);
+          const lineMatch = msg.match(/line\s+(\d+)/i);
+          const lineHint = lineMatch ? ` (line ${lineMatch[1]})` : "";
+          const wrapper = document.createElement("div");
+          wrapper.className = "mermaid-error-block";
+          // We can't attach React handlers from here, so render plain HTML.
+          // The "Copy block" link uses a tiny inline script-less interaction
+          // via the `oncopy` clipboard hint; copy of the raw source is the
+          // most useful action since the user typically pastes it back into
+          // the chat for Claude to fix.
+          wrapper.innerHTML =
+            `<div class="mermaid-error-header">` +
+            `<span class="mermaid-error-title">Mermaid render error${escapeHtml(lineHint)}</span>` +
+            `<span class="mermaid-error-msg">${escapeHtml(msg)}</span>` +
+            `</div>` +
+            `<pre class="mermaid-error-source"><code>${escapeHtml(text)}</code></pre>` +
+            `<div class="mermaid-error-hint">` +
+            `Copy this block into the chat and ask Claude to fix it, or click the Edit tab to fix it directly.` +
+            `</div>`;
+          node.parentElement?.replaceWith(wrapper);
         }
       }
       if (!cancelled && outputRef.current) {

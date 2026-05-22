@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderSearch, FolderPlus, Sparkles, ArrowRight, FileText, Keyboard } from "lucide-react";
+import { FolderSearch, FolderPlus, Sparkles, ArrowRight, FileText, Keyboard, ShieldCheck } from "lucide-react";
 import { Wordmark } from "./Wordmark";
 
 const EXAMPLE_PROMPTS = [
@@ -39,8 +39,34 @@ export function WelcomeEmpty({
           </p>
         </section>
 
+        {/* Privacy callout — surfaced high because it's the #1 unspoken
+            question from infosec / health / fintech first-time users. */}
+        <section className="fade-up-delay-1">
+          <div
+            className="flex items-start gap-3 rounded-md border p-3"
+            style={{
+              background: "color-mix(in srgb, var(--status-approved) 10%, var(--bg-elevated))",
+              borderColor: "color-mix(in srgb, var(--status-approved) 35%, var(--border-subtle))",
+            }}
+          >
+            <ShieldCheck size={18} strokeWidth={1.5} className="text-status-approved shrink-0 mt-0.5" />
+            <div className="text-xs leading-relaxed">
+              <div className="font-semibold text-fg mb-0.5">
+                Your code never leaves your machine.
+              </div>
+              <div className="text-fg-secondary">
+                Adeptly runs entirely on <span className="font-mono">localhost</span> and talks
+                only to your local <span className="font-mono">claude</span> CLI. There&apos;s no
+                backend, no API key, no telemetry. Your prompts go from Claude Code to Anthropic
+                exactly as if you ran <span className="font-mono">claude --print</span> in your
+                terminal — and nothing more.
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Primary CTAs */}
-        <section className="grid md:grid-cols-2 gap-3 fade-up-delay-1">
+        <section className="grid md:grid-cols-2 gap-3 fade-up-delay-2">
           <button
             onClick={onOpenProject}
             className="group text-left p-4 rounded-md border border-border-subtle hover:border-accent-1 bg-elevated transition-colors"
@@ -82,7 +108,7 @@ export function WelcomeEmpty({
         </section>
 
         {/* How it works */}
-        <section className="space-y-3 fade-up-delay-2">
+        <section className="space-y-3 fade-up-delay-3">
           <div className="text-xs font-bold uppercase tracking-wider text-fg-tertiary">
             How it works
           </div>
@@ -125,7 +151,7 @@ export function WelcomeEmpty({
         </section>
 
         {/* Example prompts */}
-        <section className="space-y-2 fade-up-delay-3">
+        <section className="space-y-2 fade-up-delay-4">
           <div className="text-xs font-bold uppercase tracking-wider text-fg-tertiary">
             Example things to ask Claude to plan
           </div>
@@ -143,7 +169,7 @@ export function WelcomeEmpty({
         </section>
 
         {/* Helpful pointers */}
-        <section className="text-xs text-fg-tertiary flex items-center gap-3 flex-wrap pt-2 border-t border-border-subtle fade-up-delay-4">
+        <section className="text-xs text-fg-tertiary flex items-center gap-3 flex-wrap pt-2 border-t border-border-subtle fade-up-delay-5">
           <button
             onClick={onOpenShortcuts}
             className="inline-flex items-center gap-1 text-fg-secondary hover:text-accent-1 transition-colors"

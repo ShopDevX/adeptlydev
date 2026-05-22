@@ -12,6 +12,30 @@ interface Turn {
   content: string;
 }
 
+interface AttachmentRef {
+  path: string;
+  filename: string;
+  size: number;
+  type: string;
+}
+
+function attachmentSection(atts: AttachmentRef[]): string {
+  if (!atts || atts.length === 0) return "";
+  const lines: string[] = [
+    "",
+    "USER-ATTACHED FILES — use the Read tool on each path to inspect them.",
+    "Images returned by Read can be analysed visually (screenshots, mockups, diagrams).",
+    "Refer to attachments by their original filename in your reply.",
+    "",
+  ];
+  for (const a of atts) {
+    const sizeKb = Math.max(1, Math.round(a.size / 1024));
+    lines.push(`- ${a.filename}  (${a.type || "unknown"}, ~${sizeKb}KB)  →  ${a.path}`);
+  }
+  lines.push("");
+  return lines.join("\n");
+}
+
 export interface FeatureInjection {
   /** Heading text in the plan (case-insensitive substring match), e.g. "Approach", "2. Approach", "Risks". */
   section_hint: string;
@@ -23,7 +47,7 @@ export interface FeatureInjection {
   label?: string;
 }
 
-function buildGeneratePlanPrompt(description: string): string {
+function buildGeneratePlanPrompt(description: string, atts: AttachmentRef[] = []): string {
   const cat = CLAUDE_CODE_FEATURES.map(
     (f) => `- ${f.name} (${f.category}): ${f.whenToUse}`
   ).join("\n");
@@ -38,7 +62,7 @@ function buildGeneratePlanPrompt(description: string): string {
     "",
     "USER'S DESCRIPTION:",
     description,
-    "",
+    attachmentSection(atts),
     "AVAILABLE CLAUDE CODE FEATURES — pick the ones that fit this project:",
     cat,
     "",
@@ -58,7 +82,11 @@ function buildGeneratePlanPrompt(description: string): string {
   ].join("\n");
 }
 
-function buildPrompt(planContext: string | null, history: Turn[]): string {
+function buildPrompt(
+  planContext: string | null,
+  history: Turn[],
+  atts: AttachmentRef[] = []
+): string {
   const lines: string[] = [];
 
   lines.push(
@@ -93,6 +121,9 @@ function buildPrompt(planContext: string | null, history: Turn[]): string {
     lines.push(`${t.role === "user" ? "User" : "Assistant"}: ${t.content}`);
   }
   lines.push("");
+
+  const attBlock = attachmentSection(atts);
+  if (attBlock) lines.push(attBlock);
 
   lines.push("RESPONSE FORMAT — IMPORTANT:");
   lines.push(
@@ -159,7 +190,9 @@ function safeParseGenerated(raw: string): ParsedGenerated | null {
   }
 }
 
-function safeParse(raw: string): ParsedReply {
+/** Distinguish "JSON parsed" from "fell back to raw text" so we can decide
+ *  whether to retry with a stricter prompt. */
+function safeParse(raw: string): ParsedReply & { _parsed: boolean } {
   const trimmed = (raw || "").trim();
   let text = trimmed;
   if (text.startsWith("```")) {
@@ -168,7 +201,7 @@ function safeParse(raw: string): ParsedReply {
   const first = text.indexOf("{");
   const last = text.lastIndexOf("}");
   if (first === -1 || last === -1 || last < first) {
-    return { reply: trimmed, feature_injections: [] };
+    return { reply: trimmed, feature_injections: [], _parsed: false };
   }
   try {
     const obj = JSON.parse(text.slice(first, last + 1));
@@ -182,9 +215,9 @@ function safeParse(raw: string): ParsedReply {
         label: typeof x?.label === "string" ? x.label : "Add to plan",
       }))
       .filter((x: FeatureInjection) => x.section_hint && x.content);
-    return { reply, feature_injections: cleaned };
+    return { reply, feature_injections: cleaned, _parsed: true };
   } catch {
-    return { reply: trimmed, feature_injections: [] };
+    return { reply: trimmed, feature_injections: [], _parsed: false };
   }
 }
 
@@ -233,6 +266,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const history = (body?.history as Turn[]) ?? [];
     const planSlug = body?.planSlug as string | undefined;
+    const attachments: AttachmentRef[] = Array.isArray(body?.attachments)
+      ? body.attachments.filter(
+          (a: any) =>
+            a &&
+            typeof a.path === "string" &&
+            typeof a.filename === "string" &&
+            typeof a.size === "number"
+        )
+      : [];
 
     if (history.length === 0) {
       return NextResponse.json({ error: "empty conversation" }, { status: 400 });
@@ -241,7 +283,7 @@ export async function POST(req: NextRequest) {
     // === Plan-generation mode: no plan selected, first turn ===
     if (!planSlug && history.length === 1 && history[0].role === "user") {
       const description = history[0].content;
-      const prompt = buildGeneratePlanPrompt(description);
+      const prompt = buildGeneratePlanPrompt(description, attachments);
       const { stdout, error } = await callClaude(prompt);
       if (error && !stdout) {
         return NextResponse.json(
@@ -279,8 +321,8 @@ export async function POST(req: NextRequest) {
       if (plan) planContext = plan.content;
     }
 
-    const prompt = buildPrompt(planContext, history);
-    const { stdout, error } = await callClaude(prompt);
+    const prompt = buildPrompt(planContext, history, attachments);
+    let { stdout, error } = await callClaude(prompt);
     if (error && !stdout) {
       return NextResponse.json(
         { error, hint: "Make sure the `claude` CLI is installed and on PATH." },
@@ -288,10 +330,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const parsed = safeParse(stdout);
+    let parsed = safeParse(stdout);
+    let parseWarning: string | null = null;
+
+    // Retry once if JSON parsing failed — Claude occasionally returns prose
+    // or a half-finished JSON block. Reinforce the format expectation on
+    // retry. If it still fails, surface the raw text with a banner so the
+    // user doesn't see a silent "no recommendations" response.
+    if (!parsed._parsed) {
+      const stricterPrompt =
+        prompt +
+        "\n\n--- RETRY ---\n" +
+        "Your previous response was not valid JSON. Respond ONLY with a single JSON object matching the schema above. No prose, no markdown fences, no leading or trailing text. If you have nothing to add, return { \"reply\": \"<your message>\", \"feature_injections\": [] }.";
+      const retry = await callClaude(stricterPrompt, 60_000);
+      if (retry.stdout) {
+        const reparsed = safeParse(retry.stdout);
+        if (reparsed._parsed) {
+          parsed = reparsed;
+        } else {
+          // Both attempts failed. Keep the first response as the reply (it's
+          // probably still useful prose) and flag it.
+          parseWarning =
+            "Claude returned an unexpected response format. Showing the raw text — feature suggestions are unavailable for this turn.";
+        }
+      } else {
+        parseWarning =
+          "Claude returned an unexpected response format. Showing the raw text — feature suggestions are unavailable for this turn.";
+      }
+    }
+
     return NextResponse.json({
       reply: parsed.reply,
       feature_injections: parsed.feature_injections,
+      parse_warning: parseWarning,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? String(err) }, { status: 500 });

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, FileText, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, FileText, Plus, Search, X } from "lucide-react";
 import { NewPlanModal } from "./NewPlanModal";
 import type { Plan, PlanStatus } from "@/lib/types";
 
@@ -46,6 +46,18 @@ export function PlansList({
   const [loading, setLoading] = useState(true);
   const [newOpen, setNewOpen] = useState(false);
   const [internalRefresh, setInternalRefresh] = useState(0);
+  const [filter, setFilter] = useState("");
+
+  const filteredPlans = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return plans;
+    return plans.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.filename.toLowerCase().includes(q) ||
+        (p.approval?.status ?? "draft").toLowerCase().includes(q)
+    );
+  }, [plans, filter]);
 
   useEffect(() => {
     if (!projectRoot) return;
@@ -92,26 +104,60 @@ export function PlansList({
       className="border-r border-border-subtle bg-elevated flex flex-col shrink-0"
       style={{ width: width ?? 288 }}
     >
-      <div className="p-3 border-b border-border-subtle flex items-center gap-2">
-        <div className="text-xs font-semibold uppercase tracking-wide text-fg-secondary flex-1">
-          Plans {plans.length > 0 && <span className="text-fg-tertiary">({plans.length})</span>}
+      <div className="border-b border-border-subtle">
+        <div className="p-3 flex items-center gap-2">
+          <div className="text-xs font-semibold uppercase tracking-wide text-fg-secondary flex-1">
+            Plans {plans.length > 0 && (
+              <span className="text-fg-tertiary">
+                ({filter ? `${filteredPlans.length}/${plans.length}` : plans.length})
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => setNewOpen(true)}
+            title="New plan"
+            aria-label="New plan"
+            className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
+          >
+            <Plus size={16} strokeWidth={1.5} />
+          </button>
+          <button
+            onClick={onToggleCollapsed}
+            title="Collapse plans list"
+            className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
+            aria-label="Collapse plans"
+          >
+            <ChevronLeft size={16} strokeWidth={1.5} />
+          </button>
         </div>
-        <button
-          onClick={() => setNewOpen(true)}
-          title="New plan"
-          aria-label="New plan"
-          className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
-        >
-          <Plus size={16} strokeWidth={1.5} />
-        </button>
-        <button
-          onClick={onToggleCollapsed}
-          title="Collapse plans list"
-          className="p-1 rounded hover:bg-base text-fg-secondary hover:text-fg transition-colors"
-          aria-label="Collapse plans"
-        >
-          <ChevronLeft size={16} strokeWidth={1.5} />
-        </button>
+        {plans.length >= 5 && (
+          <div className="px-3 pb-2">
+            <div className="relative">
+              <Search
+                size={11}
+                strokeWidth={1.5}
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-fg-tertiary pointer-events-none"
+              />
+              <input
+                type="search"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Filter plans…"
+                aria-label="Filter plans"
+                className="w-full bg-base border border-border-subtle rounded text-xs pl-7 pr-7 py-1 text-fg placeholder:text-fg-tertiary focus:outline-none focus:border-accent-1 transition-colors"
+              />
+              {filter && (
+                <button
+                  onClick={() => setFilter("")}
+                  aria-label="Clear filter"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-border-subtle text-fg-tertiary hover:text-fg transition-colors"
+                >
+                  <X size={11} strokeWidth={1.5} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex-1 overflow-auto">
         {loading && (
@@ -142,8 +188,13 @@ export function PlansList({
             </button>
           </div>
         )}
+        {!loading && !error && plans.length > 0 && filteredPlans.length === 0 && (
+          <div className="p-6 text-center text-xs text-fg-secondary">
+            No plans match <span className="text-fg font-mono">&quot;{filter}&quot;</span>.
+          </div>
+        )}
         <ul>
-          {plans.map((p) => {
+          {filteredPlans.map((p) => {
             const status: PlanStatus = p.approval?.status ?? "draft";
             const isSelected = selected === p.slug;
             return (
