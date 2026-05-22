@@ -515,7 +515,7 @@ export function ChatPanel({
           )
         )}
 
-        {busy && <ThinkingIndicator />}
+        {busy && <ThinkingIndicator creatingPlan={!planSlug} />}
 
         {error && (
           <div className="text-xs chip-changes p-2 rounded whitespace-pre-wrap">{error}</div>
@@ -524,35 +524,20 @@ export function ChatPanel({
 
       <div className="border-t border-border-subtle p-2 bg-elevated">
         {attachments.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-1.5">
-            {attachments.map((a) => {
-              const isImage = a.type.startsWith("image/");
-              const sizeKb = Math.max(1, Math.round(a.size / 1024));
-              const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)}MB` : `${sizeKb}KB`;
-              return (
-                <div
-                  key={a.id}
-                  className="inline-flex items-center gap-1.5 text-xs bg-base border border-border-subtle rounded px-1.5 py-1 max-w-[200px]"
-                  title={`${a.filename} (${a.type}, ${sizeLabel})`}
-                >
-                  {isImage ? (
-                    <ImageIcon size={11} strokeWidth={1.5} className="text-accent-1 shrink-0" />
-                  ) : (
-                    <FileText size={11} strokeWidth={1.5} className="text-fg-secondary shrink-0" />
-                  )}
-                  <span className="truncate text-fg">{a.filename}</span>
-                  <span className="text-fg-tertiary font-mono text-[10px]">{sizeLabel}</span>
-                  <button
-                    onClick={() => removeAttachment(a.id)}
-                    aria-label={`Remove ${a.filename}`}
-                    title="Remove attachment"
-                    className="p-0.5 rounded hover:bg-border-subtle text-fg-tertiary hover:text-status-changes transition-colors shrink-0"
-                  >
-                    <X size={10} strokeWidth={2} />
-                  </button>
-                </div>
-              );
-            })}
+          <div className="mb-1.5">
+            <div className="flex flex-wrap gap-1.5">
+              {attachments.map((a) => (
+                <AttachmentChip key={a.id} a={a} onRemove={() => removeAttachment(a.id)} />
+              ))}
+            </div>
+            {attachments.length > 1 && (
+              <button
+                onClick={() => setAttachments([])}
+                className="text-[10px] text-fg-tertiary hover:text-status-changes hover:underline mt-1"
+              >
+                Clear all ({attachments.length})
+              </button>
+            )}
           </div>
         )}
         <input
@@ -663,13 +648,68 @@ export function ChatPanel({
 }
 
 /**
+ * Attachment chip with a 24x24 thumbnail preview for image files (via
+ * URL.createObjectURL on the File). Non-image files show the FileText
+ * icon. URL is revoked when the chip unmounts to keep memory tidy.
+ */
+function AttachmentChip({
+  a,
+  onRemove,
+}: {
+  a: QueuedAttachment;
+  onRemove: () => void;
+}) {
+  const isImage = a.type.startsWith("image/");
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isImage) return;
+    const url = URL.createObjectURL(a.file);
+    setThumbUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [a.file, isImage]);
+
+  const sizeKb = Math.max(1, Math.round(a.size / 1024));
+  const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)}MB` : `${sizeKb}KB`;
+
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 text-xs bg-base border border-border-subtle rounded px-1.5 py-1 max-w-[220px]"
+      title={`${a.filename} (${a.type}, ${sizeLabel})`}
+    >
+      {isImage && thumbUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={thumbUrl}
+          alt=""
+          className="w-6 h-6 object-cover rounded shrink-0 border border-border-subtle"
+        />
+      ) : isImage ? (
+        <ImageIcon size={11} strokeWidth={1.5} className="text-accent-1 shrink-0" />
+      ) : (
+        <FileText size={11} strokeWidth={1.5} className="text-fg-secondary shrink-0" />
+      )}
+      <span className="truncate text-fg">{a.filename}</span>
+      <span className="text-fg-tertiary font-mono text-[10px]">{sizeLabel}</span>
+      <button
+        onClick={onRemove}
+        aria-label={`Remove ${a.filename}`}
+        title="Remove attachment"
+        className="p-0.5 rounded hover:bg-border-subtle text-fg-tertiary hover:text-status-changes transition-colors shrink-0"
+      >
+        <X size={10} strokeWidth={2} />
+      </button>
+    </div>
+  );
+}
+
+/**
  * Stage-based "Claude is thinking" indicator. The real `claude --print` call
  * is non-streaming and often runs 30-60s, so a static "thinking…" looks
  * frozen. We cycle through plausible stages on a timer so the user sees
  * the request is alive. Stages are deliberately vague — we don't know what
  * Claude is actually doing, just that time is passing.
  */
-function ThinkingIndicator() {
+function ThinkingIndicator({ creatingPlan = false }: { creatingPlan?: boolean }) {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     const start = Date.now();
@@ -677,11 +717,22 @@ function ThinkingIndicator() {
     return () => clearInterval(t);
   }, []);
 
+  // Plan-creation flow is its own narrative — picking features, drafting,
+  // saving — so use a distinct stage script. Otherwise it's the generic
+  // refine/answer narrative.
   let stage = "thinking";
-  if (elapsed >= 60) stage = "still working — long context can take a moment";
-  else if (elapsed >= 25) stage = "almost done";
-  else if (elapsed >= 10) stage = "drafting response";
-  else if (elapsed >= 3) stage = "reading context";
+  if (creatingPlan) {
+    if (elapsed >= 60) stage = "still drafting — Claude is being thorough";
+    else if (elapsed >= 25) stage = "almost done drafting your plan";
+    else if (elapsed >= 10) stage = "picking the right Claude Code features";
+    else if (elapsed >= 3) stage = "creating a plan from your description";
+    else stage = "creating plan";
+  } else {
+    if (elapsed >= 60) stage = "still working — long context can take a moment";
+    else if (elapsed >= 25) stage = "almost done";
+    else if (elapsed >= 10) stage = "drafting response";
+    else if (elapsed >= 3) stage = "reading context";
+  }
 
   return (
     <div className="mr-6 text-sm text-fg-secondary">

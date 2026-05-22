@@ -161,7 +161,19 @@ export default function Home() {
     {
       key: "Escape",
       handler: () => {
-        if (focusMode) setFocusMode(false);
+        // Most-recent-opened first: shortcuts overlay > palette >
+        // focus mode > chat. We swallow keystroke (prevent: true) only
+        // when we actually handled something, otherwise let it pass so
+        // native browser behaviour (e.g. blurring inputs) still works.
+        if (shortcutsOpen) {
+          setShortcutsOpen(false);
+        } else if (paletteOpen) {
+          setPaletteOpen(false);
+        } else if (focusMode) {
+          setFocusMode(false);
+        } else if (chatOpen) {
+          setChatOpen(false);
+        }
       },
       whileTyping: false,
       prevent: false,

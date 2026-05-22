@@ -17,6 +17,55 @@ function sanitizeFilename(name: string): string {
   return cleaned.slice(0, 120) || "upload";
 }
 
+/**
+ * Best-effort: ensure the user's project .gitignore contains `.adeptly/`
+ * so the user-attached files (potentially screenshots of patient records,
+ * PHI, API keys, etc.) don't accidentally get committed.
+ *
+ * Only runs when:
+ *  - the project root contains a .git directory (we won't litter non-git
+ *    folders with a .gitignore file)
+ *  - the entry isn't already in the .gitignore (idempotent)
+ *
+ * Failures are swallowed — this is a courtesy, not a correctness step.
+ */
+async function ensureGitignoreEntry(projectRoot: string): Promise<void> {
+  try {
+    const dotGit = path.join(projectRoot, ".git");
+    const isGit = await fs
+      .stat(dotGit)
+      .then(() => true)
+      .catch(() => false);
+    if (!isGit) return;
+
+    const gitignorePath = path.join(projectRoot, ".gitignore");
+    let current = "";
+    try {
+      current = await fs.readFile(gitignorePath, "utf-8");
+    } catch {
+      // file doesn't exist — we'll create it
+    }
+    // Match `.adeptly/` or `.adeptly` (with or without trailing slash, as
+    // a standalone line). Skip if any equivalent rule is already present.
+    const lines = current.split(/\r?\n/);
+    const hasEntry = lines.some((l) => {
+      const t = l.trim();
+      return t === ".adeptly" || t === ".adeptly/" || t === "/.adeptly" || t === "/.adeptly/";
+    });
+    if (hasEntry) return;
+
+    const needsLeadingNewline = current.length > 0 && !current.endsWith("\n");
+    const block =
+      (needsLeadingNewline ? "\n" : "") +
+      (current.length > 0 ? "\n" : "") +
+      "# Adeptly — local runtime data (chat uploads, etc.); never committed\n" +
+      ".adeptly/\n";
+    await fs.appendFile(gitignorePath, block, "utf-8");
+  } catch {
+    // best-effort
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const projectRoot = resolveProjectRoot(req.nextUrl.searchParams.get("projectRoot"));
@@ -29,6 +78,9 @@ export async function POST(req: NextRequest) {
 
     const dir = path.join(projectRoot, ".adeptly", "uploads");
     await fs.mkdir(dir, { recursive: true });
+    // Add .adeptly/ to the user's .gitignore the first time we save here,
+    // so screenshots / PHI / API keys never land in a commit by accident.
+    await ensureGitignoreEntry(projectRoot);
 
     const saved: Array<{ path: string; filename: string; size: number; type: string }> = [];
     for (const f of files) {

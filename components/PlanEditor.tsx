@@ -85,6 +85,16 @@ export function PlanEditor({
   const [bottomTab, setBottomTab] = useState<
     "changes" | "suggestions" | "approval" | "reviewers" | "recipe"
   >("approval");
+  // Suppress the "N suggestions" top-of-editor banner once the user has
+  // clicked through to the Suggestions tab. Resets per-plan so a new plan
+  // with new suggestions shows it again.
+  const [suggestionsViewed, setSuggestionsViewed] = useState(false);
+  useEffect(() => {
+    setSuggestionsViewed(false);
+  }, [slug]);
+  useEffect(() => {
+    if (bottomTab === "suggestions") setSuggestionsViewed(true);
+  }, [bottomTab]);
   const [pathCopied, setPathCopied] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
   const prevStatusRef = useRef<PlanStatus | null>(null);
@@ -298,6 +308,30 @@ export function PlanEditor({
         <div className="chip-changes border-b border-border-subtle text-sm px-3 py-2">{error}</div>
       )}
 
+      {suggestions.length > 0 && !suggestionsViewed && (
+        <button
+          onClick={() => setBottomTab("suggestions")}
+          className="border-b border-border-subtle px-3 py-2 text-xs flex items-center gap-2 text-left w-full transition-colors hover:opacity-90"
+          style={{
+            background: "color-mix(in srgb, var(--accent-1) 12%, var(--bg-elevated))",
+            borderBottomColor:
+              "color-mix(in srgb, var(--accent-1) 35%, var(--border-subtle))",
+          }}
+        >
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white bg-accent-gradient shrink-0">
+            {suggestions.length}
+          </span>
+          <span className="text-fg">
+            Claude has{" "}
+            <strong>
+              {suggestions.length} suggestion{suggestions.length === 1 ? "" : "s"}
+            </strong>{" "}
+            for this plan.
+          </span>
+          <span className="text-accent-1 ml-auto font-medium">View →</span>
+        </button>
+      )}
+
       <div className="border-b border-border-subtle px-3 pt-2 flex items-center gap-2 bg-elevated">
         <button
           onClick={() => setTab("edit")}
@@ -338,7 +372,7 @@ export function PlanEditor({
               setDirty(true);
             }}
             spellCheck={false}
-            className="plan-content block w-full min-h-full p-4 text-sm resize-none focus:outline-none text-fg bg-base"
+            className="plan-content block w-full min-h-full p-4 text-base resize-none focus:outline-none text-fg bg-base"
             placeholder="# Plan title…"
           />
         ) : (

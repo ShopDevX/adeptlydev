@@ -52,6 +52,20 @@ adeptly
 
 Run it from inside any project folder. Adeptly scans `docs/plans/` and creates it if missing. If Claude Code isn't installed it'll show a banner with the exact install command and link to the docs.
 
+### CLI flags
+
+```
+adeptly [options]
+
+  --host <ip>          bind address (default 127.0.0.1)
+                       use 0.0.0.0 to expose on your LAN
+  --port <n>           preferred starting port (default 3000)
+  --no-open-browser    skip the auto-open (useful over SSH / inside Docker)
+  -h, --help           show usage
+```
+
+Env vars: `PORT` (= `--port`), `ADEPTLY_NO_OPEN=1` (= `--no-open-browser`).
+
 ## The product loop
 
 1. **Open chat.** No plan selected? Describe what you want to build:

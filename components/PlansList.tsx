@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, FileText, Plus, Search, X } from "lucide-react";
 import { NewPlanModal } from "./NewPlanModal";
+import { formatRelative } from "@/lib/format-time";
 import type { Plan, PlanStatus } from "@/lib/types";
 
 type PlanLite = Omit<Plan, "content">;
@@ -211,7 +212,24 @@ export function PlansList({
                     <span className={`w-2 h-2 rounded-full ${STATUS_DOT[status]}`} aria-hidden />
                     <span className="text-sm font-medium truncate text-fg flex-1">{p.title}</span>
                   </div>
-                  <div className="text-xs text-fg-tertiary font-mono truncate">{p.filename}</div>
+                  <div className="text-xs text-fg-tertiary font-mono truncate flex items-center gap-1.5">
+                    <span className="truncate">{p.filename}</span>
+                    {p.git?.lastDate && (
+                      <>
+                        <span aria-hidden>·</span>
+                        <span
+                          className="shrink-0"
+                          title={
+                            p.git.lastAuthor
+                              ? `Last edited by ${p.git.lastAuthor} (${new Date(p.git.lastDate).toLocaleString()})`
+                              : new Date(p.git.lastDate).toLocaleString()
+                          }
+                        >
+                          {formatRelative(p.git.lastDate)}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </button>
               </li>
             );
