@@ -1,6 +1,11 @@
 # Adeptly
 
-> **Plan-first companion for Claude Code.** Describe what you want to build — Adeptly drafts the full plan and bakes the right Claude Code features (subagents, skills, hooks, /security-review, MCP, plan mode, auto-memory) into each section. Runs locally on your machine, uses your existing Claude Code subscription, never sends your code anywhere else.
+[![npm version](https://img.shields.io/npm/v/adeptly.svg)](https://www.npmjs.com/package/adeptly)
+[![npm downloads](https://img.shields.io/npm/dm/adeptly.svg)](https://www.npmjs.com/package/adeptly)
+[![license: MIT](https://img.shields.io/npm/l/adeptly.svg)](./LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
+
+> **Plan-first companion for Claude Code.** Describe what you want to build — Adeptly drafts the full plan and bakes the right Claude Code features (subagents, skills, hooks, /security-review, MCP, plan mode, auto-memory) into each section. Then **run the plan as a crew**. Runs locally on your machine, uses your existing Claude Code subscription, never sends your code anywhere else.
 
 ```bash
 npx adeptly
@@ -33,6 +38,36 @@ Adeptly solves both:
 
 - **Discover the features you're paying for.** Every plan gets a recipe: which subagents to spawn, which skills to invoke, which hooks to wire, expected turn count. Feature names are underlined inline in the rendered plan with hover explanations — you learn what to use by reading your own plans.
 - **One plan-first workflow for your whole team.** Plans live as markdown in `docs/plans/`. Every dev on the team sees the same plans, the same approval state. Git is the sync layer. No backend to manage.
+
+> **The core of Adeptly stays the same:** it's the only tool that surfaces *every* Claude Code feature — subagents, skills, hooks, MCP, plan mode, /security-review, auto-memory — and tells you **exactly where and why to use each one**, inline in your own plans. Nobody else explains Claude Code like this. The Crew below just lets you *watch those features run*.
+
+## 🚀 New in v0.5 — Crew: run the plan, don't just write it
+
+Adeptly used to stop at the recipe (the plan's list of *which Claude features to use*). Now it closes the loop: the Crew **executes that recipe**, so the subagents, skills, and hooks Adeptly taught you about actually run — as a pipeline of roles, each a headless `claude` turn in your own repo:
+
+```
+Architect → Approval Gate → Builder → Medic → Reviewer → Security → Pilot (PR)
+```
+
+- **Architect** maps the code and confirms the approach (read-only).
+- **Approval Gate** blocks anything from running until the plan is approved.
+- **Builder** branches and implements the plan with the smallest sensible diff.
+- **Medic** runs your build/tests and self-heals once if they fail.
+- **Reviewer + Security** review the diff for regressions and security issues.
+- **Pilot** commits, pushes, and opens the PR.
+
+**Safety first:**
+
+- **Dry-run by default.** Simulates the whole pipeline — no git, no `claude`, no PR. Run it anytime to preview the crew.
+- **Live runs are double-gated:** the plan must be **approved** *and* you must start Adeptly with `ADEPTLY_LIVE=1`. Without both, live is refused.
+- Still 100% local. The crew drives *your* `claude` CLI in *your* repo. Nothing new leaves your machine.
+
+```bash
+# enable real git + PR actions (off by default)
+ADEPTLY_LIVE=1 npx adeptly
+```
+
+Every run is written to `docs/plans/runs/<slug>/` as JSON + an append-only `audit.jsonl` — a full, reviewable trail of what the crew did.
 
 ## Install
 
@@ -85,6 +120,8 @@ Env vars: `PORT` (= `--port`), `ADEPTLY_NO_OPEN=1` (= `--no-open-browser`).
 
 8. **Copy plan + recipe as a Claude Code prompt** and paste into a fresh Claude Code session. Or just hand off the markdown file to your teammate.
 
+9. **Or run the crew.** Open the **Crew** tab and hit *Run* — Adeptly executes the whole plan (branch → build → test → review → PR) through the role pipeline. Start in **Dry-run** to preview; switch to **Live** once the plan's approved.
+
 ## Multi-developer workflow
 
 Plans are markdown files in git. That's the entire sync model.
@@ -136,7 +173,7 @@ Mermaid diagrams. Inline keyword underlining. Markdown rendering with images and
 The UI does. Chat doesn't — it needs `claude --print`, which needs the internet to reach Anthropic.
 
 **Q: Cursor / Continue / Aider — why this and not those?**
-Those tools generate code. Adeptly doesn't generate code; it generates and refines the *plan* that becomes a Claude Code prompt. Then you hand off to Claude Code (or any code-gen tool) for the implementation. Adeptly is the upstream step, not a replacement.
+Those tools generate code. Adeptly starts one step upstream: it generates and refines the *plan* that becomes a Claude Code prompt. With the **Crew** it can also drive the implementation end-to-end (branch → build → test → PR) by orchestrating your own `claude` CLI — but the plan, and your approval, always come first.
 
 **Q: Can my team use it together?**
 Yes. Everyone installs `adeptly` and points it at the same repo. Plans are in git; approvals are in git; conflicts resolve like any other markdown file. No central server, no accounts.
@@ -147,9 +184,31 @@ Not officially yet. Roadmap includes `--host` and Cloudflare Tunnel support. For
 **Q: Where can I report bugs / request features?**
 [GitHub issues](https://github.com/ShopDevX/adeptlydev/issues). Or DM in r/ClaudeAI / r/programming when this lands.
 
+## Contributing
+
+Adeptly is open source (MIT) and contributions are welcome — the codebase is a single Next.js app with a small local Node server, no backend, no accounts.
+
+```bash
+git clone https://github.com/ShopDevX/adeptlydev.git
+cd adeptlydev
+npm install
+npm run dev        # http://localhost:3000
+```
+
+See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the dev workflow, how the plan/recipe/crew pieces fit together, and the PR checklist. Good first issues are labelled [`good first issue`](https://github.com/ShopDevX/adeptlydev/labels/good%20first%20issue). By participating you agree to the [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+## Roadmap
+
+- [x] Plan creation from chat, inline feature highlighting, recipe generation, approval workflow
+- [x] **Crew runner** — execute a plan as a role pipeline (dry-run + live)
+- [ ] Per-run history browser + re-run from a previous run
+- [ ] Crew theming (swap role names/colors — "movie crew" packs)
+- [ ] Remote/tunnel support (`--host`, Cloudflare Tunnel)
+- [ ] Parallel crew stages where the plan allows
+
 ## Status
 
-**v0.4.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
+**v0.5.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live)**, approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
 
 - npm: https://www.npmjs.com/package/adeptly
 - repo: https://github.com/ShopDevX/adeptlydev

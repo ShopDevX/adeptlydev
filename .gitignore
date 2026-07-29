@@ -33,3 +33,6 @@ docs/plans/recipes/
 
 # npm pack output
 *.tgz
+
+# crew run artifacts (local audit trail)
+docs/plans/runs/

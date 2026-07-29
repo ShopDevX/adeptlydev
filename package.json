@@ -1,6 +1,6 @@
 {
   "name": "adeptly",
-  "version": "0.4.7",
+  "version": "0.5.0",
   "description": "Plan-first companion for Claude Code. Describe what to build — Adeptly drafts the plan with the right Claude Code features baked into each section. Free, open source, runs on your machine.",
   "keywords": [
     "claude",

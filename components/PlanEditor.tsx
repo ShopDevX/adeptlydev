@@ -6,6 +6,7 @@ import { MarkdownPreview } from "./MarkdownPreview";
 import { SuggestedFeatures } from "./SuggestedFeatures";
 import { GitHubReviewers } from "./GitHubReviewers";
 import { PlanRecipe } from "./PlanRecipe";
+import { CrewPanel } from "./CrewPanel";
 import { formatRelative } from "@/lib/format-time";
 import type { Approval, FeatureSuggestion, Plan, PlanStatus } from "@/lib/types";
 
@@ -83,7 +84,7 @@ export function PlanEditor({
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [error, setError] = useState<string | null>(null);
   const [bottomTab, setBottomTab] = useState<
-    "changes" | "suggestions" | "approval" | "reviewers" | "recipe" | "history"
+    "changes" | "suggestions" | "approval" | "reviewers" | "recipe" | "crew" | "history"
   >("approval");
   const [history, setHistory] = useState<
     Array<{ hash: string; fullHash: string; author: string; email: string; date: string; subject: string }>
@@ -448,6 +449,7 @@ export function PlanEditor({
               ["approval", "Approval", approval ? null : null],
               ["reviewers", "Reviewers", approval?.reviewers.length ? approval.reviewers.length : null],
               ["recipe", "Claude recipe", null],
+              ["crew", "Crew", null],
               ["changes", "Changes", mismatchCount > 0 ? mismatchCount : null],
               ["suggestions", "Suggestions", suggestions.length > 0 ? suggestions.length : null],
               ["history", "History", null],
@@ -602,6 +604,15 @@ export function PlanEditor({
               planSlug={slug}
               planContent={editContent}
               planTitle={plan?.title ?? slug ?? ""}
+            />
+          )}
+
+          {bottomTab === "crew" && (
+            <CrewPanel
+              projectRoot={projectRoot}
+              planSlug={slug}
+              planTitle={plan?.title ?? slug ?? ""}
+              approvalStatus={approval?.status ?? null}
             />
           )}
 
