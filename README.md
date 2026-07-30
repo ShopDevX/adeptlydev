@@ -201,6 +201,7 @@ See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the dev workflow, how the plan/
 
 - [x] Plan creation from chat, inline feature highlighting, recipe generation, approval workflow
 - [x] **Crew runner** — execute a plan as a role pipeline (dry-run + live)
+- [x] **Stack auto-detection** — reads your manifests (package.json, go.mod, Cargo.toml, …) so the plan + recipe tailor to your actual stack
 - [ ] Per-run history browser + re-run from a previous run
 - [ ] Crew theming (swap role names/colors — "movie crew" packs)
 - [ ] Remote/tunnel support (`--host`, Cloudflare Tunnel)
@@ -208,7 +209,7 @@ See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the dev workflow, how the plan/
 
 ## Status
 
-**v0.5.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live)**, approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
+**v0.6.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live)**, **stack auto-detection** (plan + recipe tailor to your detected stack), approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
 
 - npm: https://www.npmjs.com/package/adeptly
 - repo: https://github.com/ShopDevX/adeptlydev

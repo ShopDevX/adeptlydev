@@ -11,6 +11,7 @@ import {
   MessageSquareQuote,
   Sparkles,
   Copy,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 import type { PlanRecipeRecord } from "@/lib/plan-recipe";
@@ -27,6 +28,18 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
   const [stale, setStale] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stack, setStack] = useState<string>("");
+
+  useEffect(() => {
+    if (!projectRoot) {
+      setStack("");
+      return;
+    }
+    fetch(`/api/stack?projectRoot=${encodeURIComponent(projectRoot)}`)
+      .then((r) => r.json())
+      .then((d) => setStack(d?.stack?.summary || ""))
+      .catch(() => setStack(""));
+  }, [projectRoot]);
 
   useEffect(() => {
     if (!projectRoot || !planSlug) {
@@ -121,6 +134,13 @@ export function PlanRecipe({ projectRoot, planSlug, planContent, planTitle }: Pr
 
   return (
     <div className="space-y-3">
+      {stack && (
+        <div className="text-[11px] text-fg-secondary flex items-center gap-1.5 flex-wrap border border-border-subtle rounded-md px-2 py-1.5 bg-elevated">
+          <Layers size={12} className="text-accent-1 shrink-0" strokeWidth={1.5} />
+          <span>Tailored for your stack:</span>
+          <span className="font-mono text-fg">{stack}</span>
+        </div>
+      )}
       <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={generate}

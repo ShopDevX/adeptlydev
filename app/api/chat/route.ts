@@ -4,6 +4,7 @@ import { resolveProjectRoot } from "@/lib/projects";
 import { CLAUDE_CODE_FEATURES } from "@/lib/features";
 import { runClaude } from "@/lib/claude-cli";
 import { extractJson } from "@/lib/llm-json";
+import { detectStack, stackPromptSection } from "@/lib/stack";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -48,7 +49,7 @@ export interface FeatureInjection {
   label?: string;
 }
 
-function buildGeneratePlanPrompt(description: string, atts: AttachmentRef[] = []): string {
+function buildGeneratePlanPrompt(description: string, atts: AttachmentRef[] = [], stackBlock = ""): string {
   const cat = CLAUDE_CODE_FEATURES.map(
     (f) => `- ${f.name} (${f.category}): ${f.whenToUse}`
   ).join("\n");
@@ -62,7 +63,7 @@ Generate a complete development plan in markdown for them. Pick the right
 Claude Code features for each section and mention them by name inline so
 the user learns what to use. Keep features in plain English, not jargon.
 
-USER'S DESCRIPTION:
+${stackBlock}USER'S DESCRIPTION:
 ${description}
 ${attBlock}
 AVAILABLE CLAUDE CODE FEATURES — pick the ones that fit this project:
@@ -86,7 +87,8 @@ Rules:
 function buildPrompt(
   planContext: string | null,
   history: Turn[],
-  atts: AttachmentRef[] = []
+  atts: AttachmentRef[] = [],
+  stackBlock = ""
 ): string {
   // Compact feature catalogue so Claude knows what's available
   const cat = CLAUDE_CODE_FEATURES.map(
@@ -111,7 +113,7 @@ Your job: when the conversation suggests Claude Code features (subagents, skills
 AVAILABLE CLAUDE CODE FEATURES:
 ${cat}
 
-${planBlock}CONVERSATION SO FAR:
+${stackBlock}${planBlock}CONVERSATION SO FAR:
 ${convo}
 
 ${attPart}RESPONSE FORMAT — IMPORTANT:
@@ -212,10 +214,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "empty conversation" }, { status: 400 });
     }
 
+    // Detect the project's stack so plan + recommendations tailor to it.
+    const stackBlock = stackPromptSection(await detectStack(projectRoot));
+
     // === Plan-generation mode: no plan selected, first turn ===
     if (!planSlug && history.length === 1 && history[0].role === "user") {
       const description = history[0].content;
-      const prompt = buildGeneratePlanPrompt(description, attachments);
+      const prompt = buildGeneratePlanPrompt(description, attachments, stackBlock);
       const { stdout, error } = await askClaude(prompt);
       if (error && !stdout) {
         return NextResponse.json(
@@ -253,7 +258,7 @@ export async function POST(req: NextRequest) {
       if (plan) planContext = plan.content;
     }
 
-    const prompt = buildPrompt(planContext, history, attachments);
+    const prompt = buildPrompt(planContext, history, attachments, stackBlock);
     let { stdout, error } = await askClaude(prompt);
     if (error && !stdout) {
       return NextResponse.json(

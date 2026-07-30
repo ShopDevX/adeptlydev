@@ -5,6 +5,7 @@ import { getPlansDir, getProjectRoot } from "./plans";
 import { CLAUDE_CODE_FEATURES } from "./features";
 import { runClaude } from "./claude-cli";
 import { extractJson } from "./llm-json";
+import { detectStack, stackPromptSection } from "./stack";
 
 export interface PlanRecipeSubagent {
   type: string;
@@ -78,7 +79,7 @@ async function writeCachedRecipe(
   await fs.writeFile(file, JSON.stringify(record, null, 2) + "\n", "utf-8");
 }
 
-function buildPrompt(planTitle: string, planContent: string): string {
+function buildPrompt(planTitle: string, planContent: string, stackBlock = ""): string {
   // Compact feature catalogue (name + category + when-to-use only) to keep tokens down
   const catalogue = CLAUDE_CODE_FEATURES.map(
     (f) => `- ${f.name} (${f.category}): ${f.whenToUse}`
@@ -114,7 +115,7 @@ Choose skills only from this set: /init, /review, /security-review, /loop, /sche
 Available Claude Code features and when to use them:
 ${catalogue}
 
-The plan to analyse follows below the line.
+${stackBlock}The plan to analyse follows below the line.
 
 PLAN TITLE: ${planTitle}
 
@@ -177,7 +178,8 @@ export async function generateRecipe(
   projectRoot = getProjectRoot()
 ): Promise<PlanRecipeRecord> {
   const inputHash = hashContent(planContent);
-  const prompt = buildPrompt(planTitle, planContent);
+  const stackBlock = stackPromptSection(await detectStack(projectRoot));
+  const prompt = buildPrompt(planTitle, planContent, stackBlock);
   const result = await runClaude(prompt, { timeoutMs: 90_000 });
 
   let record: PlanRecipeRecord;
