@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { spawn } from "node:child_process";
 import { readPlan, createPlan } from "@/lib/plans";
 import { resolveProjectRoot } from "@/lib/projects";
 import { CLAUDE_CODE_FEATURES } from "@/lib/features";
+import { runClaude } from "@/lib/claude-cli";
+import { extractJson } from "@/lib/llm-json";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -148,101 +149,47 @@ interface ParsedGenerated {
 }
 
 function safeParseGenerated(raw: string): ParsedGenerated | null {
-  const trimmed = (raw || "").trim();
-  let text = trimmed;
-  if (text.startsWith("```")) {
-    text = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  }
-  const first = text.indexOf("{");
-  const last = text.lastIndexOf("}");
-  if (first === -1 || last === -1 || last < first) return null;
-  try {
-    const obj = JSON.parse(text.slice(first, last + 1));
-    if (
-      typeof obj?.title !== "string" ||
-      typeof obj?.content !== "string" ||
-      obj.content.length < 50
-    ) {
-      return null;
-    }
-    return {
-      title: obj.title,
-      content: obj.content,
-      reply: typeof obj?.reply === "string" ? obj.reply : "Plan created.",
-    };
-  } catch {
+  const obj = extractJson<any>(raw);
+  if (
+    !obj ||
+    typeof obj.title !== "string" ||
+    typeof obj.content !== "string" ||
+    obj.content.length < 50
+  ) {
     return null;
   }
+  return {
+    title: obj.title,
+    content: obj.content,
+    reply: typeof obj.reply === "string" ? obj.reply : "Plan created.",
+  };
 }
 
 /** Distinguish "JSON parsed" from "fell back to raw text" so we can decide
  *  whether to retry with a stricter prompt. */
 function safeParse(raw: string): ParsedReply & { _parsed: boolean } {
   const trimmed = (raw || "").trim();
-  let text = trimmed;
-  if (text.startsWith("```")) {
-    text = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  }
-  const first = text.indexOf("{");
-  const last = text.lastIndexOf("}");
-  if (first === -1 || last === -1 || last < first) {
+  const obj = extractJson<any>(raw);
+  if (!obj) {
     return { reply: trimmed, feature_injections: [], _parsed: false };
   }
-  try {
-    const obj = JSON.parse(text.slice(first, last + 1));
-    const reply = typeof obj?.reply === "string" ? obj.reply : trimmed;
-    const inj = Array.isArray(obj?.feature_injections) ? obj.feature_injections : [];
-    const cleaned: FeatureInjection[] = inj
-      .map((x: any) => ({
-        section_hint: typeof x?.section_hint === "string" ? x.section_hint : "",
-        content: typeof x?.content === "string" ? x.content : "",
-        feature_ids: Array.isArray(x?.feature_ids) ? x.feature_ids.filter((s: any) => typeof s === "string") : [],
-        label: typeof x?.label === "string" ? x.label : "Add to plan",
-      }))
-      .filter((x: FeatureInjection) => x.section_hint && x.content);
-    return { reply, feature_injections: cleaned, _parsed: true };
-  } catch {
-    return { reply: trimmed, feature_injections: [], _parsed: false };
-  }
+  const reply = typeof obj.reply === "string" ? obj.reply : trimmed;
+  const inj = Array.isArray(obj.feature_injections) ? obj.feature_injections : [];
+  const cleaned: FeatureInjection[] = inj
+    .map((x: any) => ({
+      section_hint: typeof x?.section_hint === "string" ? x.section_hint : "",
+      content: typeof x?.content === "string" ? x.content : "",
+      feature_ids: Array.isArray(x?.feature_ids) ? x.feature_ids.filter((s: any) => typeof s === "string") : [],
+      label: typeof x?.label === "string" ? x.label : "Add to plan",
+    }))
+    .filter((x: FeatureInjection) => x.section_hint && x.content);
+  return { reply, feature_injections: cleaned, _parsed: true };
 }
 
-async function callClaude(prompt: string, timeoutMs = 90_000): Promise<{ stdout: string; error?: string }> {
-  return new Promise((resolve) => {
-    let stdout = "";
-    let stderr = "";
-    let resolved = false;
-    const finish = (error?: string) => {
-      if (resolved) return;
-      resolved = true;
-      resolve({ stdout, error: error || (stderr && !stdout ? stderr : undefined) });
-    };
-
-    const child = spawn("claude", ["--print"], {
-      shell: true,
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env, CI: "1" },
-    });
-
-    child.on("error", (e) => finish(e.message));
-    child.stdout?.on("data", (d) => (stdout += d.toString("utf-8")));
-    child.stderr?.on("data", (d) => (stderr += d.toString("utf-8")));
-    child.on("close", () => finish());
-
-    const timer = setTimeout(() => {
-      try {
-        child.kill("SIGTERM");
-      } catch {}
-      finish(`claude --print timed out after ${timeoutMs}ms`);
-    }, timeoutMs);
-    child.on("close", () => clearTimeout(timer));
-
-    try {
-      child.stdin?.write(prompt);
-      child.stdin?.end();
-    } catch (e: any) {
-      finish(e?.message ?? String(e));
-    }
-  });
+/** Run claude, surfacing stderr as the error when nothing came back on stdout. */
+async function askClaude(prompt: string, timeoutMs = 90_000): Promise<{ stdout: string; error?: string }> {
+  const { stdout, stderr, error } = await runClaude(prompt, { timeoutMs });
+  return { stdout, error: error || (stderr && !stdout ? stderr : undefined) };
 }
 
 export async function POST(req: NextRequest) {
@@ -269,7 +216,7 @@ export async function POST(req: NextRequest) {
     if (!planSlug && history.length === 1 && history[0].role === "user") {
       const description = history[0].content;
       const prompt = buildGeneratePlanPrompt(description, attachments);
-      const { stdout, error } = await callClaude(prompt);
+      const { stdout, error } = await askClaude(prompt);
       if (error && !stdout) {
         return NextResponse.json(
           { error, hint: "Make sure the `claude` CLI is installed and on PATH." },
@@ -307,7 +254,7 @@ export async function POST(req: NextRequest) {
     }
 
     const prompt = buildPrompt(planContext, history, attachments);
-    let { stdout, error } = await callClaude(prompt);
+    let { stdout, error } = await askClaude(prompt);
     if (error && !stdout) {
       return NextResponse.json(
         { error, hint: "Make sure the `claude` CLI is installed and on PATH." },
@@ -327,7 +274,7 @@ export async function POST(req: NextRequest) {
         prompt +
         "\n\n--- RETRY ---\n" +
         "Your previous response was not valid JSON. Respond ONLY with a single JSON object matching the schema above. No prose, no markdown fences, no leading or trailing text. If you have nothing to add, return { \"reply\": \"<your message>\", \"feature_injections\": [] }.";
-      const retry = await callClaude(stricterPrompt, 60_000);
+      const retry = await askClaude(stricterPrompt, 60_000);
       if (retry.stdout) {
         const reparsed = safeParse(retry.stdout);
         if (reparsed._parsed) {

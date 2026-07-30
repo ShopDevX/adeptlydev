@@ -1,6 +1,6 @@
-import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { capture } from "./exec";
 
 /**
  * Git integration for the multi-dev adoption story.
@@ -27,34 +27,8 @@ export interface GitPlanInfo {
   staged: boolean;
 }
 
-interface SpawnResult {
-  stdout: string;
-  stderr: string;
-  code: number | null;
-}
-
-function run(cmd: string, args: string[], cwd: string, timeoutMs = 4000): Promise<SpawnResult> {
-  return new Promise((resolve) => {
-    let stdout = "";
-    let stderr = "";
-    let resolved = false;
-    const finish = (code: number | null) => {
-      if (resolved) return;
-      resolved = true;
-      resolve({ stdout, stderr, code });
-    };
-    const child = spawn(cmd, args, { cwd, shell: true, stdio: ["ignore", "pipe", "pipe"] });
-    child.on("error", () => finish(null));
-    child.stdout?.on("data", (d) => (stdout += d.toString("utf-8")));
-    child.stderr?.on("data", (d) => (stderr += d.toString("utf-8")));
-    child.on("close", (code) => finish(code));
-    setTimeout(() => {
-      try {
-        child.kill("SIGTERM");
-      } catch {}
-      finish(null);
-    }, timeoutMs);
-  });
+function run(cmd: string, args: string[], cwd: string, timeoutMs = 4000) {
+  return capture(cmd, args, { cwd, timeoutMs });
 }
 
 async function isGitRepo(projectRoot: string): Promise<boolean> {

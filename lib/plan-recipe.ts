@@ -1,9 +1,10 @@
-import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { getPlansDir, getProjectRoot } from "./plans";
 import { CLAUDE_CODE_FEATURES } from "./features";
+import { runClaude } from "./claude-cli";
+import { extractJson } from "./llm-json";
 
 export interface PlanRecipeSubagent {
   type: string;
@@ -127,77 +128,21 @@ Return ONLY the JSON object. Do not wrap it in markdown fences. Do not explain.`
 }
 
 function safeParseRecipe(raw: string): PlanRecipe | null {
-  if (!raw) return null;
-  // Strip code fences if Claude wraps anyway
-  let text = raw.trim();
-  if (text.startsWith("```")) {
-    text = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  }
-  // Find first { and last } in case there's any preamble
-  const first = text.indexOf("{");
-  const last = text.lastIndexOf("}");
-  if (first === -1 || last === -1 || last < first) return null;
-  const slice = text.slice(first, last + 1);
-  try {
-    const parsed = JSON.parse(slice);
-    // Minimal shape check
-    if (
-      typeof parsed?.start_with_plan_mode !== "boolean" ||
-      !Array.isArray(parsed?.subagents) ||
-      !Array.isArray(parsed?.skills) ||
-      !Array.isArray(parsed?.hooks_to_consider) ||
-      typeof parsed?.expected_turns !== "number" ||
-      typeof parsed?.estimated_cost_usd !== "number" ||
-      !Array.isArray(parsed?.execution_order)
-    ) {
-      return null;
-    }
-    return parsed as PlanRecipe;
-  } catch {
+  const parsed = extractJson<any>(raw);
+  // Minimal shape check
+  if (
+    !parsed ||
+    typeof parsed.start_with_plan_mode !== "boolean" ||
+    !Array.isArray(parsed.subagents) ||
+    !Array.isArray(parsed.skills) ||
+    !Array.isArray(parsed.hooks_to_consider) ||
+    typeof parsed.expected_turns !== "number" ||
+    typeof parsed.estimated_cost_usd !== "number" ||
+    !Array.isArray(parsed.execution_order)
+  ) {
     return null;
   }
-}
-
-async function callClaudeCli(prompt: string, timeoutMs = 90_000): Promise<{ stdout: string; stderr: string; code: number | null; error?: string }> {
-  return new Promise((resolve) => {
-    let resolved = false;
-    let stdout = "";
-    let stderr = "";
-
-    // On Windows the binary is usually `claude.cmd`; on Unix it's `claude`.
-    // child_process.spawn with `shell: true` lets us not care.
-    const child = spawn("claude", ["--print"], {
-      shell: true,
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env, CI: "1" },
-    });
-
-    const finish = (code: number | null, error?: string) => {
-      if (resolved) return;
-      resolved = true;
-      resolve({ stdout, stderr, code, error });
-    };
-
-    child.on("error", (err) => finish(null, err.message));
-    child.stdout?.on("data", (d) => (stdout += d.toString("utf-8")));
-    child.stderr?.on("data", (d) => (stderr += d.toString("utf-8")));
-    child.on("close", (code) => finish(code));
-
-    const t = setTimeout(() => {
-      try {
-        child.kill("SIGTERM");
-      } catch {}
-      finish(null, `claude --print timed out after ${timeoutMs}ms`);
-    }, timeoutMs);
-    child.on("close", () => clearTimeout(t));
-
-    try {
-      child.stdin?.write(prompt);
-      child.stdin?.end();
-    } catch (err: any) {
-      finish(null, err?.message ?? String(err));
-    }
-  });
+  return parsed as PlanRecipe;
 }
 
 function fallbackRecipe(): PlanRecipe {
@@ -233,7 +178,7 @@ export async function generateRecipe(
 ): Promise<PlanRecipeRecord> {
   const inputHash = hashContent(planContent);
   const prompt = buildPrompt(planTitle, planContent);
-  const result = await callClaudeCli(prompt);
+  const result = await runClaude(prompt, { timeoutMs: 90_000 });
 
   let record: PlanRecipeRecord;
 
