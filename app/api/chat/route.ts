@@ -52,34 +52,34 @@ function buildGeneratePlanPrompt(description: string, atts: AttachmentRef[] = []
     (f) => `- ${f.name} (${f.category}): ${f.whenToUse}`
   ).join("\n");
 
-  return [
-    "You are an expert at Claude Code, working inside Adeptly.",
-    "The user wants to start a new project or feature and is asking for a plan.",
-    "",
-    "Generate a complete development plan in markdown for them. Pick the right",
-    "Claude Code features for each section and mention them by name inline so",
-    "the user learns what to use. Keep features in plain English, not jargon.",
-    "",
-    "USER'S DESCRIPTION:",
-    description,
-    attachmentSection(atts),
-    "AVAILABLE CLAUDE CODE FEATURES — pick the ones that fit this project:",
-    cat,
-    "",
-    "Return a single JSON object — no markdown fences, no prose, just the JSON:",
-    "",
-    "{",
-    '  "title": "<short title for the plan, 3-7 words>",',
-    '  "content": "<full markdown plan, ~250-500 words, with sections # Title, ## 1. Problem, ## 2. Approach, ## 3. Files to change, ## 4. Flow (with a ```mermaid flowchart block), ## 5. Risks, ## 6. Approval. In Approach + Risks especially, mention specific Claude Code features (Plan Mode, /security-review, Explore subagent, etc.) so the keyword highlighter will underline them when the plan is rendered.>",',
-    '  "reply": "<1-2 sentence conversational response to the user, telling them you created the plan and what you focused on>"',
-    "}",
-    "",
-    "Rules:",
-    "- Make the content production-ready markdown the user can edit immediately.",
-    "- Mention 3-6 specific Claude Code features by name inside the plan content.",
-    "- Use a real Mermaid flowchart, not a placeholder.",
-    "- Keep tone confident and concise. No filler.",
-  ].join("\n");
+  const attBlock = attachmentSection(atts);
+
+  return `You are an expert at Claude Code, working inside Adeptly.
+The user wants to start a new project or feature and is asking for a plan.
+
+Generate a complete development plan in markdown for them. Pick the right
+Claude Code features for each section and mention them by name inline so
+the user learns what to use. Keep features in plain English, not jargon.
+
+USER'S DESCRIPTION:
+${description}
+${attBlock}
+AVAILABLE CLAUDE CODE FEATURES — pick the ones that fit this project:
+${cat}
+
+Return a single JSON object — no markdown fences, no prose, just the JSON:
+
+{
+  "title": "<short title for the plan, 3-7 words>",
+  "content": "<full markdown plan, ~250-500 words, with sections # Title, ## 1. Problem, ## 2. Approach, ## 3. Files to change, ## 4. Flow (with a \`\`\`mermaid flowchart block), ## 5. Risks, ## 6. Approval. In Approach + Risks especially, mention specific Claude Code features (Plan Mode, /security-review, Explore subagent, etc.) so the keyword highlighter will underline them when the plan is rendered.>",
+  "reply": "<1-2 sentence conversational response to the user, telling them you created the plan and what you focused on>"
+}
+
+Rules:
+- Make the content production-ready markdown the user can edit immediately.
+- Mention 3-6 specific Claude Code features by name inside the plan content.
+- Use a real Mermaid flowchart, not a placeholder.
+- Keep tone confident and concise. No filler.`;
 }
 
 function buildPrompt(
@@ -87,68 +87,53 @@ function buildPrompt(
   history: Turn[],
   atts: AttachmentRef[] = []
 ): string {
-  const lines: string[] = [];
-
-  lines.push(
-    "You are an assistant inside Adeptly — a plan-first companion for developers using Claude Code."
-  );
-  lines.push(
-    "The user is designing a development plan and talking with you about how to execute it well."
-  );
-  lines.push(
-    "Your job: when the conversation suggests Claude Code features (subagents, skills, hooks, etc.) that would help, offer to inject concrete recommendations into the appropriate section of their plan."
-  );
-  lines.push("");
-
   // Compact feature catalogue so Claude knows what's available
   const cat = CLAUDE_CODE_FEATURES.map(
     (f) => `- ${f.name} (${f.category}): ${f.whenToUse}`
   ).join("\n");
-  lines.push("AVAILABLE CLAUDE CODE FEATURES:");
-  lines.push(cat);
-  lines.push("");
 
-  if (planContext) {
-    lines.push("CURRENT PLAN the user is designing:");
-    lines.push("---");
-    lines.push(planContext);
-    lines.push("---");
-    lines.push("");
-  }
+  const planBlock = planContext
+    ? `CURRENT PLAN the user is designing:\n---\n${planContext}\n---\n\n`
+    : "";
 
-  lines.push("CONVERSATION SO FAR:");
-  for (const t of history) {
-    lines.push(`${t.role === "user" ? "User" : "Assistant"}: ${t.content}`);
-  }
-  lines.push("");
+  const convo = history
+    .map((t) => `${t.role === "user" ? "User" : "Assistant"}: ${t.content}`)
+    .join("\n");
 
   const attBlock = attachmentSection(atts);
-  if (attBlock) lines.push(attBlock);
+  const attPart = attBlock ? `${attBlock}\n` : "";
 
-  lines.push("RESPONSE FORMAT — IMPORTANT:");
-  lines.push(
-    "Return a single JSON object with this exact shape. No prose, no markdown fences, just the JSON:"
-  );
-  lines.push("");
-  lines.push("{");
-  lines.push('  "reply": "Your conversational reply to the user, 1-4 sentences, plain text. Be concise.",');
-  lines.push('  "feature_injections": [');
-  lines.push("    {");
-  lines.push('      "section_hint": "<exact substring from a heading in the user\'s plan, e.g. \\"Approach\\" or \\"2. Approach\\" — pick the section this advice fits>",');
-  lines.push('      "content": "<markdown bullet(s) or short block to insert under that heading>",');
-  lines.push('      "feature_ids": ["<id from the feature catalogue>", "..."],');
-  lines.push('      "label": "<2-5 word label for the Add-to-plan button>"');
-  lines.push("    }");
-  lines.push("  ]");
-  lines.push("}");
-  lines.push("");
-  lines.push("Rules:");
-  lines.push("- If you are not recommending features (e.g. a clarifying question, a yes/no answer), return an empty feature_injections array.");
-  lines.push("- Only suggest injections that genuinely add Claude Code features the user isn't already using.");
-  lines.push("- section_hint must match an actual heading in the user's plan (case-insensitive substring).");
-  lines.push("- content should be markdown bullets, ready to insert as-is.");
-  lines.push("- Do NOT wrap the JSON in markdown fences. Do NOT explain it. Just the JSON.");
-  return lines.join("\n");
+  return `You are an assistant inside Adeptly — a plan-first companion for developers using Claude Code.
+The user is designing a development plan and talking with you about how to execute it well.
+Your job: when the conversation suggests Claude Code features (subagents, skills, hooks, etc.) that would help, offer to inject concrete recommendations into the appropriate section of their plan.
+
+AVAILABLE CLAUDE CODE FEATURES:
+${cat}
+
+${planBlock}CONVERSATION SO FAR:
+${convo}
+
+${attPart}RESPONSE FORMAT — IMPORTANT:
+Return a single JSON object with this exact shape. No prose, no markdown fences, just the JSON:
+
+{
+  "reply": "Your conversational reply to the user, 1-4 sentences, plain text. Be concise.",
+  "feature_injections": [
+    {
+      "section_hint": "<exact substring from a heading in the user's plan, e.g. \\"Approach\\" or \\"2. Approach\\" — pick the section this advice fits>",
+      "content": "<markdown bullet(s) or short block to insert under that heading>",
+      "feature_ids": ["<id from the feature catalogue>", "..."],
+      "label": "<2-5 word label for the Add-to-plan button>"
+    }
+  ]
+}
+
+Rules:
+- If you are not recommending features (e.g. a clarifying question, a yes/no answer), return an empty feature_injections array.
+- Only suggest injections that genuinely add Claude Code features the user isn't already using.
+- section_hint must match an actual heading in the user's plan (case-insensitive substring).
+- content should be markdown bullets, ready to insert as-is.
+- Do NOT wrap the JSON in markdown fences. Do NOT explain it. Just the JSON.`;
 }
 
 interface ParsedReply {
