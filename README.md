@@ -41,6 +41,18 @@ Adeptly solves both:
 
 > **The core of Adeptly stays the same:** it's the only tool that surfaces *every* Claude Code feature — subagents, skills, hooks, MCP, plan mode, /security-review, auto-memory — and tells you **exactly where and why to use each one**, inline in your own plans. Nobody else explains Claude Code like this. The Crew below just lets you *watch those features run*.
 
+## 🆕 New in v0.7 — see your usage, spend less
+
+Adeptly now helps you get *more* Claude Code for *less*:
+
+- **Coverage** — every plan gets a score: how many of Claude Code's 30+ features is this plan actually using? Plus the specific high-value ones it's missing (and why), one click to add each. This is the core pitch made measurable.
+- **Token Hygiene (Savings)** — an efficiency score for the plan against the money-saving Claude habits: Plan Mode first, Explore subagent for search, `/clear` between tasks, cache-friendly ordering, Haiku for mechanical work, background agents, fewer permission prompts. Each missing habit is one click to bake into the plan.
+- **Usage ledger** — every `claude` call Adeptly makes (recipe, crew, feature-refresh) records its real token/cost receipt to `.adeptly/usage.jsonl`. A local **Usage** panel shows spend, **cache-hit %**, and cost by source and model. No telemetry — the ledger never leaves your machine.
+- **Cost estimates** — the recipe's expected turns + cost show up front; the crew shows **estimate vs. actual** after a live run.
+- **Refresh features from your CLI** — the built-in catalogue is a snapshot that goes stale. Hit **Refresh** and Adeptly asks your own (self-updating) `claude` CLI what's new, validates it, and lets you accept additions. No backend, no doc-scraping — your CLI is the one always-current source.
+
+All local-first, all keyed off your existing `claude` CLI — same trust surface as before.
+
 ## 🚀 New in v0.5 — Crew: run the plan, don't just write it
 
 Adeptly used to stop at the recipe (the plan's list of *which Claude features to use*). Now it closes the loop: the Crew **executes that recipe**, so the subagents, skills, and hooks Adeptly taught you about actually run — as a pipeline of roles, each a headless `claude` turn in your own repo:
@@ -202,6 +214,10 @@ See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the dev workflow, how the plan/
 - [x] Plan creation from chat, inline feature highlighting, recipe generation, approval workflow
 - [x] **Crew runner** — execute a plan as a role pipeline (dry-run + live)
 - [x] **Stack auto-detection** — reads your manifests (package.json, go.mod, Cargo.toml, …) so the plan + recipe tailor to your actual stack
+- [x] **Feature Coverage + Token Hygiene** — score how much of Claude Code a plan uses and how lean it is on tokens
+- [x] **Usage ledger** — meter Adeptly's own `claude` spend locally (cost, tokens, cache-hit)
+- [x] **Refresh catalogue from your CLI** — keep the feature list current without a backend
+- [ ] Whole-account usage (parse `~/.claude` transcripts, not just Adeptly's calls)
 - [ ] Per-run history browser + re-run from a previous run
 - [ ] Crew theming (swap role names/colors — "movie crew" packs)
 - [ ] Remote/tunnel support (`--host`, Cloudflare Tunnel)
@@ -209,7 +225,7 @@ See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the dev workflow, how the plan/
 
 ## Status
 
-**v0.6.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live)**, **stack auto-detection** (plan + recipe tailor to your detected stack), approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
+**v0.7.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live)**, **stack auto-detection**, **feature coverage + token-hygiene scoring**, **local usage ledger** (cost/tokens/cache-hit), **cost estimates** (recipe + crew estimate-vs-actual), **refresh feature catalogue from your CLI**, approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
 
 - npm: https://www.npmjs.com/package/adeptly
 - repo: https://github.com/ShopDevX/adeptlydev

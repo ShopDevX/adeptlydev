@@ -2,8 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { getPlansDir, readPlan, getProjectRoot } from "./plans";
 import { readCachedRecipe } from "./plan-recipe";
-import { runClaude } from "./claude-cli";
+import { runClaudeWithUsage, type ClaudeUsage } from "./claude-cli";
 import { capture } from "./exec";
+import { recordUsage } from "./usage-ledger";
 
 /**
  * Adeptly Crew — turn an APPROVED plan into a real run.
@@ -59,6 +60,8 @@ export interface Run {
   branch?: string;
   prUrl?: string;
   error?: string;
+  /** accumulated real cost of this run's claude calls (live runs only) */
+  costUsd?: number;
   stages: RunStage[];
 }
 
@@ -341,6 +344,17 @@ function sh(cmd: string, args: string[], cwd: string, timeoutMs = 20_000) {
   return capture(cmd, args, { cwd, timeoutMs });
 }
 
+/** Log a crew claude call to the usage ledger and add its cost to the run total. */
+async function meter(
+  run: Run,
+  stageId: string,
+  usage: ClaudeUsage | null,
+  projectRoot: string
+): Promise<void> {
+  await recordUsage(usage, { source: "crew", ref: `${run.slug}:${stageId}`, at: new Date().toISOString() }, projectRoot);
+  if (usage) run.costUsd = (run.costUsd ?? 0) + usage.costUsd;
+}
+
 async function runLiveStage(run: Run, stage: RunStage, ctx: LiveCtx, projectRoot: string): Promise<boolean> {
   const plan = await readPlan(run.slug, projectRoot);
   if (!plan) {
@@ -352,16 +366,17 @@ async function runLiveStage(run: Run, stage: RunStage, ctx: LiveCtx, projectRoot
   switch (stage.id) {
     case "architect": {
       stage.log.push("Asking Claude to map the code and confirm the approach…");
-      const res = await runClaude(
+      const res = await runClaudeWithUsage(
         `You are the Architect. Read the approved plan below and the current repo. Produce a SHORT implementation brief: the files you'll touch, the order of edits, and any risk. Do NOT edit anything.\n\nPLAN: ${plan.title}\n\n${plan.content}`,
         { allowedTools: "Read,Grep,Glob", cwd: projectRoot, timeoutMs: 180_000 }
       );
+      await meter(run, stage.id, res.usage, projectRoot);
       if (res.error) {
         stage.log.push(`claude unavailable: ${res.error}`);
         return false;
       }
-      stage.summary = firstLines(res.stdout, 6);
-      stage.log.push(res.stdout.slice(0, 4000));
+      stage.summary = firstLines(res.text, 6);
+      stage.log.push(res.text.slice(0, 4000));
       return true;
     }
 
@@ -383,19 +398,20 @@ async function runLiveStage(run: Run, stage: RunStage, ctx: LiveCtx, projectRoot
         return false;
       }
       stage.log.push(`On branch ${ctx.branch}. Implementing…`);
-      const res = await runClaude(
+      const res = await runClaudeWithUsage(
         `You are the Builder. Implement the approved plan below in this repo. Make the smallest sensible diff, follow existing conventions, do not add unrelated changes. When done, stop.\n\nPLAN: ${plan.title}\n\n${plan.content}${
           recipe ? `\n\nRECIPE (execution order): ${recipe.recipe.execution_order.join(" | ")}` : ""
         }`,
         { allowedTools: "Read,Grep,Glob,Edit,Write,Bash", cwd: projectRoot, timeoutMs: 300_000 }
       );
+      await meter(run, stage.id, res.usage, projectRoot);
       if (res.error) {
         stage.log.push(`claude unavailable: ${res.error}`);
         return false;
       }
       ctx.touched = true;
-      stage.summary = firstLines(res.stdout, 4);
-      stage.log.push(res.stdout.slice(0, 4000));
+      stage.summary = firstLines(res.text, 4);
+      stage.log.push(res.text.slice(0, 4000));
       const status = await sh("git", ["status", "--porcelain"], projectRoot);
       const changed = status.stdout.trim().split("\n").filter(Boolean).length;
       stage.log.push(`${changed} file(s) changed.`);
@@ -419,11 +435,12 @@ async function runLiveStage(run: Run, stage: RunStage, ctx: LiveCtx, projectRoot
       // one bounded self-heal pass
       stage.log.push(`Failed. Asking Medic to self-heal once…`);
       const errTail = (res.stdout + res.stderr).slice(-3000);
-      const heal = await runClaude(
+      const heal = await runClaudeWithUsage(
         `You are the Medic. The command \`npm run ${script}\` failed. Fix the code so it passes. Error output:\n\n${errTail}`,
         { allowedTools: "Read,Grep,Glob,Edit,Write,Bash", cwd: projectRoot, timeoutMs: 240_000 }
       );
-      stage.log.push(heal.stdout?.slice(0, 2000) || heal.error || "");
+      await meter(run, stage.id, heal.usage, projectRoot);
+      stage.log.push(heal.text?.slice(0, 2000) || heal.error || "");
       res = await sh("npm", ["run", script], projectRoot, 240_000);
       stage.summary = res.code === 0 ? `Healed — npm run ${script} passes.` : `Still failing after one heal.`;
       return res.code === 0;
@@ -431,23 +448,25 @@ async function runLiveStage(run: Run, stage: RunStage, ctx: LiveCtx, projectRoot
 
     case "qa": {
       const diff = await sh("git", ["--no-pager", "diff", `${ctx.base}...HEAD`], projectRoot, 15_000);
-      const res = await runClaude(
+      const res = await runClaudeWithUsage(
         `You are the Reviewer. Review this diff for correctness, regressions, and dead code. Be concise; list blocking issues only.\n\n${diff.stdout.slice(0, 12000)}`,
         { allowedTools: "Read,Grep,Glob", cwd: projectRoot, timeoutMs: 180_000 }
       );
-      stage.summary = firstLines(res.stdout, 5) || "Reviewed.";
-      stage.log.push(res.stdout?.slice(0, 4000) || res.error || "");
+      await meter(run, stage.id, res.usage, projectRoot);
+      stage.summary = firstLines(res.text, 5) || "Reviewed.";
+      stage.log.push(res.text?.slice(0, 4000) || res.error || "");
       return true; // review is advisory, never blocks
     }
 
     case "security": {
       const diff = await sh("git", ["--no-pager", "diff", `${ctx.base}...HEAD`], projectRoot, 15_000);
-      const res = await runClaude(
+      const res = await runClaudeWithUsage(
         `You are the Security reviewer. Scan this diff for injection, secret leakage, auth/authz gaps, and unsafe input handling. List concrete findings only.\n\n${diff.stdout.slice(0, 12000)}`,
         { allowedTools: "Read,Grep,Glob", cwd: projectRoot, timeoutMs: 180_000 }
       );
-      stage.summary = firstLines(res.stdout, 5) || "No findings.";
-      stage.log.push(res.stdout?.slice(0, 4000) || res.error || "");
+      await meter(run, stage.id, res.usage, projectRoot);
+      stage.summary = firstLines(res.text, 5) || "No findings.";
+      stage.log.push(res.text?.slice(0, 4000) || res.error || "");
       return true; // advisory
     }
 

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Ban,
   ExternalLink,
+  Coins,
 } from "lucide-react";
 import type { Run, RunStage, RunMode, StageStatus } from "@/lib/crew";
 
@@ -33,6 +34,7 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openStage, setOpenStage] = useState<string | null>(null);
+  const [estimate, setEstimate] = useState<{ turns: number; cost: number } | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const approved = approvalStatus === "approved";
@@ -71,7 +73,24 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
     setRun(null);
     setError(null);
     setOpenStage(null);
+    setEstimate(null);
   }, [planSlug, stopPolling]);
+
+  // pull the recipe's upfront estimate (turns + cost) for this plan, if generated
+  useEffect(() => {
+    if (!planSlug) return;
+    let alive = true;
+    fetch(`/api/recipe/${planSlug}${q}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const rec = data?.record?.recipe;
+        if (alive && rec) setEstimate({ turns: rec.expected_turns, cost: rec.estimated_cost_usd });
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [planSlug, q]);
 
   async function start() {
     if (!planSlug) return;
@@ -173,6 +192,33 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
           </span>
         )}
       </div>
+
+      {/* cost: upfront estimate + actual after a live run */}
+      {(estimate || (run && run.mode === "live" && typeof run.costUsd === "number")) && (
+        <div className="flex items-center gap-3 text-[11px] border border-border-subtle rounded-md px-2.5 py-1.5 bg-base/40 flex-wrap">
+          <Coins size={13} className="text-accent-1 shrink-0" strokeWidth={1.5} />
+          {estimate && (
+            <span className="text-fg-secondary">
+              Estimate: <strong className="text-fg">≈ {estimate.turns} turns</strong> ·{" "}
+              <strong className="text-fg">≈ ${estimate.cost.toFixed(2)}</strong>
+            </span>
+          )}
+          {run && run.mode === "live" && typeof run.costUsd === "number" && run.costUsd > 0 && (
+            <span className="text-fg-secondary">
+              Actual: <strong className="text-status-approved">${run.costUsd.toFixed(2)}</strong>
+              {estimate && (
+                <span className="text-fg-tertiary">
+                  {" "}
+                  ({run.costUsd <= estimate.cost ? "under" : "over"} estimate)
+                </span>
+              )}
+            </span>
+          )}
+          {!estimate && (
+            <span className="text-fg-tertiary">Generate a recipe for an upfront turn/cost estimate.</span>
+          )}
+        </div>
+      )}
 
       {error && <div className="text-xs chip-changes p-2 rounded">{error}</div>}
 

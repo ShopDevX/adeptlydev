@@ -3,9 +3,10 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { getPlansDir, getProjectRoot } from "./plans";
 import { CLAUDE_CODE_FEATURES } from "./features";
-import { runClaude } from "./claude-cli";
+import { runClaudeWithUsage } from "./claude-cli";
 import { extractJson } from "./llm-json";
 import { detectStack, stackPromptSection } from "./stack";
+import { recordUsage } from "./usage-ledger";
 
 export interface PlanRecipeSubagent {
   type: string;
@@ -180,11 +181,12 @@ export async function generateRecipe(
   const inputHash = hashContent(planContent);
   const stackBlock = stackPromptSection(await detectStack(projectRoot));
   const prompt = buildPrompt(planTitle, planContent, stackBlock);
-  const result = await runClaude(prompt, { timeoutMs: 90_000 });
+  const result = await runClaudeWithUsage(prompt, { timeoutMs: 90_000 });
+  await recordUsage(result.usage, { source: "recipe", ref: slug, at: new Date().toISOString() }, projectRoot);
 
   let record: PlanRecipeRecord;
 
-  if (result.error || (result.code !== 0 && !result.stdout)) {
+  if (result.error || (result.code !== 0 && !result.text)) {
     // Treat as failure → fallback
     record = {
       slug,
@@ -192,11 +194,11 @@ export async function generateRecipe(
       generatedAt: new Date().toISOString(),
       source: "fallback-keyword",
       recipe: fallbackRecipe(),
-      rawOutput: result.stdout || result.stderr || "",
+      rawOutput: result.text || "",
       error: result.error || `claude exited with code ${result.code}`,
     };
   } else {
-    const parsed = safeParseRecipe(result.stdout);
+    const parsed = safeParseRecipe(result.text);
     if (parsed) {
       record = {
         slug,
@@ -204,7 +206,7 @@ export async function generateRecipe(
         generatedAt: new Date().toISOString(),
         source: "claude-cli",
         recipe: parsed,
-        rawOutput: result.stdout,
+        rawOutput: result.text,
       };
     } else {
       record = {
@@ -213,7 +215,7 @@ export async function generateRecipe(
         generatedAt: new Date().toISOString(),
         source: "fallback-keyword",
         recipe: fallbackRecipe(),
-        rawOutput: result.stdout,
+        rawOutput: result.text,
         error: "Claude returned non-parseable JSON. Using fallback recipe.",
       };
     }

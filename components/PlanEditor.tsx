@@ -7,7 +7,11 @@ import { SuggestedFeatures } from "./SuggestedFeatures";
 import { GitHubReviewers } from "./GitHubReviewers";
 import { PlanRecipe } from "./PlanRecipe";
 import { CrewPanel } from "./CrewPanel";
+import { CoveragePanel } from "./CoveragePanel";
+import { SavingsPanel } from "./SavingsPanel";
 import { formatRelative } from "@/lib/format-time";
+import { computeCoverage } from "@/lib/feature-coverage";
+import { computeHygiene } from "@/lib/token-hygiene";
 import type { Approval, FeatureSuggestion, Plan, PlanStatus } from "@/lib/types";
 
 interface FileChange {
@@ -84,7 +88,7 @@ export function PlanEditor({
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [error, setError] = useState<string | null>(null);
   const [bottomTab, setBottomTab] = useState<
-    "changes" | "suggestions" | "approval" | "reviewers" | "recipe" | "crew" | "history"
+    "changes" | "suggestions" | "approval" | "reviewers" | "recipe" | "coverage" | "savings" | "crew" | "history"
   >("approval");
   const [history, setHistory] = useState<
     Array<{ hash: string; fullHash: string; author: string; email: string; date: string; subject: string }>
@@ -237,6 +241,18 @@ export function PlanEditor({
         (c) => (c.kind === "create" && c.exists) || (c.kind !== "create" && !c.exists)
       ).length,
     [changes]
+  );
+
+  // Text-only coverage for the tab badge (the panel folds in the recipe too).
+  const coverageGapCount = useMemo(
+    () => (editContent ? computeCoverage(editContent).gaps.length : 0),
+    [editContent]
+  );
+
+  // Text-only hygiene score for the Savings tab badge.
+  const savingsScore = useMemo(
+    () => (editContent ? computeHygiene(editContent).score : null),
+    [editContent]
   );
 
   if (!projectRoot) {
@@ -449,6 +465,8 @@ export function PlanEditor({
               ["approval", "Approval", approval ? null : null],
               ["reviewers", "Reviewers", approval?.reviewers.length ? approval.reviewers.length : null],
               ["recipe", "Claude recipe", null],
+              ["coverage", "Coverage", coverageGapCount > 0 ? coverageGapCount : null],
+              ["savings", "Savings", savingsScore !== null ? `${savingsScore}%` : null],
               ["crew", "Crew", null],
               ["changes", "Changes", mismatchCount > 0 ? mismatchCount : null],
               ["suggestions", "Suggestions", suggestions.length > 0 ? suggestions.length : null],
@@ -604,6 +622,52 @@ export function PlanEditor({
               planSlug={slug}
               planContent={editContent}
               planTitle={plan?.title ?? slug ?? ""}
+            />
+          )}
+
+          {bottomTab === "coverage" && (
+            <CoveragePanel
+              projectRoot={projectRoot}
+              planSlug={slug}
+              planContent={editContent}
+              onPlanChanged={() => {
+                if (slug && projectRoot) {
+                  fetch(`/api/plans/${slug}?projectRoot=${encodeURIComponent(projectRoot)}`)
+                    .then((r) => r.json())
+                    .then((data) => {
+                      if (data?.error) return;
+                      setPlan(data.plan);
+                      setChanges(data.changes ?? []);
+                      setSuggestions(data.suggestions ?? []);
+                      setEditContent(data.plan?.content ?? "");
+                      setDirty(false);
+                    })
+                    .catch(() => {});
+                }
+              }}
+            />
+          )}
+
+          {bottomTab === "savings" && (
+            <SavingsPanel
+              projectRoot={projectRoot}
+              planSlug={slug}
+              planContent={editContent}
+              onPlanChanged={() => {
+                if (slug && projectRoot) {
+                  fetch(`/api/plans/${slug}?projectRoot=${encodeURIComponent(projectRoot)}`)
+                    .then((r) => r.json())
+                    .then((data) => {
+                      if (data?.error) return;
+                      setPlan(data.plan);
+                      setChanges(data.changes ?? []);
+                      setSuggestions(data.suggestions ?? []);
+                      setEditContent(data.plan?.content ?? "");
+                      setDirty(false);
+                    })
+                    .catch(() => {});
+                }
+              }}
             />
           )}
 

@@ -14,6 +14,7 @@ import { PlansList } from "@/components/PlansList";
 import { PlanEditor } from "@/components/PlanEditor";
 import { FeatureSidebar } from "@/components/FeatureSidebar";
 import { SessionsSidebar } from "@/components/SessionsSidebar";
+import { UsagePanel } from "@/components/UsagePanel";
 import { CommandPalette } from "@/components/CommandPalette";
 import { ChatPanel } from "@/components/ChatPanel";
 import { Wordmark } from "@/components/Wordmark";
@@ -38,7 +39,7 @@ const RIGHT_KEY = "adeptly:rightCollapsed";
 const RIGHT_TAB_KEY = "adeptly:rightTab";
 const LEFT_TAB_KEY = "adeptly:leftTab";
 
-type RightTab = "features" | "sessions";
+type RightTab = "features" | "sessions" | "usage";
 type LeftTab = "plans" | "files";
 
 export default function Home() {
@@ -81,7 +82,7 @@ export default function Home() {
     setLeftCollapsed(window.localStorage.getItem(LEFT_KEY) === "1");
     setRightCollapsed(window.localStorage.getItem(RIGHT_KEY) === "1");
     const savedTab = window.localStorage.getItem(RIGHT_TAB_KEY) as RightTab | null;
-    if (savedTab === "features" || savedTab === "sessions") setRightTab(savedTab);
+    if (savedTab === "features" || savedTab === "sessions" || savedTab === "usage") setRightTab(savedTab);
     const savedLeftTab = window.localStorage.getItem(LEFT_TAB_KEY) as LeftTab | null;
     if (savedLeftTab === "plans" || savedLeftTab === "files") setLeftTab(savedLeftTab);
 
@@ -517,15 +518,28 @@ export default function Home() {
                 >
                   Sessions
                 </button>
+                <button
+                  onClick={() => selectRightTab("usage")}
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
+                    rightTab === "usage"
+                      ? "bg-base text-accent-1 font-medium"
+                      : "text-fg-secondary hover:bg-base hover:text-fg"
+                  }`}
+                >
+                  Usage
+                </button>
               </div>
               <div className="flex-1 min-h-0">
                 {rightTab === "features" ? (
                   <FeatureSidebar
+                    projectRoot={project.path}
                     highlightedIds={highlightedFeatures}
                     scrollToId={scrollToFeature}
                   />
-                ) : (
+                ) : rightTab === "sessions" ? (
                   <SessionsSidebar projectRoot={project.path} />
+                ) : (
+                  <UsagePanel projectRoot={project.path} />
                 )}
               </div>
             </aside>
