@@ -15,6 +15,8 @@ import {
   Ban,
   ExternalLink,
   Coins,
+  History,
+  RotateCcw,
 } from "lucide-react";
 import type { Run, RunStage, RunMode, StageStatus } from "@/lib/crew";
 
@@ -35,6 +37,8 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
   const [error, setError] = useState<string | null>(null);
   const [openStage, setOpenStage] = useState<string | null>(null);
   const [estimate, setEstimate] = useState<{ turns: number; cost: number } | null>(null);
+  const [history, setHistory] = useState<Run[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const approved = approvalStatus === "approved";
@@ -47,6 +51,18 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
     }
   }, []);
 
+  const loadHistory = useCallback(async () => {
+    if (!planSlug) return;
+    try {
+      const sep = q ? "&" : "?";
+      const res = await fetch(`/api/runs${q}${sep}slug=${encodeURIComponent(planSlug)}`);
+      const data = await res.json();
+      setHistory(Array.isArray(data?.runs) ? data.runs : []);
+    } catch {
+      /* ignore */
+    }
+  }, [planSlug, q]);
+
   const poll = useCallback(
     async (id: string) => {
       if (!planSlug) return;
@@ -56,16 +72,23 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
         const data = await res.json();
         if (data?.run) {
           setRun(data.run);
-          if (TERMINAL.includes(data.run.status)) stopPolling();
+          if (TERMINAL.includes(data.run.status)) {
+            stopPolling();
+            if (showHistory) loadHistory();
+          }
         }
       } catch {
         /* keep polling; transient */
       }
     },
-    [planSlug, q, stopPolling]
+    [planSlug, q, stopPolling, showHistory, loadHistory]
   );
 
   useEffect(() => () => stopPolling(), [stopPolling]);
+
+  useEffect(() => {
+    if (showHistory) loadHistory();
+  }, [showHistory, loadHistory]);
 
   // reset when switching plans
   useEffect(() => {
@@ -74,6 +97,8 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
     setError(null);
     setOpenStage(null);
     setEstimate(null);
+    setHistory([]);
+    setShowHistory(false);
   }, [planSlug, stopPolling]);
 
   // pull the recipe's upfront estimate (turns + cost) for this plan, if generated
@@ -92,8 +117,10 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
     };
   }, [planSlug, q]);
 
-  async function start() {
+  async function start(overrideMode?: RunMode) {
     if (!planSlug) return;
+    const runMode = overrideMode ?? mode;
+    if (overrideMode) setMode(overrideMode);
     setStarting(true);
     setError(null);
     stopPolling();
@@ -101,11 +128,12 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
       const res = await fetch(`/api/runs${q}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: planSlug, mode }),
+        body: JSON.stringify({ slug: planSlug, mode: runMode }),
       });
       const data = await res.json();
       if (data?.error) throw new Error(data.error);
       setRun(data.run);
+      setShowHistory(false);
       setOpenStage(data.run.stages[0]?.id ?? null);
       const id = data.run.id;
       timer.current = setInterval(() => poll(id), POLL_MS);
@@ -163,7 +191,7 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
           </button>
         ) : (
           <button
-            onClick={start}
+            onClick={() => start()}
             disabled={starting || (mode === "live" && !approved)}
             title={mode === "live" && !approved ? "Plan must be approved for a live run" : ""}
             className="text-xs px-3 py-1.5 rounded bg-accent-gradient text-white flex items-center gap-1.5 disabled:opacity-40 disabled:bg-none disabled:bg-border-subtle"
@@ -174,7 +202,69 @@ export function CrewPanel({ projectRoot, planSlug, planTitle, approvalStatus }: 
         )}
 
         {run && <RunStatusChip status={run.status} mode={run.mode} />}
+
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          className={`ml-auto text-xs px-2 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
+            showHistory ? "text-accent-1 bg-base" : "text-fg-secondary hover:text-fg"
+          }`}
+          title="Past runs of this plan"
+        >
+          <History size={14} strokeWidth={1.5} /> History
+        </button>
       </div>
+
+      {showHistory && (
+        <div className="border border-border-subtle rounded-md bg-elevated divide-y divide-border-subtle">
+          {history.length === 0 ? (
+            <div className="text-xs text-fg-secondary italic p-3">
+              No past runs for this plan yet. Run the crew (dry-run or live) and it'll be logged here.
+            </div>
+          ) : (
+            history.map((h) => {
+              const passed = h.stages.filter((s) => s.status === "passed").length;
+              return (
+                <div key={h.id} className="flex items-center gap-2 px-2.5 py-1.5 text-xs">
+                  <StageIcon status={h.status === "passed" ? "passed" : h.status === "failed" ? "failed" : h.status === "cancelled" ? "skipped" : "running"} />
+                  <button
+                    onClick={() => {
+                      setRun(h);
+                      setShowHistory(false);
+                      setOpenStage(null);
+                      if (h.status === "running" || h.status === "queued") {
+                        stopPolling();
+                        timer.current = setInterval(() => poll(h.id), POLL_MS);
+                      }
+                    }}
+                    className="min-w-0 flex-1 text-left hover:text-accent-1"
+                    title="View this run"
+                  >
+                    <span className="font-mono text-fg-tertiary">{h.mode === "dry-run" ? "dry" : "live"}</span>{" "}
+                    <span className="text-fg-secondary">{passed}/{h.stages.length}</span>{" "}
+                    <span className="text-fg-tertiary">{new Date(h.createdAt).toLocaleString()}</span>
+                    {typeof h.costUsd === "number" && h.costUsd > 0 && (
+                      <span className="text-fg-tertiary"> · ${h.costUsd.toFixed(2)}</span>
+                    )}
+                  </button>
+                  {h.prUrl && (
+                    <a href={h.prUrl} target="_blank" rel="noreferrer" className="text-accent-1 shrink-0" title="View PR">
+                      <ExternalLink size={12} />
+                    </a>
+                  )}
+                  <button
+                    onClick={() => start(h.mode)}
+                    disabled={!!isRunning || (h.mode === "live" && !approved)}
+                    className="shrink-0 text-accent-1 hover:bg-base rounded p-1 disabled:opacity-40"
+                    title={h.mode === "live" && !approved ? "Plan must be approved for a live re-run" : "Re-run with the same mode"}
+                  >
+                    <RotateCcw size={13} strokeWidth={1.5} />
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
 
       {/* mode explainer */}
       <div className="text-[11px] text-fg-secondary leading-relaxed flex items-start gap-1.5">
