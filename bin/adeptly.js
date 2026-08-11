@@ -38,7 +38,7 @@ function parseArgs(argv) {
   //   --port=<n>             override desired starting port (also: PORT env)
   //   --no-open-browser      skip the auto-open
   //   --help / -h            print usage and exit
-  const out = { host: "127.0.0.1", port: null, openBrowser: true };
+  const out = { host: "127.0.0.1", port: null, openBrowser: true, tunnel: false };
   for (let i = 2; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--help" || a === "-h") {
@@ -46,6 +46,11 @@ function parseArgs(argv) {
       process.exit(0);
     } else if (a === "--no-open-browser" || a === "--no-open") {
       out.openBrowser = false;
+    } else if (a === "--tunnel") {
+      // Expose via a Cloudflare quick-tunnel. Implies binding to all
+      // interfaces so cloudflared can reach the server.
+      out.tunnel = true;
+      if (out.host === "127.0.0.1") out.host = "0.0.0.0";
     } else if (a.startsWith("--host=")) {
       out.host = a.slice("--host=".length).trim() || "127.0.0.1";
     } else if (a === "--host") {
@@ -75,12 +80,18 @@ function printUsage() {
       "Options:",
       "  --host <ip>          bind address (default 127.0.0.1; pass 0.0.0.0 to expose on LAN)",
       "  --port <n>           preferred starting port (default 3000)",
+      "  --tunnel             expose via a Cloudflare quick-tunnel (needs `cloudflared`)",
       "  --no-open-browser    don't auto-open the browser",
       "  -h, --help           show this message",
       "",
       "Env:",
       "  PORT                 same as --port",
       "  ADEPTLY_NO_OPEN=1    same as --no-open-browser",
+      "",
+      "Security:",
+      "  Adeptly drives your local `claude` CLI. Anyone who can reach the URL can",
+      "  use it — including live crew runs that touch git. Only expose it (--host",
+      "  0.0.0.0 / --tunnel) on networks and to people you trust.",
       "",
     ].join("\n")
   );
@@ -146,6 +157,68 @@ function openBrowser(url) {
   }
 }
 
+// --- Cloudflare quick-tunnel ---------------------------------------------
+
+// Best-effort public URL via `cloudflared tunnel --url`. If cloudflared isn't
+// installed we print how to get it and carry on serving locally.
+function startTunnel(port) {
+  const cf = spawn("cloudflared", ["tunnel", "--url", `http://localhost:${port}`], {
+    stdio: ["ignore", "pipe", "pipe"],
+    shell: process.platform === "win32", // cloudflared may be a .exe/.cmd on PATH
+  });
+
+  let announced = false;
+  const scan = (buf) => {
+    const m = String(buf).match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+    if (m && !announced) {
+      announced = true;
+      process.stdout.write(
+        [
+          "",
+          "  ╭─────────────────────────────────────────────────────╮",
+          "  │  🌐 Public tunnel is live:                           │",
+          `  │     ${m[0].padEnd(49)}│`.slice(0, 60),
+          "  │                                                     │",
+          "  │  ⚠  Anyone with this URL can drive your claude CLI.  │",
+          "  │     Share only with people you trust; Ctrl+C to end. │",
+          "  ╰─────────────────────────────────────────────────────╯",
+          "",
+        ].join("\n") + "\n"
+      );
+    }
+  };
+  cf.stdout && cf.stdout.on("data", scan);
+  cf.stderr && cf.stderr.on("data", scan);
+
+  cf.on("error", () => {
+    process.stderr.write(
+      [
+        "",
+        "  adeptly: --tunnel needs `cloudflared` on your PATH, but it wasn't found.",
+        "  Install it, then re-run with --tunnel:",
+        "    macOS:   brew install cloudflared",
+        "    Windows: winget install --id Cloudflare.cloudflared",
+        "    Linux:   see https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/",
+        "  Serving locally in the meantime.",
+        "",
+      ].join("\n") + "\n"
+    );
+  });
+
+  // Don't let the tunnel keep the process alive on its own; the server does.
+  cf.unref && cf.unref();
+  const stop = () => {
+    try {
+      cf.kill();
+    } catch {}
+  };
+  process.on("exit", stop);
+  process.on("SIGINT", () => {
+    stop();
+    process.exit(0);
+  });
+}
+
 // --- Main ----------------------------------------------------------------
 
 async function main() {
@@ -187,6 +260,11 @@ async function main() {
 
   if (opts.openBrowser) {
     setTimeout(() => openBrowser(url), 1200);
+  }
+
+  // Bring up the public tunnel shortly after the server starts listening.
+  if (opts.tunnel) {
+    setTimeout(() => startTunnel(port), 1500);
   }
 
   // Hand off control to the standalone server
