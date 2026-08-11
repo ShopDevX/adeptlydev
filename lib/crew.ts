@@ -69,6 +69,12 @@ interface StageDef {
   id: string;
   role: string;
   title: string;
+  /**
+   * Stages sharing a group id run CONCURRENTLY (same barrier). Only safe for
+   * independent, advisory stages — Reviewer + Security both read the same diff
+   * and never block, so they parallelise cleanly.
+   */
+  group?: string;
   dry: { log: string[]; summary: string };
 }
 
@@ -122,6 +128,7 @@ const STAGE_DEFS: StageDef[] = [
     id: "qa",
     role: "Reviewer",
     title: "Review the diff",
+    group: "review",
     dry: {
       log: ["Diffing against base…", "Checking for regressions and dead code."],
       summary: "No blocking issues found (simulated).",
@@ -131,6 +138,7 @@ const STAGE_DEFS: StageDef[] = [
     id: "security",
     role: "Security",
     title: "Security review",
+    group: "review",
     dry: {
       log: ["Scanning the diff for injection, secrets, authz gaps…"],
       summary: "No security concerns in the diff (simulated).",
@@ -161,24 +169,33 @@ function runFile(slug: string, id: string, projectRoot = getProjectRoot()): stri
 // before the next disk flush. Disk is the durable fallback across reloads.
 const active = new Map<string, Run>();
 
+// Serialise disk writes: parallel stages call persist() concurrently, and two
+// overlapping writeFile calls to the same run file could interleave and corrupt
+// it. A single chain keeps every flush atomic w.r.t. the others.
+let ioChain: Promise<void> = Promise.resolve();
+
 async function persist(run: Run, projectRoot = getProjectRoot()): Promise<void> {
   run.updatedAt = new Date().toISOString();
   active.set(run.id, run);
-  try {
-    const dir = getRunsDir(run.slug, projectRoot);
-    await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(runFile(run.slug, run.id, projectRoot), JSON.stringify(run, null, 2) + "\n", "utf-8");
-    // append-only audit line
-    const audit = path.join(dir, "audit.jsonl");
-    const last = run.stages.filter((s) => s.status !== "pending").slice(-1)[0];
-    await fs.appendFile(
-      audit,
-      JSON.stringify({ t: run.updatedAt, id: run.id, status: run.status, stage: last?.id, stageStatus: last?.status }) + "\n",
-      "utf-8"
-    );
-  } catch {
-    // persistence is best-effort; the in-memory copy still drives the UI
-  }
+  const flush = async () => {
+    try {
+      const dir = getRunsDir(run.slug, projectRoot);
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(runFile(run.slug, run.id, projectRoot), JSON.stringify(run, null, 2) + "\n", "utf-8");
+      // append-only audit line
+      const audit = path.join(dir, "audit.jsonl");
+      const last = run.stages.filter((s) => s.status !== "pending").slice(-1)[0];
+      await fs.appendFile(
+        audit,
+        JSON.stringify({ t: run.updatedAt, id: run.id, status: run.status, stage: last?.id, stageStatus: last?.status }) + "\n",
+        "utf-8"
+      );
+    } catch {
+      // persistence is best-effort; the in-memory copy still drives the UI
+    }
+  };
+  ioChain = ioChain.then(flush, flush);
+  return ioChain;
 }
 
 export async function getRun(slug: string, id: string, projectRoot = getProjectRoot()): Promise<Run | null> {
@@ -277,6 +294,44 @@ export async function cancelRun(slug: string, id: string, projectRoot = getProje
   return run;
 }
 
+/** Run one stage end-to-end: mark running, execute, record result. Returns ok. */
+async function runOneStage(run: Run, stage: RunStage, ctx: LiveCtx, projectRoot: string): Promise<boolean> {
+  stage.status = "running";
+  stage.startedAt = new Date().toISOString();
+  await persist(run, projectRoot);
+  try {
+    const ok =
+      run.mode === "dry-run" ? await runDryStage(stage) : await runLiveStage(run, stage, ctx, projectRoot);
+    // runLiveStage may set "skipped" deliberately; don't clobber that.
+    // (Read via a widened alias so TS doesn't narrow away the mutated case.)
+    const statusAfter = stage.status as StageStatus;
+    if (statusAfter !== "skipped") stage.status = ok ? "passed" : "failed";
+    stage.endedAt = new Date().toISOString();
+    await persist(run, projectRoot);
+    return ok;
+  } catch (err: any) {
+    stage.log.push(`error: ${err?.message ?? String(err)}`);
+    stage.status = "failed";
+    stage.endedAt = new Date().toISOString();
+    run.error = err?.message ?? String(err);
+    await persist(run, projectRoot);
+    return false;
+  }
+}
+
+/** Group consecutive stages sharing a `group` id so they run concurrently. */
+function planSteps(stages: RunStage[]): RunStage[][] {
+  const steps: RunStage[][] = [];
+  for (const stage of stages) {
+    const g = STAGE_DEFS.find((d) => d.id === stage.id)?.group;
+    const last = steps[steps.length - 1];
+    const lastG = last ? STAGE_DEFS.find((d) => d.id === last[0].id)?.group : undefined;
+    if (g && last && lastG === g) last.push(stage);
+    else steps.push([stage]);
+  }
+  return steps;
+}
+
 async function execute(run: Run, projectRoot: string): Promise<void> {
   run.status = "running";
   await persist(run, projectRoot);
@@ -286,33 +341,20 @@ async function execute(run: Run, projectRoot: string): Promise<void> {
   // (cancelRun mutates run.status from a separate async context).
   const cancelled = () => run.status === "cancelled";
 
-  for (const stage of run.stages) {
+  for (const step of planSteps(run.stages)) {
     if (cancelled()) return;
-    stage.status = "running";
-    stage.startedAt = new Date().toISOString();
-    await persist(run, projectRoot);
 
-    try {
-      const ok =
-        run.mode === "dry-run"
-          ? await runDryStage(stage)
-          : await runLiveStage(run, stage, ctx, projectRoot);
+    let ok: boolean;
+    if (step.length === 1) {
+      ok = await runOneStage(run, step[0], ctx, projectRoot);
+    } else {
+      // Parallel group (e.g. Reviewer + Security): run concurrently, wait for all.
+      const results = await Promise.all(step.map((s) => runOneStage(run, s, ctx, projectRoot)));
+      ok = results.every(Boolean);
+    }
 
-      stage.status = ok ? "passed" : "failed";
-      stage.endedAt = new Date().toISOString();
-      await persist(run, projectRoot);
-
-      if (!ok) {
-        run.status = "failed";
-        await persist(run, projectRoot);
-        return;
-      }
-    } catch (err: any) {
-      stage.log.push(`error: ${err?.message ?? String(err)}`);
-      stage.status = "failed";
-      stage.endedAt = new Date().toISOString();
+    if (!ok) {
       run.status = "failed";
-      run.error = err?.message ?? String(err);
       await persist(run, projectRoot);
       return;
     }
