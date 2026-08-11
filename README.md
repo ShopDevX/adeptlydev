@@ -41,6 +41,14 @@ Adeptly solves both:
 
 > **The core of Adeptly stays the same:** it's the only tool that surfaces *every* Claude Code feature — subagents, skills, hooks, MCP, plan mode, /security-review, auto-memory — and tells you **exactly where and why to use each one**, inline in your own plans. Nobody else explains Claude Code like this. The Crew below just lets you *watch those features run*.
 
+## 🆕 New in v0.8 — team-scale, whole-picture
+
+- **Session handoff** — Claude Code sessions can't talk to each other live. Leave a handoff note (what's done, what's next, branch, plan) and **Copy resume prompt** into a fresh `claude` session to continue without rebuilding context. The bridge sessions can't make themselves.
+- **Whole-account usage** — the Usage panel now has a **Whole account** view: it parses every Claude Code transcript under `~/.claude` to show machine-wide token usage, estimated cost, cache-hit, by-model, and a daily-cost sparkline — not just Adeptly's own calls. (Tokens exact; cost estimated from public rates. Still 100% local.)
+- **Crew run history + re-run** — browse every past crew run for a plan (mode, pass count, time, cost, PR) and re-run any of them in one click.
+- **Remote / tunnel** — `adeptly --tunnel` exposes the app via a Cloudflare quick-tunnel (with a loud "anyone with this URL can drive your claude" warning), plus clearer `--host` security guidance.
+- **Parallel crew stages** — Reviewer and Security review the diff concurrently (both are advisory and independent), so live runs finish sooner.
+
 ## 🆕 New in v0.7 — see your usage, spend less
 
 Adeptly now helps you get *more* Claude Code for *less*:
@@ -217,15 +225,17 @@ See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the dev workflow, how the plan/
 - [x] **Feature Coverage + Token Hygiene** — score how much of Claude Code a plan uses and how lean it is on tokens
 - [x] **Usage ledger** — meter Adeptly's own `claude` spend locally (cost, tokens, cache-hit)
 - [x] **Refresh catalogue from your CLI** — keep the feature list current without a backend
-- [ ] Whole-account usage (parse `~/.claude` transcripts, not just Adeptly's calls)
-- [ ] Per-run history browser + re-run from a previous run
+- [x] **Session handoff** — leave a resume note the next Claude session picks up
+- [x] **Whole-account usage** — parse `~/.claude` transcripts for machine-wide spend
+- [x] **Per-run history browser + re-run** from a previous run
+- [x] **Remote/tunnel support** (`--host`, `--tunnel` via Cloudflare)
+- [x] **Parallel crew stages** — Reviewer + Security run concurrently
 - [ ] Crew theming (swap role names/colors — "movie crew" packs)
-- [ ] Remote/tunnel support (`--host`, Cloudflare Tunnel)
-- [ ] Parallel crew stages where the plan allows
+- [ ] Auth for exposed/tunnel mode (token gate)
 
 ## Status
 
-**v0.7.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live)**, **stack auto-detection**, **feature coverage + token-hygiene scoring**, **local usage ledger** (cost/tokens/cache-hit), **cost estimates** (recipe + crew estimate-vs-actual), **refresh feature catalogue from your CLI**, approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
+**v0.8.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live, parallel Reviewer+Security)**, **crew run history + re-run**, **session handoff**, **stack auto-detection**, **feature coverage + token-hygiene scoring**, **usage ledger + whole-account usage** (`~/.claude`), **cost estimates**, **refresh feature catalogue from your CLI**, **remote/tunnel** (`--host`, `--tunnel`), approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
 
 - npm: https://www.npmjs.com/package/adeptly
 - repo: https://github.com/ShopDevX/adeptlydev
