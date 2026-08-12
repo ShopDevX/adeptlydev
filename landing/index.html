@@ -19,7 +19,7 @@
     --ink:#100b09; --ink-1:#17100d; --ink-2:#1e1512; --ink-3:#281c17;
     --line:#33241d; --line-2:#4a3327;
     --fg:#fbf1ea; --fg-2:#cdb8ab; --fg-3:#8a7264;
-    --iris:#ff5a3c; --iris-soft:#ff8a52; --cyan:#ffa64d; --mint:#86cf6a; --amber:#ffb020; --rose:#ff6f8f;
+    --iris:#ff5a3c; --iris-soft:#ff8a52; --cyan:#bff23d; --mint:#8ee84f; --amber:#ffb020; --rose:#ff6f8f;
     --paper:#f4ecdd; --paper-ink:#241c12; --paper-2:#6a6355; --paper-line:#e0d4bd;
     --maxw:1120px; --r:16px;
     --ff-disp:"Bricolage Grotesque",system-ui,sans-serif;
@@ -68,66 +68,6 @@
   .btn-primary{position:relative;border:none;color:#1a0f08;font-weight:700;background:linear-gradient(100deg,var(--iris-soft),var(--cyan));box-shadow:0 10px 30px -10px var(--iris)}
   .btn-primary:hover{filter:brightness(1.06);transform:translateY(-2px)}
   .btn-ghost{background:transparent}
-
-  /* ===== cinematic scroll-zoom hero ===== */
-  .cine{position:relative;height:230vh;--fp:0;--fs:.66;--fy:56px;--co:1;--cy:0px}
-  .cine-sticky{position:sticky;top:0;height:100vh;overflow:hidden}
-  .cine-copy{position:absolute;left:50%;top:44%;transform:translate(-50%,calc(-50% - var(--cy)));width:min(820px,92%);text-align:center;z-index:6;opacity:var(--co)}
-  .cine-copy .tag{margin:0 auto}
-  .cine-copy h1{margin:20px auto 0;font-size:clamp(34px,6vw,66px);line-height:1;font-weight:800;letter-spacing:-.03em}
-  .cine-copy .hero-sub{margin:18px auto 0;max-width:58ch;opacity:1;animation:none}
-  .cine-copy .hero-cta{justify-content:center;margin-top:26px;opacity:1;animation:none}
-  .cine-frame{position:absolute;top:50%;left:50%;width:1060px;max-width:94vw;height:min(640px,78vh);
-    transform:translate(-50%,-50%) translateY(var(--fy)) scale(var(--fs));
-    border-radius:calc(7px + (1 - var(--fp)) * 15px);overflow:hidden;border:1px solid var(--line-2);
-    box-shadow:0 50px 130px -40px #000,0 0 0 1px rgba(255,120,60,.05);background:var(--ink-1);will-change:transform;z-index:3}
-  .cine-frame::after{content:"";position:absolute;inset:0;z-index:9;pointer-events:none;
-    background:radial-gradient(120% 90% at 50% -10%,transparent 42%,rgba(16,11,9,.5));opacity:calc(1 - var(--fp))}
-  .cine-hint{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-family:var(--ff-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--fg-3);opacity:var(--co);z-index:6}
-  .cine-hint::after{content:"";display:block;width:1px;height:20px;margin:9px auto 0;background:linear-gradient(var(--fg-3),transparent);animation:hintln 1.8s ease-in-out infinite}
-  @keyframes hintln{0%,100%{opacity:.25;transform:scaleY(.5)}50%{opacity:.9;transform:scaleY(1)}}
-
-  /* window chrome + high-fidelity Adeptly UI */
-  .win{display:flex;flex-direction:column;height:100%}
-  .win-bar{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--ink-2)}
-  .win-bar .wd{width:11px;height:11px;border-radius:50%;margin-right:7px}
-  .wd.r{background:#ff5f57}.wd.y{background:#febc2e}.wd.g{background:#28c840}
-  .win-url{margin-left:8px;font-family:var(--ff-mono);font-size:12px;color:var(--fg-3);background:var(--ink-1);border:1px solid var(--line);border-radius:7px;padding:4px 14px}
-  .app{flex:1;display:grid;grid-template-columns:172px 1fr 188px;min-height:0}
-  .ap-col{padding:15px;overflow:hidden}
-  .ap-side{border-right:1px solid var(--line)}.ap-right{border-left:1px solid var(--line)}
-  .ap-h{font-family:var(--ff-mono);font-size:10px;letter-spacing:.14em;color:var(--fg-3);text-transform:uppercase;margin-bottom:10px}
-  .ap-item{font-size:13px;color:var(--fg-2);padding:7px 9px;border-radius:8px;margin-bottom:3px}
-  .ap-item.on{background:color-mix(in srgb,var(--iris) 13%,transparent);color:var(--fg);border:1px solid color-mix(in srgb,var(--iris) 30%,transparent)}
-  .ap-chip{display:inline-block;font-family:var(--ff-mono);font-size:10px;padding:3px 10px;border-radius:999px}
-  .ap-chip.ok{color:var(--mint);border:1px solid color-mix(in srgb,var(--mint) 40%,var(--line))}
-  .ap-main{padding:20px 24px;min-width:0}
-  .ap-title{font-family:var(--ff-disp);font-weight:700;font-size:21px;color:var(--fg)}
-  .ap-doc{margin-top:12px;font-size:14px;line-height:1.75;color:var(--fg-2)}
-  .ap-doc .ap-h2{font-family:var(--ff-disp);font-weight:700;color:var(--fg);font-size:14px;margin:15px 0 4px}
-  .ap-doc p{margin:0 0 6px}
-  .ap-doc u{text-decoration:none;color:var(--fg);font-weight:600;border-bottom:2px solid var(--iris);padding-bottom:1px}
-  .ap-doc u.a{border-color:var(--amber)}.ap-doc u.g{border-color:var(--mint)}
-  .ap-tabs{display:flex;gap:4px;margin-top:22px;border-bottom:1px solid var(--line)}
-  .ap-tab{font-size:12px;color:var(--fg-3);padding:8px 11px}
-  .ap-tab.on{color:var(--fg);background:var(--ink-2);border:1px solid var(--line);border-bottom-color:var(--ink-2);border-radius:8px 8px 0 0;margin-bottom:-1px}
-  .ap-panel{background:var(--ink-2);border:1px solid var(--line);border-top:none;border-radius:0 0 11px 11px;padding:15px}
-  .ap-meter{display:flex;align-items:center;gap:11px;font-family:var(--ff-mono);font-size:12px;color:var(--fg-2)}
-  .ap-meter i{flex:1;height:7px;border-radius:9px;background:var(--ink-3);overflow:hidden}
-  .ap-meter i b{display:block;height:100%;background:linear-gradient(90deg,var(--iris),var(--cyan));border-radius:9px}
-  .ap-gap{display:flex;align-items:center;font-size:12px;color:var(--fg-2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-top:8px;background:var(--ink-1)}
-  .ap-gap span{margin-left:auto;font-family:var(--ff-mono);font-size:10px;color:var(--iris-soft);border:1px solid var(--line-2);border-radius:5px;padding:2px 7px}
-  .ap-stat{margin-bottom:13px}
-  .ap-stat b{display:block;font-family:var(--ff-disp);font-weight:800;font-size:23px;color:var(--fg)}
-  .ap-stat span{font-family:var(--ff-mono);font-size:10px;color:var(--fg-3)}
-  @media(max-width:820px){.app{grid-template-columns:1fr}.ap-side,.ap-right{display:none}}
-  @media(max-width:760px){.cine{height:200vh}.cine-frame{height:min(520px,68vh)}}
-  @media (prefers-reduced-motion: reduce){
-    .cine{height:auto;--fs:.9;--fp:.6;--fy:0px;--co:1}
-    .cine-sticky{position:relative;height:auto;padding:90px 0 40px;display:flex;flex-direction:column;align-items:center;gap:36px}
-    .cine-copy,.cine-frame{position:relative;left:auto;top:auto;transform:none}
-    .cine-frame{transform:scale(1)}.cine-hint{display:none}
-  }
 
   /* hero */
   header{position:relative;padding:78px 0 40px}
@@ -348,57 +288,44 @@
   </div>
 </nav>
 
-<header id="top" class="cine">
-  <div class="cine-sticky">
-    <div class="cine-copy">
+<header id="top">
+  <div class="wrap hero">
+    <div class="hero-tx">
       <span class="tag"><span class="tdot"></span> v0.9 · MIT · <b>local-first</b></span>
-      <h1>Plan it. <span class="grad">Learn every feature.</span> Run it as a crew.</h1>
-      <p class="hero-sub">A sentence becomes a full plan with the right Claude&nbsp;Code features baked in — then Adeptly runs it, scores how lean it is on tokens, and shows what you spent. All local. No API key.</p>
+      <h1 class="hero-h">
+        <span class="l"><span>Plan it.</span></span>
+        <span class="l"><span class="grad">Learn every feature.</span></span>
+        <span class="l"><span>Run it as a crew.</span></span>
+      </h1>
+      <p class="hero-sub">Adeptly turns a sentence into a full plan — with the right Claude&nbsp;Code features baked into every section. Then it runs the plan, scores how lean it is on tokens, and shows what you spent. All on your machine. No API key, no backend, no telemetry.</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="#start">Get started</a>
         <a class="btn" href="https://www.npmjs.com/package/adeptly" target="_blank" rel="noopener">View on npm ↗</a>
       </div>
-    </div>
-
-    <div class="cine-frame" aria-hidden="true">
-      <div class="win">
-        <div class="win-bar"><span class="wd r"></span><span class="wd y"></span><span class="wd g"></span><span class="win-url">localhost:3000 — adeptly</span></div>
-        <div class="app">
-          <aside class="ap-col ap-side">
-            <div class="ap-h">Plans</div>
-            <div class="ap-item on">add-passkeys</div>
-            <div class="ap-item">migrate-to-vitest</div>
-            <div class="ap-item">nightly-etl</div>
-            <div class="ap-h" style="margin-top:18px">Status</div>
-            <span class="ap-chip ok">approved</span>
-          </aside>
-          <main class="ap-col ap-main">
-            <div class="ap-title">Add passkeys to the auth flow</div>
-            <div class="ap-doc">
-              <div class="ap-h2">Approach</div>
-              <p>Start in <u>Plan Mode</u> before writing code — this spans sessions and middleware.</p>
-              <p>Map the flow with an <u class="g">Explore subagent</u>, then implement behind a flag.</p>
-              <div class="ap-h2">Risks</div>
-              <p>Run <u class="a">/security-review</u> before merging the session-token changes.</p>
-            </div>
-            <div class="ap-tabs"><span class="ap-tab">Approval</span><span class="ap-tab">Recipe</span><span class="ap-tab on">Coverage</span><span class="ap-tab">Crew</span><span class="ap-tab">Delegate</span></div>
-            <div class="ap-panel">
-              <div class="ap-meter"><span>Coverage</span><i><b style="width:62%"></b></i><span>62%</span></div>
-              <div class="ap-gap">Hooks (PostToolUse) — auto-run tests <span>+ add</span></div>
-              <div class="ap-gap">MCP — you mention a Postgres DB <span>+ add</span></div>
-            </div>
-          </main>
-          <aside class="ap-col ap-right">
-            <div class="ap-h">Usage</div>
-            <div class="ap-stat"><b>$0.19</b><span>this session</span></div>
-            <div class="ap-stat"><b>94%</b><span>cache hit</span></div>
-            <div class="ap-stat"><b>2.4k</b><span>tokens</span></div>
-          </aside>
+      <div class="term" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i><span class="f mono">~/your-repo</span></div>
+        <div class="body">
+          <div><span class="p">$</span> <span class="c">npx adeptly</span></div>
+          <div class="o">→ reading docs/plans/ … starting on :3000</div>
+          <div><span class="ok">✓</span> <span class="o">plan drafted · recipe ready · crew standing by</span><span class="cur"></span></div>
         </div>
       </div>
     </div>
 
-    <div class="cine-hint">Scroll to zoom in</div>
+    <div class="stage-wrap" aria-hidden="true">
+      <div class="editor">
+        <div class="e-bar"><i></i><i></i><i></i><span class="e-file">docs/plans/passkeys.md</span><span class="e-badge">coverage 62%</span></div>
+        <div class="e-body">
+          <div class="e-prompt"><span class="e-caret2"></span>add passkeys to our auth flow</div>
+          <div class="e-line l1"><span class="h">## Approach</span></div>
+          <div class="e-line l2">Start in <span class="kw k1">Plan&nbsp;Mode</span> before writing code.</div>
+          <div class="e-line l3">Map the flow with an <span class="kw k2">Explore&nbsp;subagent</span>.</div>
+          <div class="e-line l4">Run <span class="kw k3">/security-review</span> before merge.</div>
+          <div class="e-line l5"><span class="h">## Crew</span><span class="e-stamp">Approved ✓</span></div>
+        </div>
+        <div class="e-cov"><span></span></div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -604,7 +531,7 @@
         </div>
         <svg class="spark" id="spark" viewBox="0 0 320 70" preserveAspectRatio="none" aria-hidden="true">
           <defs>
-            <linearGradient id="sparkStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5a3c"/><stop offset="1" stop-color="#ffa64d"/></linearGradient>
+            <linearGradient id="sparkStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5a3c"/><stop offset="1" stop-color="#bff23d"/></linearGradient>
             <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a3c" stop-opacity=".26"/><stop offset="1" stop-color="#ff5a3c" stop-opacity="0"/></linearGradient>
           </defs>
           <path id="spark-area" fill="url(#sparkArea)"></path>
@@ -716,32 +643,6 @@
       var io=new IntersectionObserver(function(en){ en.forEach(function(x){ if(x.isIntersecting){ load(); io.disconnect(); } }); }, {threshold:.25});
       io.observe(sec);
     } else { load(); }
-  })();
-
-  // Cinematic scroll-zoom hero — maps scroll progress to a GPU transform.
-  (function(){
-    var hero = document.getElementById('top');
-    if (!hero || !hero.classList.contains('cine')) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var ticking = false;
-    function apply(){
-      ticking = false;
-      var vh = window.innerHeight;
-      var total = hero.offsetHeight - vh;
-      if (total <= 0) return;
-      var top = hero.getBoundingClientRect().top;
-      var p = Math.min(Math.max(-top / total, 0), 1);
-      var e = p * p * (3 - 2 * p); // smoothstep
-      hero.style.setProperty('--fp', e.toFixed(3));
-      hero.style.setProperty('--fs', (0.66 + e * 0.42).toFixed(3));
-      hero.style.setProperty('--fy', (56 - e * 56).toFixed(1) + 'px');
-      hero.style.setProperty('--co', Math.max(1 - p * 1.9, 0).toFixed(3));
-      hero.style.setProperty('--cy', (p * 66).toFixed(1) + 'px');
-    }
-    function onScroll(){ if (!ticking){ ticking = true; requestAnimationFrame(apply); } }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    apply();
   })();
 </script>
 </body>
