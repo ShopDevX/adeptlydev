@@ -41,6 +41,17 @@ Adeptly solves both:
 
 > **The core of Adeptly stays the same:** it's the only tool that surfaces *every* Claude Code feature — subagents, skills, hooks, MCP, plan mode, /security-review, auto-memory — and tells you **exactly where and why to use each one**, inline in your own plans. Nobody else explains Claude Code like this. The Crew below just lets you *watch those features run*.
 
+## 🆕 New in v0.9 — Delegate: split work across sessions, safely
+
+Running two Claude Code sessions on the same repo? They apply **inconsistent rigor** — the session you *hand* a subtask to surfaces concerns and security impact first, while the *driver* session just implements. And they **step on each other's files**. Delegate fixes both:
+
+- **Working Agreement** (`.adeptly/agreement.md`) — a shared pre-flight gate (restate scope → concerns → security → confirm → smallest diff → **stay in your lane**). Adeptly staples it onto every brief *and* every "copy as prompt", so every session — driver included — runs the same checks.
+- **Splitter** — turns an approved plan into N independent subtasks via your own `claude`, dividing by area so they touch **disjoint files**.
+- **Lane briefs** — each subtask becomes a paste-ready prompt: its scope + the Agreement + *"other sessions own these files, stay out."* Drop one into each terminal tab.
+- **Collision guard + board** — flags any file claimed by two subtasks, shows dependency order, and tracks todo / in-progress / done so tabs don't duplicate work.
+
+Open the **Delegate** tab on an approved plan. All local — no backend, same trust model.
+
 ## 🆕 New in v0.8 — team-scale, whole-picture
 
 - **Session handoff** — Claude Code sessions can't talk to each other live. Leave a handoff note (what's done, what's next, branch, plan) and **Copy resume prompt** into a fresh `claude` session to continue without rebuilding context. The bridge sessions can't make themselves.
@@ -230,12 +241,13 @@ See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for the dev workflow, how the plan/
 - [x] **Per-run history browser + re-run** from a previous run
 - [x] **Remote/tunnel support** (`--host`, `--tunnel` via Cloudflare)
 - [x] **Parallel crew stages** — Reviewer + Security run concurrently
+- [x] **Delegate** — split a plan across parallel sessions with a shared Working Agreement + collision guard
 - [ ] Crew theming (swap role names/colors — "movie crew" packs)
 - [ ] Auth for exposed/tunnel mode (token gate)
 
 ## Status
 
-**v0.8.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live, parallel Reviewer+Security)**, **crew run history + re-run**, **session handoff**, **stack auto-detection**, **feature coverage + token-hygiene scoring**, **usage ledger + whole-account usage** (`~/.claude`), **cost estimates**, **refresh feature catalogue from your CLI**, **remote/tunnel** (`--host`, `--tunnel`), approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
+**v0.9.x — beta on npm.** Feature set: plan creation from chat, inline feature highlighting, multi-dev git awareness, recipe generation, **crew runner (dry-run + live, parallel Reviewer+Security)**, **crew run history + re-run**, **Delegate** (split a plan across parallel sessions with a shared Working Agreement + collision guard), **session handoff**, **stack auto-detection**, **feature coverage + token-hygiene scoring**, **usage ledger + whole-account usage** (`~/.claude`), **cost estimates**, **refresh feature catalogue from your CLI**, **remote/tunnel** (`--host`, `--tunnel`), approval workflow, command palette, focus mode, drag-resize splitters, voice input (push-to-talk), file + image upload, dark + light themes.
 
 - npm: https://www.npmjs.com/package/adeptly
 - repo: https://github.com/ShopDevX/adeptlydev

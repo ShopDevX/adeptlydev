@@ -9,6 +9,7 @@ import { PlanRecipe } from "./PlanRecipe";
 import { CrewPanel } from "./CrewPanel";
 import { CoveragePanel } from "./CoveragePanel";
 import { SavingsPanel } from "./SavingsPanel";
+import { DelegatePanel } from "./DelegatePanel";
 import { formatRelative } from "@/lib/format-time";
 import { computeCoverage } from "@/lib/feature-coverage";
 import { computeHygiene } from "@/lib/token-hygiene";
@@ -88,7 +89,7 @@ export function PlanEditor({
   const [tab, setTab] = useState<"edit" | "preview">("edit");
   const [error, setError] = useState<string | null>(null);
   const [bottomTab, setBottomTab] = useState<
-    "changes" | "suggestions" | "approval" | "reviewers" | "recipe" | "coverage" | "savings" | "crew" | "history"
+    "changes" | "suggestions" | "approval" | "reviewers" | "recipe" | "coverage" | "savings" | "crew" | "delegate" | "history"
   >("approval");
   const [history, setHistory] = useState<
     Array<{ hash: string; fullHash: string; author: string; email: string; date: string; subject: string }>
@@ -220,14 +221,25 @@ export function PlanEditor({
 
   async function copyAsPrompt() {
     if (!plan) return;
+    let agreementBlock = "";
+    if (projectRoot) {
+      try {
+        const res = await fetch(`/api/agreement?projectRoot=${encodeURIComponent(projectRoot)}`);
+        const data = await res.json();
+        if (data?.text) agreementBlock = `\n\n---\n\n${data.text.trim()}\n`;
+      } catch {
+        /* agreement is best-effort */
+      }
+    }
     const promptText =
       `# Approved plan: ${plan.title}\n\n` +
       `Status: ${approval?.status ?? "(no approval record)"}\n\n` +
       `---\n\n${plan.content}\n\n---\n\n` +
-      `Please execute this plan exactly as described. If anything is unclear, ask before changing code. Use plan mode if the change is larger than a single edit.`;
+      `Please execute this plan exactly as described. If anything is unclear, ask before changing code. Use plan mode if the change is larger than a single edit.` +
+      agreementBlock;
     try {
       await navigator.clipboard.writeText(promptText);
-      alert("Plan copied to clipboard as a Claude Code prompt.");
+      alert("Plan + Working Agreement copied to clipboard as a Claude Code prompt.");
     } catch (e: any) {
       setError("Could not copy: " + (e.message ?? String(e)));
     }
@@ -468,6 +480,7 @@ export function PlanEditor({
               ["coverage", "Coverage", coverageGapCount > 0 ? coverageGapCount : null],
               ["savings", "Savings", savingsScore !== null ? `${savingsScore}%` : null],
               ["crew", "Crew", null],
+              ["delegate", "Delegate", null],
               ["changes", "Changes", mismatchCount > 0 ? mismatchCount : null],
               ["suggestions", "Suggestions", suggestions.length > 0 ? suggestions.length : null],
               ["history", "History", null],
@@ -678,6 +691,10 @@ export function PlanEditor({
               planTitle={plan?.title ?? slug ?? ""}
               approvalStatus={approval?.status ?? null}
             />
+          )}
+
+          {bottomTab === "delegate" && (
+            <DelegatePanel projectRoot={projectRoot} planSlug={slug} approvalStatus={approval?.status ?? null} />
           )}
 
           {bottomTab === "history" &&
