@@ -8,19 +8,19 @@
 <meta property="og:title" content="Adeptly — plan-first cockpit for Claude Code" />
 <meta property="og:description" content="Plan it. Learn every Claude Code feature. Run it as a crew. See what you spend. Local-first, no API key." />
 <meta property="og:type" content="website" />
-<meta name="theme-color" content="#100b09" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23ff5a3c'/%3E%3Cpath d='M12 3.4C12.18 5.2 12.5 5.5 14.3 5.7 12.5 5.9 12.18 6.2 12 8 11.82 6.2 11.5 5.9 9.7 5.7 11.5 5.5 11.82 5.2 12 3.4Z' fill='%2317100d'/%3E%3Cg fill='none' stroke='%2317100d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 19 12 10.5 17 19'/%3E%3Cpath d='M9 15h6'/%3E%3C/g%3E%3C/svg%3E" />
+<meta name="theme-color" content="#0a0713" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23a78bfa'/%3E%3Cpath d='M12 3.4C12.18 5.2 12.5 5.5 14.3 5.7 12.5 5.9 12.18 6.2 12 8 11.82 6.2 11.5 5.9 9.7 5.7 11.5 5.5 11.82 5.2 12 3.4Z' fill='%2317100d'/%3E%3Cg fill='none' stroke='%2317100d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 19 12 10.5 17 19'/%3E%3Cpath d='M9 15h6'/%3E%3C/g%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root{
-    /* Warm identity: ember-coral primary + lime fresh accent on warm ink. */
-    --ink:#100b09; --ink-1:#17100d; --ink-2:#1e1512; --ink-3:#281c17;
-    --line:#33241d; --line-2:#4a3327;
-    --fg:#fbf1ea; --fg-2:#cdb8ab; --fg-3:#8a7264;
-    --iris:#ff5a3c; --iris-soft:#ff8a52; --cyan:#bff23d; --mint:#8ee84f; --amber:#ffb020; --rose:#ff6f8f;
-    --paper:#f4ecdd; --paper-ink:#241c12; --paper-2:#6a6355; --paper-line:#e0d4bd;
+    /* Violet identity: iris-violet primary + magenta accent on violet ink. */
+    --ink:#0a0713; --ink-1:#100a1c; --ink-2:#161028; --ink-3:#1f1740;
+    --line:#2a2148; --line-2:#3d2f68;
+    --fg:#f3eeff; --fg-2:#b6a6d0; --fg-3:#7a6c9a;
+    --iris:#a78bfa; --iris-soft:#b9a6ff; --cyan:#ff5cf0; --mint:#7ee6a0; --amber:#ffcf6b; --rose:#ff6f8f;
+    --paper:#efe9fb; --paper-ink:#1a1330; --paper-2:#6a6088; --paper-line:#d8cff0;
     --maxw:1120px; --r:16px;
     --ff-disp:"Bricolage Grotesque",system-ui,sans-serif;
     --ff-body:"Hanken Grotesk",system-ui,sans-serif;
@@ -68,6 +68,17 @@
   .btn-primary{position:relative;border:none;color:#1a0f08;font-weight:700;background:linear-gradient(100deg,var(--iris-soft),var(--cyan));box-shadow:0 10px 30px -10px var(--iris)}
   .btn-primary:hover{filter:brightness(1.06);transform:translateY(-2px)}
   .btn-ghost{background:transparent}
+
+  /* word-assembly split hero */
+  .hw{position:relative;min-height:92vh;overflow:hidden;padding:0}
+  #heroCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block}
+  .hw-scrim{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,var(--ink) 22%,color-mix(in srgb,var(--ink) 55%,transparent) 44%,transparent 62%)}
+  .hw-copy{position:relative;z-index:3;max-width:min(560px,52%);margin-left:max(24px,calc((100vw - var(--maxw))/2 + 24px));min-height:92vh;display:flex;flex-direction:column;justify-content:center;padding-right:20px}
+  .hw .tag{align-self:flex-start}
+  .hw h1{font-size:clamp(38px,5.4vw,68px);line-height:.97;font-weight:800;letter-spacing:-.035em;margin:22px 0 0}
+  .hw .hero-sub{margin:22px 0 0;opacity:1;animation:none;max-width:44ch}
+  .hw .hero-cta{opacity:1;animation:none;margin-top:30px}
+  @media(max-width:820px){.hw-copy{max-width:100%;margin-left:0;padding:0 24px}.hw-scrim{background:linear-gradient(180deg,var(--ink) 34%,transparent 74%)}}
 
   /* hero */
   header{position:relative;padding:78px 0 40px}
@@ -288,43 +299,16 @@
   </div>
 </nav>
 
-<header id="top">
-  <div class="wrap hero">
-    <div class="hero-tx">
-      <span class="tag"><span class="tdot"></span> v0.9 · MIT · <b>local-first</b></span>
-      <h1 class="hero-h">
-        <span class="l"><span>Plan it.</span></span>
-        <span class="l"><span class="grad">Learn every feature.</span></span>
-        <span class="l"><span>Run it as a crew.</span></span>
-      </h1>
-      <p class="hero-sub">Adeptly turns a sentence into a full plan — with the right Claude&nbsp;Code features baked into every section. Then it runs the plan, scores how lean it is on tokens, and shows what you spent. All on your machine. No API key, no backend, no telemetry.</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#start">Get started</a>
-        <a class="btn" href="https://www.npmjs.com/package/adeptly" target="_blank" rel="noopener">View on npm ↗</a>
-      </div>
-      <div class="term" aria-hidden="true">
-        <div class="bar"><i></i><i></i><i></i><span class="f mono">~/your-repo</span></div>
-        <div class="body">
-          <div><span class="p">$</span> <span class="c">npx adeptly</span></div>
-          <div class="o">→ reading docs/plans/ … starting on :3000</div>
-          <div><span class="ok">✓</span> <span class="o">plan drafted · recipe ready · crew standing by</span><span class="cur"></span></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stage-wrap" aria-hidden="true">
-      <div class="editor">
-        <div class="e-bar"><i></i><i></i><i></i><span class="e-file">docs/plans/passkeys.md</span><span class="e-badge">coverage 62%</span></div>
-        <div class="e-body">
-          <div class="e-prompt"><span class="e-caret2"></span>add passkeys to our auth flow</div>
-          <div class="e-line l1"><span class="h">## Approach</span></div>
-          <div class="e-line l2">Start in <span class="kw k1">Plan&nbsp;Mode</span> before writing code.</div>
-          <div class="e-line l3">Map the flow with an <span class="kw k2">Explore&nbsp;subagent</span>.</div>
-          <div class="e-line l4">Run <span class="kw k3">/security-review</span> before merge.</div>
-          <div class="e-line l5"><span class="h">## Crew</span><span class="e-stamp">Approved ✓</span></div>
-        </div>
-        <div class="e-cov"><span></span></div>
-      </div>
+<header id="top" class="hw">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="hw-scrim"></div>
+  <div class="hw-copy">
+    <span class="tag"><span class="tdot"></span> v0.9 · MIT · <b>local-first</b></span>
+    <h1>Plan it. <span class="grad">Learn every feature.</span> Run it as a crew.</h1>
+    <p class="hero-sub">A sentence becomes a full plan with the right Claude&nbsp;Code features baked in — then Adeptly runs it and shows what you spent. All local. No API key.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#start">Get started</a>
+      <a class="btn" href="https://www.npmjs.com/package/adeptly" target="_blank" rel="noopener">View on npm ↗</a>
     </div>
   </div>
 </header>
@@ -531,8 +515,8 @@
         </div>
         <svg class="spark" id="spark" viewBox="0 0 320 70" preserveAspectRatio="none" aria-hidden="true">
           <defs>
-            <linearGradient id="sparkStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5a3c"/><stop offset="1" stop-color="#bff23d"/></linearGradient>
-            <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a3c" stop-opacity=".26"/><stop offset="1" stop-color="#ff5a3c" stop-opacity="0"/></linearGradient>
+            <linearGradient id="sparkStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#ff5cf0"/></linearGradient>
+            <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a78bfa" stop-opacity=".26"/><stop offset="1" stop-color="#a78bfa" stop-opacity="0"/></linearGradient>
           </defs>
           <path id="spark-area" fill="url(#sparkArea)"></path>
           <polyline id="spark-line" fill="none" stroke="url(#sparkStroke)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points=""></polyline>
@@ -643,6 +627,45 @@
       var io=new IntersectionObserver(function(en){ en.forEach(function(x){ if(x.isIntersecting){ load(); io.disconnect(); } }); }, {threshold:.25});
       io.observe(sec);
     } else { load(); }
+  })();
+
+  // Hero: the word "Adeptly" assembles from particles (violet), scatters on cursor.
+  (function(){
+    var cv=document.getElementById('heroCanvas'); if(!cv) return;
+    var ctx=cv.getContext('2d'), W=0,H=0, DPR=Math.min(window.devicePixelRatio||1,2), ps=[];
+    var A1=[167,139,250], A2=[255,92,240], BG=[10,7,19];
+    var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var M={x:0,y:0,tx:0,ty:0,active:false};
+    function rect(){ return cv.getBoundingClientRect(); }
+    function resize(){ var r=rect(); W=r.width; H=r.height; cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0); M.x=M.tx=W*0.72; M.y=M.ty=H*0.5; build(); }
+    window.addEventListener('pointermove',function(e){ var r=rect(); M.tx=e.clientX-r.left; M.ty=e.clientY-r.top; M.active=true; });
+    function rnd(a,b){ return a+Math.random()*(b-a); }
+    function build(){
+      if(W<2||H<2) return;
+      var o=document.createElement('canvas'); o.width=W; o.height=H; var oc=o.getContext('2d');
+      oc.fillStyle='#fff'; oc.textAlign='center'; oc.textBaseline='middle';
+      var fs=Math.min(W*0.22,H*0.5,220);
+      oc.font='800 '+fs+'px "Bricolage Grotesque",system-ui,sans-serif';
+      oc.fillText('Adeptly', W*0.70, H*0.5);
+      var d=oc.getImageData(0,0,W,H).data, step=Math.max(4,(W/300)|0), targ=[];
+      for(var y=0;y<H;y+=step) for(var x=0;x<W;x+=step){ if(d[(y*W+x)*4+3]>128) targ.push([x,y]); }
+      ps=[]; for(var i=0;i<targ.length;i++) ps.push({x:rnd(0,W),y:rnd(0,H),tx:targ[i][0],ty:targ[i][1],h:Math.random()});
+      ctx.globalCompositeOperation='source-over'; ctx.fillStyle='rgb('+BG[0]+','+BG[1]+','+BG[2]+')'; ctx.fillRect(0,0,W,H);
+    }
+    function col(h,a){ var r=A1[0]+(A2[0]-A1[0])*h,g=A1[1]+(A2[1]-A1[1])*h,b=A1[2]+(A2[2]-A1[2])*h; return 'rgba('+(r|0)+','+(g|0)+','+(b|0)+','+a+')'; }
+    function draw(){
+      M.x+=(M.tx-M.x)*0.08; M.y+=(M.ty-M.y)*0.08;
+      // rest the cursor off to the side so the word settles cleanly; it only
+      // scatters when the visitor actually moves over it.
+      if(!M.active){ M.tx=W*1.35; M.ty=H*0.5; }
+      ctx.globalCompositeOperation='source-over';
+      ctx.fillStyle='rgba('+BG[0]+','+BG[1]+','+BG[2]+',0.17)'; ctx.fillRect(0,0,W,H);
+      ctx.globalCompositeOperation='lighter';
+      for(var i=0;i<ps.length;i++){ var p=ps[i]; var dx=p.tx-p.x,dy=p.ty-p.y; var mx=p.x-M.x,my=p.y-M.y,md=Math.hypot(mx,my); var ax=dx*0.045,ay=dy*0.045; if(md<140){ var f=(1-md/140)*5; ax+=mx/md*f; ay+=my/md*f; } p.x+=ax; p.y+=ay; ctx.fillStyle=col(p.h,0.94); ctx.fillRect(p.x,p.y,2,2); }
+      if(!reduce) requestAnimationFrame(draw);
+    }
+    resize(); window.addEventListener('resize',resize);
+    if(reduce){ for(var f=0;f<200;f++) draw(); } else requestAnimationFrame(draw);
   })();
 </script>
 </body>
