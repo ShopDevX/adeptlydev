@@ -3,259 +3,472 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Adeptly — the plan-first companion for Claude Code</title>
-<meta name="description" content="Adeptly drafts the plan, bakes in the right Claude Code features, runs it as a crew, and shows what you spend — all local, no API key. Learn every Claude Code feature by reading your own plans." />
-<meta property="og:title" content="Adeptly — plan-first companion for Claude Code" />
-<meta property="og:description" content="Draft the plan, learn every Claude Code feature inline, run it as a crew, see your token usage. Local-first, no API key." />
+<title>Adeptly — plan-first cockpit for Claude Code</title>
+<meta name="description" content="Adeptly turns a sentence into a plan with the right Claude Code features baked in, runs it as a crew, scores how lean it is on tokens, and shows what you spend. Local-first. No API key." />
+<meta property="og:title" content="Adeptly — plan-first cockpit for Claude Code" />
+<meta property="og:description" content="Plan it. Learn every Claude Code feature. Run it as a crew. See what you spend. Local-first, no API key." />
 <meta property="og:type" content="website" />
+<meta name="theme-color" content="#100b09" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg:#0b0d12; --bg-soft:#12151d; --panel:#151925; --panel-2:#1b2130;
-    --border:#232a3a; --border-strong:#2f3850;
-    --fg:#eef1f7; --fg-2:#aab3c5; --fg-3:#727d94;
-    --accent:#8b93ff; --accent-2:#a78bfa; --mint:#34d399; --amber:#fbbf24;
-    --grad:linear-gradient(135deg,#8b93ff 0%,#a78bfa 55%,#7c5cff 100%);
-    --maxw:1080px;
-  }
-  @media (prefers-color-scheme: light){
-    :root{
-      --bg:#f7f8fb; --bg-soft:#eef1f7; --panel:#ffffff; --panel-2:#f3f5fa;
-      --border:#e4e8f0; --border-strong:#d3d9e6;
-      --fg:#161a24; --fg-2:#48526a; --fg-3:#828ba1;
-      --accent:#5b57e0; --accent-2:#7c5cff; --mint:#0f9d6b; --amber:#c07c06;
-    }
+    /* Warm identity: ember-coral primary + lime fresh accent on warm ink. */
+    --ink:#100b09; --ink-1:#17100d; --ink-2:#1e1512; --ink-3:#281c17;
+    --line:#33241d; --line-2:#4a3327;
+    --fg:#fbf1ea; --fg-2:#cdb8ab; --fg-3:#8a7264;
+    --iris:#ff5a3c; --iris-soft:#ff8a52; --cyan:#bff23d; --mint:#8ee84f; --amber:#ffb020; --rose:#ff6f8f;
+    --paper:#f4ecdd; --paper-ink:#241c12; --paper-2:#6a6355; --paper-line:#e0d4bd;
+    --maxw:1120px; --r:16px;
+    --ff-disp:"Bricolage Grotesque",system-ui,sans-serif;
+    --ff-body:"Hanken Grotesk",system-ui,sans-serif;
+    --ff-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
   body{
-    margin:0; background:var(--bg); color:var(--fg);
-    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;
+    margin:0;background:var(--ink);color:var(--fg);
+    font-family:var(--ff-body);font-size:17px;line-height:1.6;font-weight:400;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
   }
   a{color:inherit;text-decoration:none}
+  ::selection{background:color-mix(in srgb,var(--iris) 40%,transparent);color:#fff}
+  :focus-visible{outline:2px solid var(--iris-soft);outline-offset:3px;border-radius:6px}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-  .grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .mono{font-family:var(--ff-mono)}
+  h1,h2,h3{font-family:var(--ff-disp);font-weight:700;letter-spacing:-.02em;text-wrap:balance;margin:0}
+  .eyebrow{font-family:var(--ff-mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);font-weight:500}
+  .grad{background:linear-gradient(100deg,var(--iris-soft),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* blueprint grid backdrop */
+  .grid-bg{position:fixed;inset:0;z-index:-2;pointer-events:none;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:56px 56px;opacity:.35;
+    mask-image:radial-gradient(120% 80% at 50% -10%,#000 30%,transparent 78%)}
+  .aura{position:fixed;inset:-20% -10% auto;height:720px;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(560px 340px at 22% 8%,color-mix(in srgb,var(--iris) 30%,transparent),transparent 66%),
+      radial-gradient(520px 300px at 82% 0%,color-mix(in srgb,var(--cyan) 18%,transparent),transparent 62%);
+    filter:blur(6px);animation:drift 16s ease-in-out infinite alternate}
+  @keyframes drift{from{transform:translate3d(-14px,0,0) scale(1)}to{transform:translate3d(18px,10px,0) scale(1.06)}}
 
   /* nav */
-  nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-  nav .wrap{display:flex;align-items:center;gap:20px;height:60px}
-  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:18px;letter-spacing:-.02em}
-  .brand .dot{width:26px;height:26px;border-radius:8px;background:var(--grad);display:grid;place-items:center;font-size:15px}
-  nav .links{margin-left:auto;display:flex;align-items:center;gap:22px;font-size:14px;color:var(--fg-2)}
-  nav .links a:hover{color:var(--fg)}
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:9px;font-weight:600;font-size:14px;border:1px solid var(--border-strong);transition:.15s}
-  .btn:hover{border-color:var(--accent);color:var(--fg)}
-  .btn-primary{background:var(--grad);color:#fff;border:none;box-shadow:0 6px 20px -8px var(--accent)}
-  .btn-primary:hover{filter:brightness(1.07);color:#fff}
-  @media(max-width:720px){nav .links a.hide-sm{display:none}}
+  nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--ink) 72%,transparent);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:18px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--ff-disp);font-weight:800;font-size:20px;letter-spacing:-.03em}
+  .brand .mk{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 200deg,var(--iris),var(--cyan),var(--iris));display:grid;place-items:center;font-size:16px;box-shadow:0 0 0 1px var(--line-2),0 8px 24px -8px var(--iris)}
+  nav .nl{margin-left:auto;display:flex;align-items:center;gap:26px;font-size:14.5px;color:var(--fg-2);font-weight:500}
+  nav .nl a:hover{color:var(--fg)}
+  @media(max-width:760px){nav .nl a.hs{display:none}}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:11px;font-weight:600;font-size:14.5px;border:1px solid var(--line-2);color:var(--fg);transition:transform .15s,border-color .15s,background .15s;font-family:var(--ff-body)}
+  .btn:hover{border-color:var(--iris);transform:translateY(-1px)}
+  .btn-primary{position:relative;border:none;color:#1a0f08;font-weight:700;background:linear-gradient(100deg,var(--iris-soft),var(--cyan));box-shadow:0 10px 30px -10px var(--iris)}
+  .btn-primary:hover{filter:brightness(1.06);transform:translateY(-2px)}
+  .btn-ghost{background:transparent}
 
   /* hero */
-  header{position:relative;overflow:hidden;padding:84px 0 64px;text-align:center}
-  header::before{content:"";position:absolute;inset:-40% 0 auto;height:640px;background:
-    radial-gradient(600px 300px at 50% 0,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%);
-    pointer-events:none}
-  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--border-strong);border-radius:999px;font-size:13px;color:var(--fg-2);background:var(--panel)}
-  .pill b{color:var(--mint)}
-  h1{font-size:clamp(34px,6vw,60px);line-height:1.05;letter-spacing:-.03em;margin:22px auto 0;max-width:16ch;font-weight:800}
-  .sub{margin:20px auto 0;max-width:60ch;font-size:clamp(16px,2.2vw,20px);color:var(--fg-2)}
-  .cta{margin-top:34px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-  .install{margin:30px auto 0;max-width:420px;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:12px 14px;font-family:ui-monospace,monospace;font-size:15px}
-  .install .p{color:var(--accent)}
-  .install code{flex:1;text-align:left;color:var(--fg)}
-  .install button{cursor:pointer;background:var(--panel-2);border:1px solid var(--border);border-radius:7px;color:var(--fg-2);padding:5px 9px;font-size:12px}
-  .install button:hover{color:var(--fg);border-color:var(--accent)}
-  .badges{margin-top:24px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-  .badges img{height:20px}
+  header{position:relative;padding:78px 0 40px}
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+  @media(max-width:900px){.hero{grid-template-columns:1fr;gap:34px}}
+  .tag{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border:1px solid var(--line-2);border-radius:999px;font-family:var(--ff-mono);font-size:12.5px;color:var(--fg-2);background:color-mix(in srgb,var(--ink-2) 70%,transparent)}
+  .tag b{color:var(--mint);font-weight:600}
+  h1.hero-h{font-size:clamp(40px,7vw,74px);line-height:.98;font-weight:800;margin:22px 0 0}
+  h1.hero-h .l{display:block;overflow:hidden}
+  h1.hero-h .l span{display:block;transform:translateY(105%);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  h1.hero-h .l:nth-child(2) span{animation-delay:.09s}
+  h1.hero-h .l:nth-child(3) span{animation-delay:.18s}
+  @keyframes rise{to{transform:translateY(0)}}
+  .hero-sub{margin:24px 0 0;max-width:52ch;color:var(--fg-2);font-size:clamp(16px,2.1vw,19px);opacity:0;animation:fade .8s .5s forwards}
+  @keyframes fade{to{opacity:1}}
+  .hero-cta{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap;opacity:0;animation:fade .8s .66s forwards}
+  .term{margin-top:26px;max-width:440px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(180deg,var(--ink-2),var(--ink-1));overflow:hidden;opacity:0;animation:fade .8s .8s forwards}
+  .term .bar{display:flex;align-items:center;gap:7px;padding:10px 13px;border-bottom:1px solid var(--line)}
+  .term .bar i{width:10px;height:10px;border-radius:50%;background:var(--line-2)}
+  .term .bar i:nth-child(1){background:#ff5f57}.term .bar i:nth-child(2){background:#febc2e}.term .bar i:nth-child(3){background:#28c840}
+  .term .bar .f{margin-left:auto;font-family:var(--ff-mono);font-size:11px;color:var(--fg-3)}
+  .term .body{padding:14px 15px;font-family:var(--ff-mono);font-size:13.5px;line-height:1.7}
+  .term .p{color:var(--cyan)} .term .c{color:var(--fg)} .term .o{color:var(--fg-3)} .term .ok{color:var(--mint)}
+  .cur{display:inline-block;width:8px;height:15px;background:var(--iris-soft);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
 
-  /* sections */
-  section{padding:64px 0;border-top:1px solid var(--border)}
-  .eyebrow{color:var(--accent);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
-  h2{font-size:clamp(26px,4vw,38px);letter-spacing:-.02em;margin:10px 0 0;font-weight:800}
-  .lead{color:var(--fg-2);max-width:64ch;margin-top:14px;font-size:17px}
-  .center{text-align:center}
-  .center .lead{margin-left:auto;margin-right:auto}
+  /* pipeline visual */
+  .stage-wrap{position:relative}
+  .pipe{width:100%;height:auto;overflow:visible}
+  .pipe .edge{fill:none;stroke:var(--line-2);stroke-width:2}
+  .pipe .flow{fill:none;stroke:url(#g1);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:520;stroke-dashoffset:520;animation:draw 2.2s .4s ease forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .pipe .node rect{fill:var(--ink-2);stroke:var(--line-2);stroke-width:1.5;rx:11}
+  .pipe .node.par rect{stroke:color-mix(in srgb,var(--cyan) 55%,var(--line-2))}
+  .pipe .node text{font-family:var(--ff-mono);font-size:11px;fill:var(--fg);letter-spacing:.02em}
+  .pipe .node .sub{fill:var(--fg-3);font-size:8.5px}
+  .pipe .dot{fill:var(--cyan);filter:drop-shadow(0 0 6px var(--cyan))}
+  .pulse{offset-path:path('M70 40 L70 96 L70 152 L70 208 L200 250 L200 320 L70 362');animation:trav 3s 1.4s linear infinite}
+  .pipe .node{opacity:0;animation:pop .5s ease forwards}
+  .pipe .node.n1{animation-delay:.5s}.pipe .node.n2{animation-delay:.75s}.pipe .node.n3{animation-delay:1s}
+  .pipe .node.n4{animation-delay:1.25s}.pipe .node.n5{animation-delay:1.35s}.pipe .node.n6{animation-delay:1.6s}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-  /* problem cards */
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:34px}
-  @media(max-width:720px){.two{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:24px}
-  .card h3{margin:0 0 8px;font-size:19px}
-  .card p{margin:0;color:var(--fg-2)}
-  .stat{font-size:42px;font-weight:800;letter-spacing:-.02em;line-height:1}
-  .stat.grad-text{display:inline-block}
+  /* stat band */
+  .stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:46px;background:color-mix(in srgb,var(--ink-1) 60%,transparent)}
+  .stats .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:30px 24px}
+  @media(max-width:760px){.stats .wrap{grid-template-columns:1fr 1fr;gap:22px}}
+  .stat .n{font-family:var(--ff-disp);font-weight:800;font-size:clamp(30px,5vw,46px);line-height:1;font-variant-numeric:tabular-nums}
+  .stat .k{margin-top:8px;font-family:var(--ff-mono);font-size:12px;color:var(--fg-2);letter-spacing:.04em}
 
-  /* loop diagram */
-  .loop{margin-top:38px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:stretch}
-  .loop .step{flex:1 1 120px;min-width:120px;max-width:150px;background:var(--panel);border:1px solid var(--border);border-radius:13px;padding:16px 12px;text-align:center}
-  .loop .step .n{width:26px;height:26px;border-radius:8px;background:var(--panel-2);border:1px solid var(--border-strong);display:grid;place-items:center;margin:0 auto 9px;font-size:13px;font-weight:700;color:var(--accent)}
-  .loop .step .t{font-weight:700;font-size:14px}
-  .loop .step .d{font-size:12px;color:var(--fg-3);margin-top:4px}
-  .loop .arrow{align-self:center;color:var(--fg-3);font-size:20px}
-  @media(max-width:720px){.loop .arrow{display:none}}
+  /* section scaffolding */
+  section{padding:82px 0;position:relative}
+  .sec-head{max-width:64ch}
+  h2{font-size:clamp(28px,4.4vw,44px);line-height:1.05;font-weight:800;margin-top:12px}
+  .lead{color:var(--fg-2);margin-top:16px;font-size:18px}
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}
 
-  /* comparison table */
-  .tablewrap{margin-top:34px;overflow-x:auto;border:1px solid var(--border);border-radius:16px}
-  table{width:100%;border-collapse:collapse;min-width:620px}
-  th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:14.5px}
-  thead th{background:var(--panel-2);font-size:13px;color:var(--fg-2);font-weight:700}
+  /* problem */
+  .prob{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:40px}
+  @media(max-width:760px){.prob{grid-template-columns:1fr}}
+  .pcard{border:1px solid var(--line);border-radius:var(--r);background:linear-gradient(180deg,var(--ink-2),var(--ink-1));padding:26px}
+  .pcard .big{font-family:var(--ff-disp);font-weight:800;font-size:52px;line-height:1}
+  .pcard h3{font-size:20px;margin:14px 0 8px}
+  .pcard p{margin:0;color:var(--fg-2);font-size:15.5px}
+
+  /* the loop */
+  .loop{display:flex;flex-wrap:wrap;align-items:stretch;gap:12px;margin-top:44px}
+  .loop .st{flex:1 1 150px;min-width:140px;border:1px solid var(--line);border-radius:14px;background:var(--ink-2);padding:18px 16px;position:relative;overflow:hidden}
+  .loop .st::before{content:attr(data-i);position:absolute;top:10px;right:12px;font-family:var(--ff-mono);font-size:11px;color:var(--fg-3)}
+  .loop .st .h{font-family:var(--ff-disp);font-weight:700;font-size:17px}
+  .loop .st .d{color:var(--fg-3);font-size:13px;margin-top:5px;font-family:var(--ff-mono)}
+  .loop .st .ic{font-size:20px}
+  .loop .ar{align-self:center;color:var(--cyan);font-size:22px}
+  @media(max-width:760px){.loop .ar{display:none}}
+
+  /* spotlight (zigzag) */
+  .spot{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;margin-top:72px}
+  .spot:first-of-type{margin-top:48px}
+  .spot.rev .viz{order:2}
+  @media(max-width:840px){.spot{grid-template-columns:1fr;gap:26px}.spot.rev .viz{order:0}}
+  .spot .tx .k{font-family:var(--ff-mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+  .spot .tx h3{font-size:clamp(24px,3.4vw,32px);margin:12px 0 0;font-weight:800}
+  .spot .tx p{color:var(--fg-2);margin:14px 0 0;font-size:16.5px}
+  .spot .tx ul{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:9px}
+  .spot .tx li{display:flex;gap:10px;align-items:flex-start;color:var(--fg-2);font-size:14.5px}
+  .spot .tx li b{color:var(--fg);font-weight:600}
+  .spot .tx li .chk{color:var(--mint);flex:none;margin-top:2px}
+  .viz{border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,var(--ink-2),var(--ink-1));padding:22px;min-height:250px;position:relative;overflow:hidden}
+  .viz .vlabel{position:absolute;top:14px;left:16px;font-family:var(--ff-mono);font-size:11px;color:var(--fg-3);letter-spacing:.05em}
+
+  /* paper inset (the learn-every-feature moment) */
+  .paper{background:var(--paper);color:var(--paper-ink);border:1px solid var(--paper-line);border-radius:14px;padding:26px 26px 22px;font-family:var(--ff-body);box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+  .paper .pt{font-family:var(--ff-mono);font-size:11px;color:var(--paper-2);letter-spacing:.08em;text-transform:uppercase}
+  .paper h4{font-family:var(--ff-disp);font-weight:700;font-size:20px;margin:8px 0 12px;color:var(--paper-ink)}
+  .paper p{margin:0 0 10px;font-size:14.5px;color:#3a352c;line-height:1.65}
+  .u{border-bottom:2px solid var(--iris);padding-bottom:1px;font-weight:600;color:var(--paper-ink);cursor:help;position:relative}
+  .u.c2{border-color:var(--mint)}.u.c3{border-color:var(--amber)}
+  .paper .foot{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-family:var(--ff-mono);font-size:11px;background:#e7e1d0;color:#4a4436;border:1px solid var(--paper-line);border-radius:6px;padding:4px 8px}
+
+  /* coverage meter viz */
+  .meter{margin-top:6px}
+  .meter .row{display:flex;align-items:center;gap:12px;margin-top:14px;font-family:var(--ff-mono);font-size:12px;color:var(--fg-2)}
+  .meter .track{flex:1;height:8px;border-radius:99px;background:var(--ink-3);overflow:hidden}
+  .meter .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--iris),var(--cyan));width:0;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
+  .meter .fill.mint{background:linear-gradient(90deg,var(--mint),var(--cyan))}
+  .meter .fill.amber{background:linear-gradient(90deg,var(--amber),var(--rose))}
+  .in .meter .fill[data-w]{width:var(--w)}
+  .gaps{margin-top:18px;display:grid;gap:8px}
+  .gap{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--fg-2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--ink-2)}
+  .gap .plus{margin-left:auto;font-family:var(--ff-mono);color:var(--iris-soft);font-size:11px;border:1px solid var(--line-2);border-radius:6px;padding:2px 7px}
+
+  /* usage viz bars */
+  .bars{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:20px}
+  .bars .b{flex:1;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--iris),color-mix(in srgb,var(--iris) 20%,var(--ink-2)));transform:scaleY(.15);transform-origin:bottom;transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+  .in .bars .b{transform:scaleY(var(--s,1))}
+  .ustat{display:flex;gap:18px;margin-top:16px;flex-wrap:wrap;font-family:var(--ff-mono);font-size:12px;color:var(--fg-2)}
+  .ustat b{display:block;font-family:var(--ff-disp);font-weight:800;font-size:24px;color:var(--fg)}
+
+  /* everything grid */
+  .egrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px}
+  @media(max-width:900px){.egrid{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.egrid{grid-template-columns:1fr}}
+  .fx{border:1px solid var(--line);border-radius:14px;background:var(--ink-2);padding:20px;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;position:relative;overflow:hidden}
+  .fx::after{content:"";position:absolute;inset:0;background:radial-gradient(240px 120px at 100% 0,color-mix(in srgb,var(--iris) 14%,transparent),transparent 70%);opacity:0;transition:opacity .2s}
+  .fx:hover{transform:translateY(-4px);border-color:var(--line-2);box-shadow:0 20px 40px -24px #000}
+  .fx:hover::after{opacity:1}
+  .fx .ic{font-size:22px}
+  .fx h3{font-size:17px;margin:12px 0 6px;font-weight:700}
+  .fx p{margin:0;color:var(--fg-2);font-size:14px}
+  .fx .tagm{position:absolute;top:16px;right:16px;font-family:var(--ff-mono);font-size:9.5px;letter-spacing:.08em;color:var(--fg-3);text-transform:uppercase}
+
+  /* comparison */
+  .cmp{margin-top:40px;overflow-x:auto;border:1px solid var(--line);border-radius:16px}
+  table{width:100%;border-collapse:collapse;min-width:640px;font-size:14.5px}
+  th,td{padding:15px 18px;text-align:left;border-bottom:1px solid var(--line)}
+  thead th{background:var(--ink-2);font-family:var(--ff-mono);font-size:12px;letter-spacing:.05em;color:var(--fg-2);font-weight:500}
   thead th.hl{color:var(--fg)}
   tbody tr:last-child td{border-bottom:none}
-  td.feat{color:var(--fg);font-weight:600}
-  .yes{color:var(--mint);font-weight:700}
-  .no{color:var(--fg-3)}
-  .col-adeptly{background:color-mix(in srgb,var(--accent) 8%,transparent)}
-
-  /* feature grid */
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:34px}
-  @media(max-width:900px){.grid{grid-template-columns:1fr 1fr}}
-  @media(max-width:600px){.grid{grid-template-columns:1fr}}
-  .feature{background:var(--panel);border:1px solid var(--border);border-radius:15px;padding:20px;transition:.15s}
-  .feature:hover{border-color:var(--border-strong);transform:translateY(-2px)}
-  .feature .ico{font-size:22px}
-  .feature h3{margin:12px 0 6px;font-size:17px}
-  .feature p{margin:0;color:var(--fg-2);font-size:14px}
+  td.f{font-weight:600;color:var(--fg)}
+  .yes{color:var(--mint);font-weight:700} .naw{color:var(--fg-3)}
+  .cw{background:color-mix(in srgb,var(--iris) 8%,transparent)}
 
   /* trust */
-  .trust{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:8px 8px 4px;margin-top:34px}
-  .trust table{min-width:520px}
-  .trust td.g{color:var(--mint);font-weight:600}
+  .trust{margin-top:36px;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .trust td.g{color:var(--mint);font-weight:600;font-family:var(--ff-mono);font-size:13px}
+  .trust table{min-width:560px}
 
-  /* cta band */
-  .band{margin-top:12px;text-align:center;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:52px 24px;position:relative;overflow:hidden}
-  .band::before{content:"";position:absolute;inset:auto -20% -60% ;height:340px;background:radial-gradient(500px 240px at 50% 100%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 70%)}
-  .band h2{position:relative}
-  .band .cta{margin-top:26px}
+  /* install / cta band */
+  .install{margin:0 auto;max-width:520px;display:flex;align-items:center;gap:10px;background:var(--ink-2);border:1px solid var(--line-2);border-radius:12px;padding:13px 15px;font-family:var(--ff-mono);font-size:15px}
+  .install .p{color:var(--cyan)} .install code{flex:1;color:var(--fg);white-space:nowrap;overflow:auto}
+  .install button{cursor:pointer;background:var(--ink-3);border:1px solid var(--line-2);border-radius:8px;color:var(--fg-2);padding:6px 11px;font-size:12px;font-family:var(--ff-mono)}
+  .install button:hover{color:var(--fg);border-color:var(--iris)}
+  .band{position:relative;text-align:center;border:1px solid var(--line);border-radius:24px;padding:66px 24px;overflow:hidden;background:linear-gradient(180deg,var(--ink-2),var(--ink-1))}
+  .band::before{content:"";position:absolute;inset:auto -10% -70%;height:420px;background:radial-gradient(560px 260px at 50% 100%,color-mix(in srgb,var(--iris) 28%,transparent),transparent 68%)}
+  .band h2,.band p,.band .install,.band .hero-cta{position:relative}
+  .band .hero-cta{justify-content:center;margin-top:26px}
 
-  footer{border-top:1px solid var(--border);padding:34px 0;color:var(--fg-3);font-size:14px}
-  footer .wrap{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+  footer{border-top:1px solid var(--line);padding:40px 0;color:var(--fg-3);font-size:14px}
+  footer .wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
   footer a{color:var(--fg-2)} footer a:hover{color:var(--fg)}
   footer .sp{margin-left:auto}
+  .dim{color:var(--fg-3)}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .reveal{opacity:1;transform:none}
+    h1.hero-h .l span{transform:none}
+    .hero-sub,.hero-cta,.term{opacity:1}
+    .pipe .flow{stroke-dashoffset:0}
+    .pipe .node{opacity:1}
+    .meter .fill[data-w]{width:var(--w)}
+  }
 </style>
 </head>
 <body>
+<div class="grid-bg"></div>
+<div class="aura"></div>
 
 <nav>
   <div class="wrap">
-    <a class="brand" href="#top"><span class="dot">🧭</span> Adeptly</a>
-    <div class="links">
-      <a class="hide-sm" href="#why">Why</a>
-      <a class="hide-sm" href="#features">Features</a>
-      <a class="hide-sm" href="#trust">Trust</a>
-      <a class="hide-sm" href="#start">Get started</a>
-      <a class="btn" href="https://github.com/ShopDevX/adeptlydev" target="_blank" rel="noopener">GitHub ↗</a>
+    <a class="brand" href="#top"><span class="mk">🧭</span>Adeptly</a>
+    <div class="nl">
+      <a class="hs" href="#loop">How it works</a>
+      <a class="hs" href="#spotlight">Features</a>
+      <a class="hs" href="#why">Why</a>
+      <a class="hs" href="#trust">Trust</a>
+      <a class="btn btn-ghost" href="https://github.com/ShopDevX/adeptlydev" target="_blank" rel="noopener">GitHub ★</a>
     </div>
   </div>
 </nav>
 
 <header id="top">
-  <div class="wrap">
-    <span class="pill">🧭 Plan-first companion for Claude Code · <b>v0.8</b> · MIT</span>
-    <h1>Write the plan. <span class="grad-text">Learn every feature.</span> Run it as a crew.</h1>
-    <p class="sub">Adeptly turns a sentence into a full plan — with the right Claude&nbsp;Code features (subagents, skills, hooks, plan mode, /security-review) baked into each section. Then it runs the plan, scores how lean it is on tokens, and shows what you spent. All on your machine. No API key.</p>
-    <div class="install">
-      <span class="p">$</span><code id="cmd">npx adeptly</code>
-      <button onclick="navigator.clipboard.writeText('npx adeptly');this.textContent='copied'">copy</button>
+  <div class="wrap hero">
+    <div class="hero-tx">
+      <span class="tag">🧭 v0.8 · MIT · <b>local-first</b></span>
+      <h1 class="hero-h">
+        <span class="l"><span>Plan it.</span></span>
+        <span class="l"><span class="grad">Learn every feature.</span></span>
+        <span class="l"><span>Run it as a crew.</span></span>
+      </h1>
+      <p class="hero-sub">Adeptly turns a sentence into a full plan — with the right Claude&nbsp;Code features baked into every section. Then it runs the plan, scores how lean it is on tokens, and shows what you spent. All on your machine. No API key, no backend, no telemetry.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#start">Get started</a>
+        <a class="btn" href="https://www.npmjs.com/package/adeptly" target="_blank" rel="noopener">View on npm ↗</a>
+      </div>
+      <div class="term" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i><span class="f mono">~/your-repo</span></div>
+        <div class="body">
+          <div><span class="p">$</span> <span class="c">npx adeptly</span></div>
+          <div class="o">→ reading docs/plans/ … starting on :3000</div>
+          <div><span class="ok">✓</span> <span class="o">plan drafted · recipe ready · crew standing by</span><span class="cur"></span></div>
+        </div>
+      </div>
     </div>
-    <div class="cta">
-      <a class="btn btn-primary" href="#start">Get started</a>
-      <a class="btn" href="https://www.npmjs.com/package/adeptly" target="_blank" rel="noopener">View on npm</a>
-    </div>
-    <div class="badges">
-      <img alt="npm version" src="https://img.shields.io/npm/v/adeptly.svg?color=8b93ff" />
-      <img alt="downloads" src="https://img.shields.io/npm/dm/adeptly.svg?color=34d399" />
-      <img alt="license" src="https://img.shields.io/npm/l/adeptly.svg?color=a78bfa" />
+
+    <div class="stage-wrap" aria-hidden="true">
+      <svg class="pipe" viewBox="0 0 280 400" role="img" aria-label="Crew pipeline: Architect, Gate, Builder, Medic, Reviewer and Security in parallel, then Pilot opening a PR">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#ff5a3c"/><stop offset="1" stop-color="#bff23d"/>
+          </linearGradient>
+        </defs>
+        <path class="edge" d="M70 40 L70 96 L70 152 L70 208 L200 250 L200 320 L70 362"/>
+        <path class="edge" d="M70 208 L70 320 L70 362"/>
+        <path class="flow" d="M70 40 L70 96 L70 152 L70 208 L200 250 L200 320 L70 362"/>
+        <circle class="dot pulse" r="4"/>
+        <g class="node n1" transform="translate(20,22)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Architect</text><text class="sub" x="14" y="27">maps the code</text></g>
+        <g class="node n2" transform="translate(20,78)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Gate</text><text class="sub" x="14" y="27">approved?</text></g>
+        <g class="node n3" transform="translate(20,134)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Builder</text><text class="sub" x="14" y="27">smallest diff</text></g>
+        <g class="node n4" transform="translate(20,190)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Medic</text><text class="sub" x="14" y="27">build · test · heal</text></g>
+        <g class="node n5 par" transform="translate(150,232)"><rect width="112" height="34" rx="11"/><text x="12" y="16">Reviewer</text><text class="sub" x="12" y="27">∥ Security</text></g>
+        <g class="node n6" transform="translate(20,344)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Pilot</text><text class="sub" x="14" y="27">opens the PR</text></g>
+      </svg>
     </div>
   </div>
 </header>
 
-<!-- problem -->
-<section id="why">
+<div class="stats">
   <div class="wrap">
-    <div class="eyebrow">The gap</div>
-    <h2>You're paying for Claude Code. You're using a fraction of it.</h2>
-    <p class="lead">Plan mode, subagents, skills, hooks, MCP, auto-memory — most people never discover them. And when a few devs share a repo, nobody knows what anyone else is planning until the PR lands. Adeptly fixes both.</p>
-    <div class="two">
-      <div class="card">
-        <div class="stat grad-text">~15%</div>
-        <h3 style="margin-top:12px">of Claude Code, actually used</h3>
-        <p>Adeptly names the exact features your plan should use — inline, with hover explanations — so you learn them by reading your own plans. A <b>Coverage</b> score makes it measurable.</p>
-      </div>
-      <div class="card">
-        <div class="stat grad-text">0</div>
-        <h3 style="margin-top:12px">backends, API keys, or accounts</h3>
-        <p>Adeptly is a thin GUI on top of your local <span class="mono">claude</span> CLI. Plans live as markdown in git — that's the whole team-sync model. Your code never leaves your machine.</p>
-      </div>
+    <div class="stat"><div class="n grad" data-count="34" data-suffix="+">0</div><div class="k">Claude Code features, catalogued</div></div>
+    <div class="stat"><div class="n" data-count="0">0</div><div class="k">API keys · backends · accounts</div></div>
+    <div class="stat"><div class="n" data-count="100" data-suffix="%">0</div><div class="k">local — code never leaves your box</div></div>
+    <div class="stat"><div class="n" data-count="7" data-suffix="/7">0</div><div class="k">crew roles, dry-run by default</div></div>
+  </div>
+</div>
+
+<!-- problem -->
+<section id="why-gap">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="eyebrow">The gap</span>
+      <h2>You're paying for Claude&nbsp;Code.<br>You're using a sliver of it.</h2>
+      <p class="lead">Plan Mode, subagents, skills, hooks, MCP, auto-memory — most people never find them. And when a few devs share a repo, nobody knows the plan until the PR lands. Adeptly closes both gaps.</p>
+    </div>
+    <div class="prob">
+      <div class="pcard reveal"><div class="big grad">~15%</div><h3>of Claude Code, actually used</h3><p>Adeptly names the exact features your plan should use — inline, with hover explanations — so you learn them by reading your own plans. A live <b style="color:var(--fg)">Coverage</b> score makes it measurable.</p></div>
+      <div class="pcard reveal d1"><div class="big grad">$0</div><h3>new trust surface</h3><p>Adeptly is a thin GUI over your local <span class="mono">claude</span> CLI. Plans live as markdown in git — that's the whole team-sync model. Nothing new leaves your machine.</p></div>
     </div>
   </div>
 </section>
 
 <!-- loop -->
+<section id="loop">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="eyebrow">The loop</span><h2>A sentence in. A pull request out.</h2>
+      <p class="lead">One plan-first workflow — and you can stop, hand off, or take over at any step.</p></div>
+    <div class="loop reveal d1">
+      <div class="st" data-i="01"><div class="ic">💬</div><div class="h">Describe</div><div class="d">say what to build</div></div>
+      <div class="ar">→</div>
+      <div class="st" data-i="02"><div class="ic">🗺️</div><div class="h">Plan + Recipe</div><div class="d">features named inline</div></div>
+      <div class="ar">→</div>
+      <div class="st" data-i="03"><div class="ic">✅</div><div class="h">Approve</div><div class="d">draft → approved</div></div>
+      <div class="ar">→</div>
+      <div class="st" data-i="04"><div class="ic">👥</div><div class="h">Crew</div><div class="d">build · test · review</div></div>
+      <div class="ar">→</div>
+      <div class="st" data-i="05"><div class="ic">🚀</div><div class="h">PR</div><div class="d">branch pushed</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- spotlights -->
+<section id="spotlight">
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="eyebrow">What makes it different</span><h2>The only tool that <span class="grad">explains</span> Claude&nbsp;Code — and runs it.</h2></div>
+
+    <!-- 1: learn every feature (paper) -->
+    <div class="spot reveal">
+      <div class="tx">
+        <div class="k">Learn by reading your own plans</div>
+        <h3>Every feature, named where it belongs</h3>
+        <p>Adeptly writes the plan and underlines the exact Claude&nbsp;Code features to use — right in the sections they apply to. Hover any one for what it is and why it's here. Nobody else explains Claude Code like this.</p>
+        <ul>
+          <li><span class="chk">◆</span><span><b>Plan Mode</b>, subagents, skills, hooks, MCP, /security-review, auto-memory — all in context</span></li>
+          <li><span class="chk">◆</span><span>A numbered suggestion strip: <b>"line 19 → /security-review matched 'password'"</b></span></li>
+          <li><span class="chk">◆</span><span>A 30+ feature catalogue you can <b>refresh from your own CLI</b></span></li>
+        </ul>
+      </div>
+      <div class="viz" style="background:none;border:none;padding:0">
+        <div class="paper">
+          <div class="pt">docs/plans/passkeys.md</div>
+          <h4>Add passkeys to the auth flow</h4>
+          <p>Start in <span class="u">Plan Mode</span> before writing code — the change spans sessions and middleware.</p>
+          <p>Map the current flow with an <span class="u c2">Explore subagent</span>, then implement behind a flag.</p>
+          <p>Run <span class="u c3">/security-review</span> before merging the session-token changes.</p>
+          <div class="foot"><span class="chip">Plan Mode</span><span class="chip">Explore</span><span class="chip">/security-review</span><span class="chip">+ hover to learn</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: coverage + hygiene -->
+    <div class="spot rev reveal">
+      <div class="tx">
+        <div class="k">Coverage · Token Hygiene</div>
+        <h3>Measure how much you use — and how lean you spend</h3>
+        <p>Two scores over your plan: how many Claude&nbsp;Code features it actually uses, and how many money-saving habits it follows. Each gap is one click to bake into the plan.</p>
+        <ul>
+          <li><span class="chk">◆</span><span><b>Coverage:</b> using 6 / 34 features — with the high-value ones you're missing</span></li>
+          <li><span class="chk">◆</span><span><b>Token Hygiene:</b> Plan Mode first, Explore for search, cache-friendly ordering, Haiku for grunt work</span></li>
+          <li><span class="chk">◆</span><span>One click adds the recommendation straight into the plan</span></li>
+        </ul>
+      </div>
+      <div class="viz">
+        <span class="vlabel">coverage · this plan</span>
+        <div class="meter" style="margin-top:26px">
+          <div class="row"><span style="width:78px">Coverage</span><span class="track"><span class="fill" data-w style="--w:19%"></span></span><span>19%</span></div>
+          <div class="row"><span style="width:78px">Hygiene</span><span class="track"><span class="fill mint" data-w style="--w:75%"></span></span><span>75%</span></div>
+          <div class="row"><span style="width:78px">Cost est.</span><span class="track"><span class="fill amber" data-w style="--w:42%"></span></span><span>~$0.20</span></div>
+        </div>
+        <div class="gaps">
+          <div class="gap">Hooks (PostToolUse) — auto-run tests <span class="plus">+ add</span></div>
+          <div class="gap">MCP — you mention a Postgres DB <span class="plus">+ add</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: usage -->
+    <div class="spot reveal">
+      <div class="tx">
+        <div class="k">Usage ledger + whole-account</div>
+        <h3>See exactly what Claude is costing you</h3>
+        <p>Every call Adeptly makes records its real token cost and cache-hit. Flip to <b>Whole account</b> to see machine-wide spend parsed from <span class="mono">~/.claude</span> — tokens exact, cost estimated. 100% local, no telemetry.</p>
+        <ul>
+          <li><span class="chk">◆</span><span>Spend, <b>cache-hit %</b>, and cost by source &amp; model</span></li>
+          <li><span class="chk">◆</span><span>Recipe shows an <b>upfront estimate</b>; the crew shows estimate-vs-actual</span></li>
+          <li><span class="chk">◆</span><span>A daily-cost sparkline across every session</span></li>
+        </ul>
+      </div>
+      <div class="viz rev">
+        <span class="vlabel">whole account · 30d</span>
+        <div class="bars" style="margin-top:30px" aria-hidden="true">
+          <span class="b" style="--s:.3"></span><span class="b" style="--s:.5"></span><span class="b" style="--s:.4"></span><span class="b" style="--s:.7"></span><span class="b" style="--s:.55"></span><span class="b" style="--s:.9"></span><span class="b" style="--s:.65"></span><span class="b" style="--s:1"></span><span class="b" style="--s:.8"></span><span class="b" style="--s:.6"></span><span class="b" style="--s:.85"></span><span class="b" style="--s:.5"></span>
+        </div>
+        <div class="ustat"><span><b>94%</b>cache hit</span><span><b>2.4M</b>tokens</span><span><b>14</b>sessions</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- everything grid -->
 <section>
-  <div class="wrap center">
-    <div class="eyebrow">The loop</div>
-    <h2>Describe it → ship it</h2>
-    <p class="lead">One plan-first workflow, from a sentence to a pull request.</p>
-    <div class="loop">
-      <div class="step"><div class="n">1</div><div class="t">Describe</div><div class="d">Say what you want to build</div></div>
-      <div class="arrow">→</div>
-      <div class="step"><div class="n">2</div><div class="t">Plan + Recipe</div><div class="d">Full markdown, features named</div></div>
-      <div class="arrow">→</div>
-      <div class="step"><div class="n">3</div><div class="t">Approve</div><div class="d">Draft → review → approved</div></div>
-      <div class="arrow">→</div>
-      <div class="step"><div class="n">4</div><div class="t">Crew</div><div class="d">Build → test → review</div></div>
-      <div class="arrow">→</div>
-      <div class="step"><div class="n">5</div><div class="t">PR</div><div class="d">Branch pushed, PR opened</div></div>
+  <div class="wrap">
+    <div class="sec-head reveal"><span class="eyebrow">The whole kit</span><h2>Everything, keyed off your own <span class="mono" style="font-size:.8em">claude</span></h2>
+      <p class="lead">Fourteen more reasons it stays open in a tab all day.</p></div>
+    <div class="egrid">
+      <div class="fx reveal"><span class="tagm">v0.5</span><div class="ic">👥</div><h3>Crew runner</h3><p>Runs an approved plan as roles — Architect → Builder → Medic → Reviewer + Security (parallel) → PR. Dry-run by default; live is double-gated.</p></div>
+      <div class="fx reveal d1"><span class="tagm">v0.8</span><div class="ic">🤝</div><h3>Session handoff</h3><p>Leave a resume note one Claude session hands to the next — the bridge sessions can't make live.</p></div>
+      <div class="fx reveal d2"><span class="tagm">v0.7</span><div class="ic">🔄</div><h3>Refresh from your CLI</h3><p>Ask your own self-updating <span class="mono">claude</span> what features are new and fold them in. No backend, no doc-scraping.</p></div>
+      <div class="fx reveal"><span class="tagm">v0.6</span><div class="ic">🧩</div><h3>Stack-aware recipes</h3><p>Detects your stack from manifests so every recommendation, path, and command fits what you actually build with.</p></div>
+      <div class="fx reveal d1"><span class="tagm">v0.8</span><div class="ic">🕘</div><h3>Run history + re-run</h3><p>Browse every past crew run — mode, pass count, cost, PR — and re-run any of them in one click.</p></div>
+      <div class="fx reveal d2"><div class="ic">✅</div><h3>Approvals in git</h3><p>Plans and approval state are files. Every dev sees the same thing; git is the only sync layer. No accounts.</p></div>
+      <div class="fx reveal"><div class="ic">🎙️</div><h3>Voice + vision</h3><p>Dictate in chat (push-to-talk) or paste a screenshot and ask Claude to read it.</p></div>
+      <div class="fx reveal d1"><span class="tagm">v0.8</span><div class="ic">🌐</div><h3>Remote &amp; tunnel</h3><p><span class="mono">--host</span> for LAN, <span class="mono">--tunnel</span> for a Cloudflare quick-tunnel — with a loud, honest trust warning.</p></div>
+      <div class="fx reveal d2"><div class="ic">✨</div><h3>Recipe generator</h3><p>Structured workflow for a plan: subagents by purpose, skills with when-to-invoke, hooks, expected turns &amp; cost.</p></div>
+      <div class="fx reveal"><div class="ic">⌘</div><h3>Command palette</h3><p><kbd class="mono">⌘K</kbd> to search and open plans, <kbd class="mono">⌘I</kbd> for chat, focus mode to hide the panels.</p></div>
+      <div class="fx reveal d1"><div class="ic">🔀</div><h3>Multi-dev aware</h3><p>The plans list shows git author + dirty-state, so you see who last touched what at a glance.</p></div>
+      <div class="fx reveal d2"><div class="ic">📋</div><h3>Copy as prompt</h3><p>One click turns plan + recipe into a paste-ready Claude&nbsp;Code prompt for a fresh session.</p></div>
+      <div class="fx reveal"><div class="ic">🌗</div><h3>Dark &amp; light</h3><p>Drag-resize splitters, a mint-green pulse when a plan gets approved, and both themes done right.</p></div>
+      <div class="fx reveal d1"><div class="ic">🔒</div><h3>Audit trail</h3><p>Every crew run is written to <span class="mono">runs/&lt;slug&gt;/</span> as JSON + an append-only <span class="mono">audit.jsonl</span>.</p></div>
     </div>
   </div>
 </section>
 
 <!-- comparison -->
-<section>
+<section id="why">
   <div class="wrap">
-    <div class="eyebrow">Why Adeptly</div>
-    <h2>Not another code generator</h2>
-    <p class="lead">Cursor, Continue, and Aider generate code. Adeptly starts one step upstream — the plan that becomes a great Claude Code prompt — and closes the loop with a crew that runs it.</p>
-    <div class="tablewrap">
+    <div class="sec-head reveal"><span class="eyebrow">Why Adeptly</span><h2>Not another code generator</h2>
+      <p class="lead">Cursor, Continue, and Aider generate code. Adeptly starts one step upstream — the plan that becomes a great prompt — and closes the loop with a crew that runs it.</p></div>
+    <div class="cmp reveal d1">
       <table>
-        <thead>
-          <tr>
-            <th>Capability</th>
-            <th class="hl col-adeptly">Adeptly</th>
-            <th>Raw Claude&nbsp;Code</th>
-            <th>Code-gen IDEs</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Capability</th><th class="hl cw">Adeptly</th><th>Raw Claude&nbsp;Code</th><th>Code-gen IDEs</th></tr></thead>
         <tbody>
-          <tr><td class="feat">Plan-first, approve before code</td><td class="col-adeptly yes">✓</td><td class="no">manual</td><td class="no">—</td></tr>
-          <tr><td class="feat">Teaches every Claude Code feature inline</td><td class="col-adeptly yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
-          <tr><td class="feat">Feature-coverage + token-hygiene score</td><td class="col-adeptly yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
-          <tr><td class="feat">Shows your real token spend</td><td class="col-adeptly yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
-          <tr><td class="feat">Runs the plan as a role crew → PR</td><td class="col-adeptly yes">✓</td><td class="no">DIY</td><td class="no">partial</td></tr>
-          <tr><td class="feat">Team sync with zero backend (git)</td><td class="col-adeptly yes">✓</td><td class="no">—</td><td class="no">—</td></tr>
-          <tr><td class="feat">Runs locally, no API key of its own</td><td class="col-adeptly yes">✓</td><td class="yes">✓</td><td class="no">varies</td></tr>
+          <tr><td class="f">Plan-first, approve before code</td><td class="cw yes">✓</td><td class="naw">manual</td><td class="naw">—</td></tr>
+          <tr><td class="f">Teaches every Claude Code feature inline</td><td class="cw yes">✓</td><td class="naw">—</td><td class="naw">—</td></tr>
+          <tr><td class="f">Coverage + token-hygiene score</td><td class="cw yes">✓</td><td class="naw">—</td><td class="naw">—</td></tr>
+          <tr><td class="f">Shows your real token spend</td><td class="cw yes">✓</td><td class="naw">—</td><td class="naw">—</td></tr>
+          <tr><td class="f">Runs the plan as a role crew → PR</td><td class="cw yes">✓</td><td class="naw">DIY</td><td class="naw">partial</td></tr>
+          <tr><td class="f">Team sync with zero backend (git)</td><td class="cw yes">✓</td><td class="naw">—</td><td class="naw">—</td></tr>
+          <tr><td class="f">Runs locally, no API key of its own</td><td class="cw yes">✓</td><td class="yes">✓</td><td class="naw">varies</td></tr>
         </tbody>
       </table>
-    </div>
-  </div>
-</section>
-
-<!-- features -->
-<section id="features">
-  <div class="wrap">
-    <div class="eyebrow">What's inside</div>
-    <h2>Everything, keyed off your own <span class="mono">claude</span></h2>
-    <div class="grid">
-      <div class="feature"><div class="ico">🎯</div><h3>Feature Coverage</h3><p>Scores how many of Claude Code's 30+ features your plan uses, with the high-value gaps — one click to add each.</p></div>
-      <div class="feature"><div class="ico">🌿</div><h3>Token Hygiene</h3><p>Rates the plan on money-saving habits — Plan Mode, cheap-model routing, cache-friendly ordering, /clear — and adds the ones you're missing.</p></div>
-      <div class="feature"><div class="ico">📊</div><h3>Usage ledger</h3><p>Every call's real cost + cache-hit, plus a whole-account view parsed from <span class="mono">~/.claude</span>. 100% local.</p></div>
-      <div class="feature"><div class="ico">👥</div><h3>Crew runner</h3><p>Runs an approved plan as a role pipeline — Architect → Builder → Medic → Reviewer + Security (parallel) → PR. Dry-run by default.</p></div>
-      <div class="feature"><div class="ico">🤝</div><h3>Session handoff</h3><p>Leave a resume note one Claude session hands to the next — the bridge sessions can't make live.</p></div>
-      <div class="feature"><div class="ico">🔄</div><h3>Live feature refresh</h3><p>Ask your own self-updating <span class="mono">claude</span> CLI what's new and fold it into the catalogue. No backend, no doc-scraping.</p></div>
-      <div class="feature"><div class="ico">🧩</div><h3>Stack-aware recipes</h3><p>Detects your stack from manifests so every recommendation, path, and command fits what you actually build with.</p></div>
-      <div class="feature"><div class="ico">✅</div><h3>Approvals in git</h3><p>Plans and approval state live as files. Every dev sees the same thing; git is the only sync layer.</p></div>
-      <div class="feature"><div class="ico">🎙️</div><h3>Voice + images</h3><p>Dictate in chat (push-to-talk) or paste a screenshot and ask Claude to read it. Command palette + focus mode included.</p></div>
     </div>
   </div>
 </section>
@@ -263,34 +476,33 @@
 <!-- trust -->
 <section id="trust">
   <div class="wrap">
-    <div class="eyebrow">The trust moat</div>
-    <h2>Your code never leaves your machine</h2>
-    <p class="lead">No SaaS backend, no API key, no telemetry, no account. If you trust Claude Code, Adeptly adds zero new trust surface.</p>
-    <div class="trust">
+    <div class="sec-head reveal"><span class="eyebrow">The trust moat</span><h2>Your code never leaves your machine</h2>
+      <p class="lead">No SaaS backend, no API key, no telemetry, no account. If you trust Claude Code, Adeptly adds zero new trust surface.</p></div>
+    <div class="trust reveal d1">
       <table>
         <thead><tr><th>What</th><th>Where it runs</th><th>What it sends</th></tr></thead>
         <tbody>
-          <tr><td class="feat">Adeptly web UI</td><td><span class="mono">localhost</span></td><td class="g">nothing</td></tr>
-          <tr><td class="feat">Adeptly node server</td><td>your box</td><td class="g">nothing</td></tr>
-          <tr><td class="feat"><span class="mono">claude --print</span> subprocess</td><td>your box</td><td>your prompt → your Claude CLI → Anthropic, exactly as if you typed it</td></tr>
+          <tr><td class="f">Adeptly web UI</td><td class="mono dim">localhost</td><td class="g">nothing</td></tr>
+          <tr><td class="f">Adeptly node server</td><td class="dim">your box</td><td class="g">nothing</td></tr>
+          <tr><td class="f"><span class="mono">claude --print</span> subprocess</td><td class="dim">your box</td><td class="dim">your prompt → your CLI → Anthropic, exactly as if you typed it</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </section>
 
-<!-- get started -->
+<!-- cta -->
 <section id="start">
   <div class="wrap">
-    <div class="band">
-      <div class="eyebrow">Get started</div>
-      <h2>Two commands. That's it.</h2>
-      <p class="lead" style="margin:14px auto 0">Requires Node 18.17+ and a signed-in Claude Code CLI.</p>
-      <div class="install" style="margin-top:26px">
+    <div class="band reveal">
+      <span class="eyebrow">Get started</span>
+      <h2 style="margin-top:12px">Two commands. That's the whole setup.</h2>
+      <p class="lead" style="margin:14px auto 26px;max-width:52ch">Needs Node 18.17+ and a signed-in Claude&nbsp;Code CLI.</p>
+      <div class="install">
         <span class="p">$</span><code>npm i -g @anthropic-ai/claude-code &amp;&amp; npx adeptly</code>
-        <button onclick="navigator.clipboard.writeText('npm i -g @anthropic-ai/claude-code && npx adeptly');this.textContent='copied'">copy</button>
+        <button onclick="navigator.clipboard.writeText('npm i -g @anthropic-ai/claude-code && npx adeptly');this.textContent='copied ✓'">copy</button>
       </div>
-      <div class="cta">
+      <div class="hero-cta">
         <a class="btn btn-primary" href="https://www.npmjs.com/package/adeptly" target="_blank" rel="noopener">Install from npm</a>
         <a class="btn" href="https://github.com/ShopDevX/adeptlydev" target="_blank" rel="noopener">Star on GitHub ★</a>
       </div>
@@ -300,13 +512,41 @@
 
 <footer>
   <div class="wrap">
-    <span class="brand" style="font-size:15px"><span class="dot" style="width:22px;height:22px;font-size:12px">🧭</span> Adeptly</span>
+    <span class="brand" style="font-size:16px"><span class="mk" style="width:24px;height:24px;font-size:13px">🧭</span>Adeptly</span>
     <a href="https://www.npmjs.com/package/adeptly" target="_blank" rel="noopener">npm</a>
     <a href="https://github.com/ShopDevX/adeptlydev" target="_blank" rel="noopener">GitHub</a>
-    <a href="https://github.com/ShopDevX/adeptlydev/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+    <a href="https://github.com/ShopDevX/adeptlydev/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a>
     <span class="sp">Built by <a href="https://github.com/ShopDevX" target="_blank" rel="noopener">ShopDevX</a></span>
   </div>
 </footer>
 
+<script>
+  // Scroll reveals
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(e){e.classList.add('in')}); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, {threshold:.16, rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(e){ io.observe(e); });
+  })();
+
+  // Count-up stats
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var nums = document.querySelectorAll('[data-count]');
+    function run(el){
+      var target = +el.getAttribute('data-count'), suf = el.getAttribute('data-suffix')||'';
+      if (reduce){ el.textContent = target + suf; return; }
+      var t0 = null, dur = 1200;
+      function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1); var e=1-Math.pow(1-p,3);
+        el.textContent = Math.round(target*e) + suf; if(p<1) requestAnimationFrame(step); }
+      requestAnimationFrame(step);
+    }
+    if (!('IntersectionObserver' in window)){ nums.forEach(run); return; }
+    var io = new IntersectionObserver(function(en){ en.forEach(function(x){ if(x.isIntersecting){ run(x.target); io.unobserve(x.target);} }); }, {threshold:.6});
+    nums.forEach(function(n){ io.observe(n); });
+  })();
+</script>
 </body>
 </html>
