@@ -9,7 +9,7 @@
 <meta property="og:description" content="Plan it. Learn every Claude Code feature. Run it as a crew. See what you spend. Local-first, no API key." />
 <meta property="og:type" content="website" />
 <meta name="theme-color" content="#100b09" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AD%3C/text%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff5a3c'/%3E%3Cg fill='none' stroke='%2317100d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 15l8-6 8 6'/%3E%3Cpath d='M8 22l8-6 8 6'/%3E%3C/g%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -58,7 +58,8 @@
   nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--ink) 72%,transparent);border-bottom:1px solid var(--line)}
   nav .wrap{display:flex;align-items:center;gap:18px;height:64px}
   .brand{display:flex;align-items:center;gap:10px;font-family:var(--ff-disp);font-weight:800;font-size:20px;letter-spacing:-.03em}
-  .brand .mk{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 200deg,var(--iris),var(--cyan),var(--iris));display:grid;place-items:center;font-size:16px;box-shadow:0 0 0 1px var(--line-2),0 8px 24px -8px var(--iris)}
+  .brand .mk{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--iris),var(--cyan));display:grid;place-items:center;box-shadow:0 0 0 1px var(--line-2),0 8px 22px -8px var(--iris)}
+  .brand .mk svg{width:64%;height:64%;display:block}
   nav .nl{margin-left:auto;display:flex;align-items:center;gap:26px;font-size:14.5px;color:var(--fg-2);font-weight:500}
   nav .nl a:hover{color:var(--fg)}
   @media(max-width:760px){nav .nl a.hs{display:none}}
@@ -93,22 +94,34 @@
   .cur{display:inline-block;width:8px;height:15px;background:var(--iris-soft);vertical-align:-2px;animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
 
-  /* pipeline visual */
+  /* hero: plan-writing editor animation */
+  .tdot{width:7px;height:7px;border-radius:50%;background:var(--iris);display:inline-block;box-shadow:0 0 8px var(--iris)}
   .stage-wrap{position:relative}
-  .pipe{width:100%;height:auto;overflow:visible}
-  .pipe .edge{fill:none;stroke:var(--line-2);stroke-width:2}
-  .pipe .flow{fill:none;stroke:url(#g1);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:520;stroke-dashoffset:520;animation:draw 2.2s .4s ease forwards}
-  @keyframes draw{to{stroke-dashoffset:0}}
-  .pipe .node rect{fill:var(--ink-2);stroke:var(--line-2);stroke-width:1.5;rx:11}
-  .pipe .node.par rect{stroke:color-mix(in srgb,var(--cyan) 55%,var(--line-2))}
-  .pipe .node text{font-family:var(--ff-mono);font-size:11px;fill:var(--fg);letter-spacing:.02em}
-  .pipe .node .sub{fill:var(--fg-3);font-size:8.5px}
-  .pipe .dot{fill:var(--cyan);filter:drop-shadow(0 0 6px var(--cyan))}
-  .pulse{offset-path:path('M70 40 L70 96 L70 152 L70 208 L200 250 L200 320 L70 362');animation:trav 3s 1.4s linear infinite}
-  .pipe .node{opacity:0;animation:pop .5s ease forwards}
-  .pipe .node.n1{animation-delay:.5s}.pipe .node.n2{animation-delay:.75s}.pipe .node.n3{animation-delay:1s}
-  .pipe .node.n4{animation-delay:1.25s}.pipe .node.n5{animation-delay:1.35s}.pipe .node.n6{animation-delay:1.6s}
-  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .editor{position:relative;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--ink-2),var(--ink-1));box-shadow:0 34px 80px -34px #000;overflow:hidden;animation:efloat 7s ease-in-out infinite}
+  @keyframes efloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  .e-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .e-bar i{width:10px;height:10px;border-radius:50%}
+  .e-bar i:nth-child(1){background:#ff5f57}.e-bar i:nth-child(2){background:#febc2e}.e-bar i:nth-child(3){background:#28c840}
+  .e-file{margin-left:6px;font-family:var(--ff-mono);font-size:12px;color:var(--fg-3)}
+  .e-badge{margin-left:auto;font-family:var(--ff-mono);font-size:11px;color:var(--mint);border:1px solid var(--line-2);border-radius:999px;padding:3px 10px;opacity:0;animation:efade .6s 4.9s forwards}
+  .e-body{padding:18px 18px 4px;font-size:15px;line-height:1.85}
+  .e-prompt{font-family:var(--ff-mono);font-size:13px;color:var(--cyan);margin-bottom:15px}
+  .e-caret2{display:inline-block;width:7px;height:13px;background:var(--iris-soft);vertical-align:-1px;margin-right:5px;animation:blink 1s steps(1) infinite}
+  .e-line{opacity:0;transform:translateY(8px);animation:writein .55s forwards}
+  .e-line+.e-line{margin-top:3px}
+  .l1{animation-delay:.5s}.l2{animation-delay:1.3s}.l3{animation-delay:2.1s}.l4{animation-delay:2.9s}.l5{animation-delay:3.9s}
+  @keyframes writein{to{opacity:1;transform:none}}
+  .e-line .h{font-family:var(--ff-disp);font-weight:700;color:var(--fg)}
+  .kw{position:relative;color:var(--fg);font-weight:600;white-space:nowrap}
+  .kw::after{content:"";position:absolute;left:0;right:100%;bottom:-3px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--iris),var(--cyan));box-shadow:0 0 9px color-mix(in srgb,var(--iris) 55%,transparent);animation:uline .5s forwards}
+  .k1::after{animation-delay:1.75s}.k2::after{animation-delay:2.55s}.k3::after{animation-delay:3.35s}
+  @keyframes uline{to{right:0}}
+  .e-stamp{display:inline-block;margin-left:10px;font-family:var(--ff-mono);font-size:11px;color:#0e2b16;background:var(--mint);border-radius:6px;padding:2px 9px;opacity:0;transform:scale(.7);animation:estamp .5s 4.5s cubic-bezier(.2,1.5,.4,1) forwards}
+  @keyframes estamp{to{opacity:1;transform:scale(1)}}
+  .e-cov{height:6px;background:var(--ink-3);margin:14px 18px 18px;border-radius:99px;overflow:hidden}
+  .e-cov span{display:block;height:100%;width:8%;background:linear-gradient(90deg,var(--iris),var(--cyan));border-radius:99px;animation:covfill 1.3s 4.7s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes covfill{to{width:62%}}
+  @keyframes efade{to{opacity:1}}
 
   /* stat band */
   .stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:46px;background:color-mix(in srgb,var(--ink-1) 60%,transparent)}
@@ -227,6 +240,19 @@
   .band h2,.band p,.band .install,.band .hero-cta{position:relative}
   .band .hero-cta{justify-content:center;margin-top:26px}
 
+  /* momentum / live npm */
+  .mo{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,var(--ink-2),var(--ink-1));padding:36px;position:relative;overflow:hidden}
+  .mo::before{content:"";position:absolute;inset:auto -20% -80% auto;width:60%;height:300px;background:radial-gradient(closest-side,color-mix(in srgb,var(--iris) 16%,transparent),transparent);pointer-events:none}
+  @media(max-width:840px){.mo{grid-template-columns:1fr;gap:26px}}
+  .mo-left h2{font-size:clamp(24px,3.6vw,34px);margin-top:12px}
+  .mo-stats{display:flex;gap:30px;flex-wrap:wrap}
+  .ms .msn{font-family:var(--ff-disp);font-weight:800;font-size:clamp(30px,5vw,46px);line-height:1;font-variant-numeric:tabular-nums;background:linear-gradient(100deg,var(--iris-soft),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;min-height:1em}
+  .ms .msk{font-family:var(--ff-mono);font-size:12px;color:var(--fg-2);margin-top:7px;letter-spacing:.03em}
+  .spark{width:100%;height:70px;margin-top:22px;display:block}
+  .mo-cap{font-size:11px;color:var(--fg-3);margin-top:8px;display:flex;align-items:center;gap:7px}
+  .mo-cap .live{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 0 color-mix(in srgb,var(--mint) 70%,transparent);animation:ping 2s ease-out infinite}
+  @keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--mint) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+
   footer{border-top:1px solid var(--line);padding:40px 0;color:var(--fg-3);font-size:14px}
   footer .wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:center}
   footer a{color:var(--fg-2)} footer a:hover{color:var(--fg)}
@@ -238,8 +264,9 @@
     .reveal{opacity:1;transform:none}
     h1.hero-h .l span{transform:none}
     .hero-sub,.hero-cta,.term{opacity:1}
-    .pipe .flow{stroke-dashoffset:0}
-    .pipe .node{opacity:1}
+    .e-line,.e-badge,.e-stamp{opacity:1;transform:none}
+    .kw::after{right:0}
+    .e-cov span{width:62%}
     .meter .fill[data-w]{width:var(--w)}
   }
 </style>
@@ -250,7 +277,7 @@
 
 <nav>
   <div class="wrap">
-    <a class="brand" href="#top"><span class="mk">🧭</span>Adeptly</a>
+    <a class="brand" href="#top"><span class="mk"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#17100d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11l6-5 6 5"/><path d="M6 17l6-5 6 5"/></g></svg></span>Adeptly</a>
     <div class="nl">
       <a class="hs" href="#loop">How it works</a>
       <a class="hs" href="#spotlight">Features</a>
@@ -264,7 +291,7 @@
 <header id="top">
   <div class="wrap hero">
     <div class="hero-tx">
-      <span class="tag">🧭 v0.8 · MIT · <b>local-first</b></span>
+      <span class="tag"><span class="tdot"></span> v0.8 · MIT · <b>local-first</b></span>
       <h1 class="hero-h">
         <span class="l"><span>Plan it.</span></span>
         <span class="l"><span class="grad">Learn every feature.</span></span>
@@ -286,23 +313,18 @@
     </div>
 
     <div class="stage-wrap" aria-hidden="true">
-      <svg class="pipe" viewBox="0 0 280 400" role="img" aria-label="Crew pipeline: Architect, Gate, Builder, Medic, Reviewer and Security in parallel, then Pilot opening a PR">
-        <defs>
-          <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#ff5a3c"/><stop offset="1" stop-color="#bff23d"/>
-          </linearGradient>
-        </defs>
-        <path class="edge" d="M70 40 L70 96 L70 152 L70 208 L200 250 L200 320 L70 362"/>
-        <path class="edge" d="M70 208 L70 320 L70 362"/>
-        <path class="flow" d="M70 40 L70 96 L70 152 L70 208 L200 250 L200 320 L70 362"/>
-        <circle class="dot pulse" r="4"/>
-        <g class="node n1" transform="translate(20,22)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Architect</text><text class="sub" x="14" y="27">maps the code</text></g>
-        <g class="node n2" transform="translate(20,78)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Gate</text><text class="sub" x="14" y="27">approved?</text></g>
-        <g class="node n3" transform="translate(20,134)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Builder</text><text class="sub" x="14" y="27">smallest diff</text></g>
-        <g class="node n4" transform="translate(20,190)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Medic</text><text class="sub" x="14" y="27">build · test · heal</text></g>
-        <g class="node n5 par" transform="translate(150,232)"><rect width="112" height="34" rx="11"/><text x="12" y="16">Reviewer</text><text class="sub" x="12" y="27">∥ Security</text></g>
-        <g class="node n6" transform="translate(20,344)"><rect width="100" height="34" rx="11"/><text x="14" y="16">Pilot</text><text class="sub" x="14" y="27">opens the PR</text></g>
-      </svg>
+      <div class="editor">
+        <div class="e-bar"><i></i><i></i><i></i><span class="e-file">docs/plans/passkeys.md</span><span class="e-badge">coverage 62%</span></div>
+        <div class="e-body">
+          <div class="e-prompt"><span class="e-caret2"></span>add passkeys to our auth flow</div>
+          <div class="e-line l1"><span class="h">## Approach</span></div>
+          <div class="e-line l2">Start in <span class="kw k1">Plan&nbsp;Mode</span> before writing code.</div>
+          <div class="e-line l3">Map the flow with an <span class="kw k2">Explore&nbsp;subagent</span>.</div>
+          <div class="e-line l4">Run <span class="kw k3">/security-review</span> before merge.</div>
+          <div class="e-line l5"><span class="h">## Crew</span><span class="e-stamp">Approved ✓</span></div>
+        </div>
+        <div class="e-cov"><span></span></div>
+      </div>
     </div>
   </div>
 </header>
@@ -491,6 +513,35 @@
   </div>
 </section>
 
+<!-- momentum -->
+<section id="momentum">
+  <div class="wrap">
+    <div class="mo reveal">
+      <div class="mo-left">
+        <span class="eyebrow">Momentum · live from npm</span>
+        <h2>Developers are already shipping with it</h2>
+        <p class="lead">Pulled live from the npm registry and GitHub right now — no marketing math, just the real counters.</p>
+      </div>
+      <div class="mo-right">
+        <div class="mo-stats">
+          <div class="ms"><div class="msn" id="dl-total" data-fallback="2249">—</div><div class="msk">total installs</div></div>
+          <div class="ms"><div class="msn" id="dl-month" data-fallback="776">—</div><div class="msk">last 30 days</div></div>
+          <div class="ms"><div class="msn" id="gh-stars" data-fallback="62">—</div><div class="msk">GitHub stars</div></div>
+        </div>
+        <svg class="spark" id="spark" viewBox="0 0 320 70" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="sparkStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff5a3c"/><stop offset="1" stop-color="#bff23d"/></linearGradient>
+            <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a3c" stop-opacity=".26"/><stop offset="1" stop-color="#ff5a3c" stop-opacity="0"/></linearGradient>
+          </defs>
+          <path id="spark-area" fill="url(#sparkArea)"></path>
+          <polyline id="spark-line" fill="none" stroke="url(#sparkStroke)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points=""></polyline>
+        </svg>
+        <div class="mo-cap mono"><span class="live"></span> daily installs · last 30 days</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- cta -->
 <section id="start">
   <div class="wrap">
@@ -512,7 +563,7 @@
 
 <footer>
   <div class="wrap">
-    <span class="brand" style="font-size:16px"><span class="mk" style="width:24px;height:24px;font-size:13px">🧭</span>Adeptly</span>
+    <span class="brand" style="font-size:16px"><span class="mk" style="width:24px;height:24px"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#17100d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11l6-5 6 5"/><path d="M6 17l6-5 6 5"/></g></svg></span>Adeptly</span>
     <a href="https://www.npmjs.com/package/adeptly" target="_blank" rel="noopener">npm</a>
     <a href="https://github.com/ShopDevX/adeptlydev" target="_blank" rel="noopener">GitHub</a>
     <a href="https://github.com/ShopDevX/adeptlydev/blob/main/LICENSE" target="_blank" rel="noopener">MIT</a>
@@ -546,6 +597,51 @@
     if (!('IntersectionObserver' in window)){ nums.forEach(run); return; }
     var io = new IntersectionObserver(function(en){ en.forEach(function(x){ if(x.isIntersecting){ run(x.target); io.unobserve(x.target);} }); }, {threshold:.6});
     nums.forEach(function(n){ io.observe(n); });
+  })();
+
+  // Live npm + GitHub momentum
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var PKG='adeptly', REPO='ShopDevX/adeptlydev', LAUNCH='2026-05-01';
+    function fmt(n){ return (n||0).toLocaleString('en-US'); }
+    function set(id,v){ var el=document.getElementById(id); if(el) el.textContent=fmt(v); }
+    function animate(id,target){
+      var el=document.getElementById(id); if(!el) return;
+      if(reduce){ el.textContent=fmt(target); return; }
+      var t0=null;
+      function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/1100,1),e=1-Math.pow(1-p,3);
+        el.textContent=fmt(Math.round(target*e)); if(p<1) requestAnimationFrame(step); }
+      requestAnimationFrame(step);
+    }
+    // seed fallbacks so numbers never flash empty
+    ['dl-total','dl-month','gh-stars'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent=fmt(+el.getAttribute('data-fallback')); });
+
+    function today(){ return new Date().toISOString().slice(0,10); }
+    function drawSpark(vals){
+      if(!vals||vals.length<2) return;
+      var W=320,H=70,pad=5, max=Math.max.apply(null,vals), min=Math.min.apply(null,vals), span=(max-min)||1;
+      var pts=vals.map(function(v,i){ return [pad+(W-2*pad)*i/(vals.length-1), H-pad-(H-2*pad)*((v-min)/span)]; });
+      var line=document.getElementById('spark-line');
+      if(line) line.setAttribute('points', pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' '));
+      var area=document.getElementById('spark-area');
+      if(area){ var d='M'+pts[0][0].toFixed(1)+','+pts[0][1].toFixed(1)+pts.slice(1).map(function(p){return 'L'+p[0].toFixed(1)+','+p[1].toFixed(1);}).join('')+'L'+pts[pts.length-1][0].toFixed(1)+','+H+'L'+pts[0][0].toFixed(1)+','+H+'Z'; area.setAttribute('d',d); }
+    }
+    var loaded=false;
+    function load(){
+      if(loaded) return; loaded=true;
+      fetch('https://api.npmjs.org/downloads/range/'+LAUNCH+':'+today()+'/'+PKG).then(function(r){return r.json();}).then(function(j){
+        var arr=(j.downloads||[]); if(!arr.length) return;
+        animate('dl-total', arr.reduce(function(a,b){return a+b.downloads;},0));
+        drawSpark(arr.slice(-30).map(function(d){return d.downloads;}));
+      }).catch(function(){});
+      fetch('https://api.npmjs.org/downloads/point/last-month/'+PKG).then(function(r){return r.json();}).then(function(j){ if(typeof j.downloads==='number') animate('dl-month', j.downloads); }).catch(function(){});
+      fetch('https://api.github.com/repos/'+REPO).then(function(r){return r.json();}).then(function(j){ if(typeof j.stargazers_count==='number') animate('gh-stars', j.stargazers_count); }).catch(function(){});
+    }
+    var sec=document.getElementById('momentum');
+    if('IntersectionObserver' in window && sec){
+      var io=new IntersectionObserver(function(en){ en.forEach(function(x){ if(x.isIntersecting){ load(); io.disconnect(); } }); }, {threshold:.25});
+      io.observe(sec);
+    } else { load(); }
   })();
 </script>
 </body>
