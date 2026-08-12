@@ -36,3 +36,7 @@ docs/plans/recipes/
 
 # crew run artifacts (local audit trail)
 docs/plans/runs/
+
+# vercel CLI local link
+.vercel/
+landing/.vercel/
