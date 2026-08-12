@@ -8,19 +8,19 @@
 <meta property="og:title" content="Adeptly — plan-first cockpit for Claude Code" />
 <meta property="og:description" content="Plan it. Learn every Claude Code feature. Run it as a crew. See what you spend. Local-first, no API key." />
 <meta property="og:type" content="website" />
-<meta name="theme-color" content="#0a0713" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23a78bfa'/%3E%3Cpath d='M12 3.4C12.18 5.2 12.5 5.5 14.3 5.7 12.5 5.9 12.18 6.2 12 8 11.82 6.2 11.5 5.9 9.7 5.7 11.5 5.5 11.82 5.2 12 3.4Z' fill='%2317100d'/%3E%3Cg fill='none' stroke='%2317100d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 19 12 10.5 17 19'/%3E%3Cpath d='M9 15h6'/%3E%3C/g%3E%3C/svg%3E" />
+<meta name="theme-color" content="#0d0e14" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%237c86ff'/%3E%3Cpath d='M12 3.4C12.18 5.2 12.5 5.5 14.3 5.7 12.5 5.9 12.18 6.2 12 8 11.82 6.2 11.5 5.9 9.7 5.7 11.5 5.5 11.82 5.2 12 3.4Z' fill='%2317100d'/%3E%3Cg fill='none' stroke='%2317100d' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 19 12 10.5 17 19'/%3E%3Cpath d='M9 15h6'/%3E%3C/g%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   :root{
-    /* Violet identity: iris-violet primary + magenta accent on violet ink. */
-    --ink:#0a0713; --ink-1:#100a1c; --ink-2:#161028; --ink-3:#1f1740;
-    --line:#2a2148; --line-2:#3d2f68;
-    --fg:#f3eeff; --fg-2:#b6a6d0; --fg-3:#7a6c9a;
-    --iris:#a78bfa; --iris-soft:#b9a6ff; --cyan:#ff5cf0; --mint:#7ee6a0; --amber:#ffcf6b; --rose:#ff6f8f;
-    --paper:#efe9fb; --paper-ink:#1a1330; --paper-2:#6a6088; --paper-line:#d8cff0;
+    /* Matches the Adeptly app: periwinkle + violet on navy-black. */
+    --ink:#0d0e14; --ink-1:#0a0b10; --ink-2:#12131c; --ink-3:#1a1b26;
+    --line:#20212c; --line-2:#2b2c39;
+    --fg:#e9eaf2; --fg-2:#8b8d9e; --fg-3:#5c5e70;
+    --iris:#7c86ff; --iris-soft:#a9b2ff; --cyan:#6d5efc; --mint:#4ade80; --amber:#ffcf6b; --rose:#ff6b6b;
+    --paper:#ecebf6; --paper-ink:#16171f; --paper-2:#5c5e70; --paper-line:#d3d3e2;
     --maxw:1120px; --r:16px;
     --ff-disp:"Bricolage Grotesque",system-ui,sans-serif;
     --ff-body:"Hanken Grotesk",system-ui,sans-serif;
@@ -65,7 +65,7 @@
   @media(max-width:760px){nav .nl a.hs{display:none}}
   .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:11px;font-weight:600;font-size:14.5px;border:1px solid var(--line-2);color:var(--fg);transition:transform .15s,border-color .15s,background .15s;font-family:var(--ff-body)}
   .btn:hover{border-color:var(--iris);transform:translateY(-1px)}
-  .btn-primary{position:relative;border:none;color:#1a0f08;font-weight:700;background:linear-gradient(100deg,var(--iris-soft),var(--cyan));box-shadow:0 10px 30px -10px var(--iris)}
+  .btn-primary{position:relative;border:none;color:#fff;font-weight:700;background:linear-gradient(100deg,var(--iris),var(--cyan));box-shadow:0 10px 30px -10px var(--iris)}
   .btn-primary:hover{filter:brightness(1.06);transform:translateY(-2px)}
   .btn-ghost{background:transparent}
 
@@ -515,8 +515,8 @@
         </div>
         <svg class="spark" id="spark" viewBox="0 0 320 70" preserveAspectRatio="none" aria-hidden="true">
           <defs>
-            <linearGradient id="sparkStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a78bfa"/><stop offset="1" stop-color="#ff5cf0"/></linearGradient>
-            <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a78bfa" stop-opacity=".26"/><stop offset="1" stop-color="#a78bfa" stop-opacity="0"/></linearGradient>
+            <linearGradient id="sparkStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7c86ff"/><stop offset="1" stop-color="#6d5efc"/></linearGradient>
+            <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c86ff" stop-opacity=".26"/><stop offset="1" stop-color="#7c86ff" stop-opacity="0"/></linearGradient>
           </defs>
           <path id="spark-area" fill="url(#sparkArea)"></path>
           <polyline id="spark-line" fill="none" stroke="url(#sparkStroke)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points=""></polyline>
@@ -633,7 +633,7 @@
   (function(){
     var cv=document.getElementById('heroCanvas'); if(!cv) return;
     var ctx=cv.getContext('2d'), W=0,H=0, DPR=Math.min(window.devicePixelRatio||1,2), ps=[];
-    var A1=[167,139,250], A2=[255,92,240], BG=[10,7,19];
+    var A1=[124,134,255], A2=[190,182,255], BG=[13,14,20];
     var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var M={x:0,y:0,tx:0,ty:0,active:false};
     function rect(){ return cv.getBoundingClientRect(); }
